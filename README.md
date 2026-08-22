@@ -1,6 +1,6 @@
 # Finfolio 2.0 — Portfolio Attribution & Risk Analytics
 
-> Finfolio 2.0 giúp sinh viên tài chính và nhà đầu tư cá nhân giai đoạn đầu hiểu lợi nhuận và rủi ro của danh mục đa tài sản đến từ đâu, từ đó đưa ra quyết định phân bổ dựa trên bằng chứng định lượng thay vì chỉ nhìn vào các chỉ số tổng hợp.
+> Finfolio 2.0 giúp nhà đầu tư cá nhân đang tự theo dõi một danh mục nhỏ gồm nhiều vị thế nhưng chưa sử dụng hệ thống portfolio analytics chuyên nghiệp hiểu lợi nhuận và rủi ro đến từ đâu, từ đó đưa ra quyết định phân bổ dựa trên bằng chứng định lượng thay vì chỉ nhìn vào các chỉ số tổng hợp.
 
 ## Repository evidence
 
@@ -34,15 +34,15 @@ Nhóm xem xét ba hướng vấn đề trước khi chọn phạm vi dự án.
 |---|---|---|---|---|
 | Công cụ so sánh sản phẩm tiết kiệm | Người mới đi làm đang chọn kênh tiết kiệm | So sánh lãi suất, kỳ hạn và thanh khoản | Điều kiện của nhiều ngân hàng khó so sánh đồng thời | Khả thi nhưng chiều sâu phân tích định lượng còn hạn chế |
 | Công cụ so sánh khoản vay cá nhân | Người vay lần đầu | Đánh giá khả năng chi trả và so sánh các khoản vay | Lãi suất, phí và nghĩa vụ trả nợ có thể dẫn đến các kết luận khác nhau | Có ý nghĩa tài chính nhưng đã có nhiều sản phẩm tương tự |
-| **Finfolio 2.0 — Portfolio Attribution & Risk Analytics** | Sinh viên tài chính và nhà đầu tư cá nhân giai đoạn đầu đang có danh mục đa tài sản | Quyết định có nên giữ nguyên hoặc tái phân bổ danh mục | Chỉ số tổng không giải thích tài sản nào tạo ra lợi nhuận và rủi ro; tác động của thay đổi phân bổ khó được đánh giá trước | **Được chọn** vì có task rõ, phù hợp quantitative finance và tận dụng được năng lực của nhóm |
+| **Finfolio 2.0 — Portfolio Attribution & Risk Analytics** | Nhà đầu tư cá nhân đang tự theo dõi một danh mục nhỏ gồm nhiều vị thế nhưng chưa sử dụng hệ thống portfolio analytics chuyên nghiệp | Quyết định có nên giữ nguyên hoặc tái phân bổ danh mục | Chỉ số tổng không giải thích tài sản nào tạo ra lợi nhuận và rủi ro; tác động của thay đổi phân bổ khó được đánh giá trước | **Được chọn** vì có task rõ, phù hợp quantitative finance và tận dụng được năng lực của nhóm |
 
 ## 2. Selected target user
 
-Target user chính là **sinh viên tài chính và nhà đầu tư cá nhân giai đoạn đầu đã sở hữu một danh mục nhỏ gồm nhiều vị thế**, nhưng chưa sử dụng hệ thống portfolio analytics chuyên nghiệp.
+Target user chính là **nhà đầu tư cá nhân đang tự theo dõi một danh mục nhỏ gồm nhiều vị thế nhưng chưa sử dụng hệ thống portfolio analytics chuyên nghiệp**.
 
 - **Specific:** không nhắm đến mọi nhà đầu tư; tập trung vào người đã có danh mục nhưng chưa có quy trình phân tích chuyên sâu.
 - **Relevant:** người dùng trực tiếp gặp khó khăn khi xác định nguồn gốc lợi nhuận và rủi ro.
-- **Reachable:** nhóm có thể làm việc với sinh viên tài chính, nhà đầu tư cá nhân trong mạng lưới gần và test portfolio giả lập.
+- **Reachable:** nhóm có thể phỏng vấn nhà đầu tư cá nhân trong mạng lưới gần và sử dụng test portfolio để kiểm tra cách họ đọc kết quả.
 - **Task-based:** người dùng cần đánh giá danh mục trước khi quyết định giữ nguyên hoặc tái phân bổ.
 
 Các nhà đầu tư chuyên nghiệp có thể hưởng lợi từ sản phẩm nhưng không phải target user chính của MVP vì nhu cầu và tiêu chuẩn của họ vượt quá phạm vi dự án bảy tuần.
@@ -68,7 +68,7 @@ Người dùng có thể nhìn thấy giá trị, return hoặc volatility của
 
 ## 5. Draft problem statement
 
-> Sinh viên tài chính và nhà đầu tư cá nhân giai đoạn đầu đang nắm giữ danh mục đa tài sản gặp khó khăn khi đánh giá mức độ và nguồn gốc rủi ro của danh mục để ra quyết định phân bổ lại, vì các chỉ số tổng hợp không cho thấy rủi ro và lợi nhuận đang tập trung ở tài sản hoặc exposure nào, đồng thời họ khó kiểm tra trước tác động của một thay đổi trong bối cảnh các loại tài sản có đặc tính rủi ro khác nhau.
+> Nhà đầu tư cá nhân đang tự theo dõi một danh mục nhỏ gồm nhiều vị thế gặp khó khăn khi đánh giá mức độ và nguồn gốc rủi ro để quyết định giữ nguyên hay tái phân bổ, vì các chỉ số tổng hợp không cho thấy lợi nhuận và rủi ro đang tập trung ở vị thế nào, đồng thời họ khó kiểm tra trước tác động của một thay đổi tỷ trọng.
 
 Problem statement tập trung vào **user, task, difficulty và context**; chưa đưa công nghệ hoặc giao diện vào định nghĩa vấn đề.
 
@@ -85,13 +85,13 @@ Sản phẩm không chỉ hiển thị dữ liệu mà phải giúp người dù
 
 ## 7. Initial observation and assumptions to verify
 
-Định hướng hiện tại bắt đầu từ quan sát rằng các công cụ theo dõi danh mục thường ưu tiên giá trị và chỉ số tổng, trong khi người dùng giai đoạn đầu có thể cần một diễn giải đơn giản hơn về nguồn đóng góp rủi ro và lợi nhuận.
+Quan sát ban đầu từ Finfolio 1.0 là nhà đầu tư đã có thể nhìn thấy giá trị, return hoặc volatility của toàn danh mục, nhưng chưa được giải thích rõ vị thế nào tạo ra phần lớn lợi nhuận và rủi ro hoặc một thay đổi tỷ trọng sẽ tác động thế nào.
 
 Đây là **giả thuyết vấn đề**, chưa phải kết luận đã được kiểm chứng. Nhóm cần xác nhận bằng phỏng vấn ngắn, quan sát quy trình hiện tại hoặc phản hồi từ người dùng mục tiêu.
 
 ## 8. Open questions
 
-1. Người dùng mục tiêu hiện sử dụng công cụ nào và thiếu thông tin gì khi tái phân bổ danh mục?
+1. Trong Finfolio 1.0, nhà đầu tư còn thiếu thông tin nào quan trọng nhất khi cân nhắc tái phân bổ danh mục?
 2. Người dùng hiểu “return contribution” và “risk contribution” theo cách trình bày nào dễ nhất?
 3. Nên dùng portfolio thật, portfolio giả lập hay cả hai trong demo và kiểm thử?
 4. Instrument universe nhỏ nhất nào đủ để chứng minh problem và core user task?
@@ -118,6 +118,7 @@ Week 2 kế thừa difficulty đã xác định ở Week 1:
 
 | Thành phần | Quyết định hiện tại |
 |---|---|
+| Target user | Nhà đầu tư cá nhân đang tự theo dõi một danh mục nhỏ gồm nhiều vị thế nhưng chưa sử dụng hệ thống portfolio analytics chuyên nghiệp |
 | Problem | Chỉ số tổng không giải thích nguồn tập trung lợi nhuận/rủi ro hoặc tác động của một thay đổi tỷ trọng |
 | User task | Đánh giá danh mục hiện tại và so sánh một phương án tái phân bổ |
 | Desired outcome | Người dùng có thể giải thích quyết định giữ nguyên hoặc điều chỉnh danh mục bằng kết quả truy nguyên được |
