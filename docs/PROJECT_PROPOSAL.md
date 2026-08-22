@@ -4,7 +4,7 @@
 
 Week 1 identified the following difficulty:
 
-> Sinh viên tài chính và nhà đầu tư cá nhân giai đoạn đầu có thể nhìn thấy giá trị, return hoặc volatility của toàn danh mục nhưng khó xác định lợi nhuận và rủi ro đang tập trung ở vị thế nào. Vì vậy, họ khó đánh giá liệu một thay đổi tỷ trọng có thực sự cải thiện danh mục hay không.
+> Người dùng là các nhà đầu tư cá nhân có thể nhìn thấy giá trị, return hoặc volatility của toàn danh mục qua công cụ Finfolio 1.0 nhưng khó xác định lợi nhuận và rủi ro đang tập trung ở vị thế nào. Vì vậy, họ khó đánh giá liệu một thay đổi tỷ trọng có thực sự cải thiện danh mục hay không.
 
 Đây vẫn là một **problem hypothesis cần được kiểm chứng với target users**. Week 2 chuyển hypothesis này thành một product direction có thể review và tiếp tục điều chỉnh theo evidence.
 
@@ -12,7 +12,7 @@ Week 1 identified the following difficulty:
 
 ### Primary target user
 
-Sinh viên tài chính và nhà đầu tư cá nhân giai đoạn đầu đang tự theo dõi một danh mục nhỏ gồm nhiều vị thế nhưng chưa sử dụng hệ thống portfolio analytics chuyên nghiệp.
+Nhà đầu tư cá nhân đang tự theo dõi một danh mục nhỏ gồm nhiều vị thế nhưng chưa sử dụng hệ thống portfolio analytics chuyên nghiệp.
 
 ### Context
 
