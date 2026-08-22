@@ -4,9 +4,9 @@
 
 Week 1 identified the following difficulty:
 
-> Người dùng là các nhà đầu tư cá nhân có thể nhìn thấy giá trị, return hoặc volatility của toàn danh mục qua công cụ Finfolio 1.0 nhưng khó xác định lợi nhuận và rủi ro đang tập trung ở vị thế nào. Vì vậy, họ khó đánh giá liệu một thay đổi tỷ trọng có thực sự cải thiện danh mục hay không.
+> Nhà đầu tư cá nhân đang tự theo dõi một danh mục nhỏ gồm nhiều vị thế nhưng chưa sử dụng hệ thống portfolio analytics chuyên nghiệp có thể nhìn thấy giá trị, return hoặc volatility của toàn danh mục qua Finfolio 1.0 nhưng khó xác định lợi nhuận và rủi ro đang tập trung ở vị thế nào. Vì vậy, họ khó đánh giá liệu một thay đổi tỷ trọng có thực sự cải thiện danh mục hay không.
 
-Đây vẫn là một **problem hypothesis cần được kiểm chứng với target users**. Week 2 chuyển hypothesis này thành một product direction có thể review và tiếp tục điều chỉnh theo evidence.
+Đây vẫn là một **problem hypothesis cần được kiểm chứng với nhóm nhà đầu tư cá nhân mục tiêu**. Week 2 chuyển hypothesis này thành một product direction có thể review và tiếp tục điều chỉnh theo evidence.
 
 ## 2. Target user, context and user task
 
@@ -125,7 +125,7 @@ Product pattern / route
 
 | Risk | Tác động | Response |
 |---|---|---|
-| Problem hypothesis chưa được xác nhận | Xây đúng kỹ thuật nhưng không đúng nhu cầu | Phỏng vấn/quan sát target users và ghi lại current workflow |
+| Problem hypothesis chưa được xác nhận | Xây đúng kỹ thuật nhưng không đúng nhu cầu | Phỏng vấn/quan sát nhà đầu tư cá nhân mục tiêu và ghi lại current workflow |
 | “Risk contribution” khó hiểu | Output không hỗ trợ quyết định | Dùng plain-language explanation và test comprehension |
 | Dữ liệu không đồng nhất | Attribution sai hoặc không so sánh được | Week 3 xác định instrument universe, frequency, currency và cleaning rules |
 | Feature expansion | Scope tăng nhưng core flow chưa hoàn chỉnh | Chỉ thêm feature khi có traceability tới problem/task và acceptance test |
@@ -133,7 +133,7 @@ Product pattern / route
 
 ## 9. Open questions for Week 3
 
-1. Target users hiện dùng quy trình nào để nhận diện risk concentration?
+1. Nhà đầu tư cá nhân mục tiêu hiện dùng quy trình nào để nhận diện risk concentration?
 2. Họ hiểu “risk contribution” theo cách trình bày nào dễ nhất?
 3. Instrument universe nhỏ nhất nào có dữ liệu tương thích để chứng minh core output?
 4. Dữ liệu holdings và historical prices cần trường, đơn vị, currency và frequency nào?

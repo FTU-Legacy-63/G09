@@ -38,7 +38,7 @@ Dashboard hoặc prototype đơn giản đủ để review complete flow
 
 ```text
 USER
-Sinh viên tài chính / nhà đầu tư cá nhân giai đoạn đầu
+Nhà đầu tư cá nhân đang tự theo dõi một danh mục nhỏ gồm nhiều vị thế nhưng chưa sử dụng hệ thống portfolio analytics chuyên nghiệp
     ↓
 INPUT
 Current holdings và một proposed weight change
@@ -120,7 +120,7 @@ MVP hoàn thành khi flow này chạy được, giải thích được và kiể
 Chỉ bổ sung sau khi core flow đã được kiểm thử:
 
 - input portfolio linh hoạt hơn;
-- thêm một downside-risk metric như VaR hoặc Expected Shortfall nếu target users cần;
+- thêm một downside-risk metric như VaR hoặc Expected Shortfall nếu nhà đầu tư cá nhân mục tiêu cần;
 - một predefined stress scenario nếu có scenario specification defensible;
 - thêm asset classes có dữ liệu tương thích.
 
@@ -173,13 +173,15 @@ Notebook/spreadsheet logic proof kết hợp một report hoặc prototype inter
 
 ## 10. Responsibility by output
 
-| Owner | Responsibility | Visible output | Consumer/dependency |
-|---|---|---|---|
-| Hoàng Khánh Linh | Xác định financial logic, assumptions và giới hạn diễn giải | Formula/assumption specification cho return/risk contribution và comparison | Developer, PM, Decision Brief |
-| Nguyễn Quỳnh Anh | Product coordination và QA | Test portfolio, hand-calculated cases, acceptance checklist | Developer, Product Owner, demo |
-| Lê Bảo An | Integration và implementation | Calculation modules, data adapter và complete runnable flow | Decision Brief và toàn bộ MVP |
-| Trần Minh Ngọc | Information readiness | Dataset, data dictionary, source/limitation note | Calculation layer và tests |
-| Nguyễn Ngọc Anh | Output/interface design | User flow, Decision Brief schema, Figma screens/components | Frontend implementation và user review |
+| Owner | Responsibility | Expected output | Evidence location (planned) | Dependency | Next action |
+|---|---|---|---|---|---|
+| Hoàng Khánh Linh | Xác định financial logic, assumptions và giới hạn diễn giải | Formula/assumption specification cho return/risk contribution và comparison | `docs/FINANCIAL_LOGIC.md` | Data definition, Developer, PM | Chốt metric, assumptions và cách diễn giải sau data-readiness review |
+| Nguyễn Quỳnh Anh | Product coordination và QA | Test portfolio, hand-calculated cases, acceptance checklist | `docs/TEST_PLAN.md`, `tests/` | Financial logic, input schema, Developer | Tạo test portfolio và expected results cho core flow |
+| Lê Bảo An | Integration và implementation | Calculation modules, data adapter và complete runnable flow | `src/`, deployment link trong README | Financial logic, dataset, output schema | Dựng pipeline Validate → Calculate → Attribute → Compare → Explain |
+| Trần Minh Ngọc | Information readiness | Dataset, data dictionary, source/limitation note | `data/`, `data/README.md` | Instrument universe, financial assumptions | Xác minh nguồn, frequency, currency và missing-data rules |
+| Nguyễn Ngọc Anh | Output/interface design | User flow, Decision Brief schema, Figma screens/components | `docs/DESIGN.md`, Figma link trong README | Main output specification, sample results | Thiết kế wireframe bằng sample results của Decision Brief |
+
+Các đường dẫn trên là **vị trí evidence dự kiến**, chưa được xem là evidence hoàn thành cho đến khi file hoặc link thực sự xuất hiện trong repository.
 
 ### Shared specification
 
