@@ -110,9 +110,9 @@ Sản phẩm không chỉ hiển thị dữ liệu mà phải giúp người dù
 
 # Week 2 — Product Direction
 
-## Problem-first product decision
+## Product decision summary
 
-Week 2 bắt đầu từ difficulty đã xác định ở Week 1, không bắt đầu từ dashboard, công nghệ hoặc danh sách feature:
+Week 2 kế thừa difficulty đã xác định ở Week 1:
 
 > Người dùng không biết lợi nhuận và rủi ro đang tập trung ở đâu, vì vậy họ khó đánh giá có nên thay đổi phân bổ danh mục hay không.
 
@@ -123,7 +123,7 @@ Week 2 bắt đầu từ difficulty đã xác định ở Week 1, không bắt �
 | Desired outcome | Người dùng có thể giải thích quyết định giữ nguyên hoặc điều chỉnh danh mục bằng kết quả truy nguyên được |
 | Main output | **Portfolio Decision Brief** |
 | Core process | Calculate → attribute → compare → explain |
-| Product pattern | Dashboard được chọn sau khi chốt output, vì brief cần trình bày nhiều kết quả liên kết |
+| Product pattern | Dashboard application, phù hợp để trình bày các kết quả liên kết trong Decision Brief |
 | Core MVP | Allocation + return/risk contribution + concentration insight + một so sánh before/after |
 
 VaR/Expected Shortfall, stress testing, Monte Carlo và index futures không còn là yêu cầu bắt buộc của core MVP. Chúng chỉ được bổ sung nếu Week 3–4 chứng minh được nhu cầu, dữ liệu, logic và khả năng kiểm thử.
@@ -136,10 +136,10 @@ Phần này được cập nhật sau Checkpoint 2 để lưu lại chu trình P
 
 | Nội dung | Ghi nhận |
 |---|---|
-| Feedback received | Product direction có nguy cơ solution-first vì dashboard và các kỹ thuật phân tích được chốt quá sớm. |
-| Decision | **Simplify** |
-| Revision made | Đặt problem và user task trước; đổi main output thành Portfolio Decision Brief; thu hẹp core MVP; chuyển VaR/ES, stress test, Monte Carlo và futures thành conditional extensions. |
-| Reason | Mỗi thành phần của MVP phải truy ngược trực tiếp về difficulty và quyết định của người dùng. |
+| Feedback received | _Chưa cập nhật_ |
+| Decision | _Keep / Change / Simplify / Restart_ |
+| Revision made | _Chưa cập nhật_ |
+| Reason | _Chưa cập nhật_ |
 
 ## Responsible use of AI
 
