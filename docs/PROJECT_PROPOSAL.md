@@ -1,12 +1,12 @@
 # Finfolio 2.0 — Project Proposal
 
-## 1. Starting point: the problem, not the product
+## 1. Problem direction
 
 Week 1 identified the following difficulty:
 
 > Sinh viên tài chính và nhà đầu tư cá nhân giai đoạn đầu có thể nhìn thấy giá trị, return hoặc volatility của toàn danh mục nhưng khó xác định lợi nhuận và rủi ro đang tập trung ở vị thế nào. Vì vậy, họ khó đánh giá liệu một thay đổi tỷ trọng có thực sự cải thiện danh mục hay không.
 
-Đây vẫn là một **problem hypothesis cần được kiểm chứng với target users**. Week 2 chỉ chuyển hypothesis này thành một product direction có thể review; nhóm chưa mặc định rằng dashboard, Monte Carlo hay bất kỳ công nghệ nào là lời giải bắt buộc.
+Đây vẫn là một **problem hypothesis cần được kiểm chứng với target users**. Week 2 chuyển hypothesis này thành một product direction có thể review và tiếp tục điều chỉnh theo evidence.
 
 ## 2. Target user, context and user task
 
@@ -68,11 +68,11 @@ Chuyển từ “danh mục đang có chỉ số bao nhiêu?” sang “vì sao 
 
 ### Product form and pattern
 
-Sau khi chốt main output, nhóm chọn **dashboard application** làm initial product pattern vì Decision Brief gồm nhiều kết quả liên kết và cần so sánh current/alternative state trên cùng một flow.
+Nhóm chọn **dashboard application** làm initial product pattern vì Decision Brief gồm nhiều kết quả liên kết và cần so sánh current/alternative state trên cùng một flow.
 
 Dashboard là cách tổ chức output, không phải lý do sản phẩm tồn tại. Nếu một report/prototype đơn giản chứng minh core output nhanh hơn, nhóm có thể dùng route đó mà không thay đổi product value.
 
-## 6. Problem-first traceability
+## 6. Product traceability
 
 | Problem evidence/hypothesis | Product response | Priority |
 |---|---|---|
@@ -112,8 +112,6 @@ Product pattern / route
   Dashboard or simpler reviewable prototype
 ```
 
-Thứ tự này bảo đảm công nghệ và feature được chọn sau problem, task và output.
-
 ## 8. Feasibility and scope decision
 
 ### Why the direction is feasible
@@ -130,7 +128,7 @@ Thứ tự này bảo đảm công nghệ và feature được chọn sau proble
 | Problem hypothesis chưa được xác nhận | Xây đúng kỹ thuật nhưng không đúng nhu cầu | Phỏng vấn/quan sát target users và ghi lại current workflow |
 | “Risk contribution” khó hiểu | Output không hỗ trợ quyết định | Dùng plain-language explanation và test comprehension |
 | Dữ liệu không đồng nhất | Attribution sai hoặc không so sánh được | Week 3 xác định instrument universe, frequency, currency và cleaning rules |
-| Feature expansion | Product quay lại solution-first | Chỉ thêm feature khi có traceability tới problem/task và acceptance test |
+| Feature expansion | Scope tăng nhưng core flow chưa hoàn chỉnh | Chỉ thêm feature khi có traceability tới problem/task và acceptance test |
 | Kết quả bị hiểu như lời khuyên đầu tư | Tạo kỳ vọng sai | Hiển thị assumptions, limitations và không đưa ra “best portfolio” |
 
 ## 9. Open questions for Week 3

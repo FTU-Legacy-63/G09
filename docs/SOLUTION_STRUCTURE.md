@@ -1,6 +1,6 @@
 # Finfolio 2.0 — Solution Structure
 
-## 1. Problem-first constraint
+## 1. Component selection rule
 
 Mọi component phải vượt qua hai câu hỏi:
 
@@ -9,7 +9,7 @@ Mọi component phải vượt qua hai câu hỏi:
 
 Nếu không truy ngược được về problem hoặc core task, component đó là supporting, conditional hoặc out of scope.
 
-## 2. Reasoning chain before the operational chain
+## 2. Product reasoning chain
 
 ```text
 PROBLEM
@@ -33,8 +33,6 @@ Holdings + compatible historical data + proposed weights
 PATTERN / ROUTE
 Dashboard hoặc prototype đơn giản đủ để review complete flow
 ```
-
-Product form xuất hiện cuối chuỗi, sau khi task và output đã rõ.
 
 ## 3. User → Input → Process → Output → User Action
 
@@ -194,14 +192,14 @@ Các workstream gặp nhau tại:
 - test portfolio và expected results;
 - reallocation comparison rule.
 
-## 11. Anti-solution-first guardrails
+## 11. Scope and quality guardrails
 
-- Không thêm feature chỉ vì kỹ thuật đó “ấn tượng”.
-- Không gọi dashboard là main output.
-- Không dùng “AI engine” hoặc “analytics engine” thay cho process description.
-- Không mở rộng asset classes trước data-readiness check.
-- Không đưa Monte Carlo, stress test, VaR/ES hoặc futures vào core nếu chưa có user need và acceptance test.
-- Không xem số lượng màn hình hoặc số metric là bằng chứng product value.
+- Mỗi feature phải hỗ trợ một phần rõ ràng của user task hoặc main output.
+- Dashboard là product pattern; Portfolio Decision Brief là main output.
+- Process phải mô tả rõ calculate, attribute, compare và explain.
+- Chỉ mở rộng asset classes sau data-readiness check.
+- Monte Carlo, stress test, VaR/ES hoặc futures chỉ được bổ sung khi có user need và acceptance test.
+- Product value được đánh giá bằng complete flow và khả năng giải thích, không phải số lượng màn hình hoặc metric.
 
 ## 12. Definition of done for Week 2
 
@@ -214,4 +212,4 @@ Các workstream gặp nhau tại:
 - [x] Core, target extension, fallback và out-of-scope được phân biệt.
 - [x] Mỗi core component truy ngược được về problem/task.
 - [x] Responsibility được phân chia theo visible output và dependency.
-- [x] Revision từ solution-first sang problem-first được ghi trong README.
+- [ ] Feedback và revision sau Checkpoint 2 được cập nhật trong README.
