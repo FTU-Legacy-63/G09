@@ -155,7 +155,3 @@ Phần này được cập nhật sau Checkpoint 2 để lưu lại chu trình P
 | Decision | _Keep / Change / Simplify / Restart_ |
 | Revision made | _Chưa cập nhật_ |
 | Reason | _Chưa cập nhật_ |
-
-## Responsible use of AI
-
-AI được sử dụng để hỗ trợ tổ chức và biên tập tài liệu theo cấu trúc Week 1–2. Nhóm chịu trách nhiệm kiểm tra mọi giả định, công thức, nguồn dữ liệu và tuyên bố về người dùng; chỉ các artefact thực sự có trong repository mới được dùng làm evidence chính thức.
