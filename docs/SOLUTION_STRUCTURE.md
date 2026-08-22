@@ -1,176 +1,217 @@
 # Finfolio 2.0 — Solution Structure
 
-## 1. User → Input → Process → Output → User Action
+## 1. Problem-first constraint
+
+Mọi component phải vượt qua hai câu hỏi:
+
+1. Component này giải quyết difficulty hoặc hỗ trợ user task nào?
+2. Nếu bỏ component này, người dùng còn hoàn thành được core task không?
+
+Nếu không truy ngược được về problem hoặc core task, component đó là supporting, conditional hoặc out of scope.
+
+## 2. Reasoning chain before the operational chain
+
+```text
+PROBLEM
+Không biết return/risk tập trung ở đâu và một thay đổi tỷ trọng tạo ra tác động gì
+    ↓
+USER TASK
+Đánh giá current portfolio và một reallocation alternative
+    ↓
+DESIRED OUTCOME
+Đưa ra quyết định giữ nguyên hoặc điều chỉnh có thể giải thích
+    ↓
+MAIN OUTPUT
+Portfolio Decision Brief
+    ↓
+PROCESS NEEDED
+Calculate → Attribute → Compare → Explain
+    ↓
+INPUT NEEDED
+Holdings + compatible historical data + proposed weights
+    ↓
+PATTERN / ROUTE
+Dashboard hoặc prototype đơn giản đủ để review complete flow
+```
+
+Product form xuất hiện cuối chuỗi, sau khi task và output đã rõ.
+
+## 3. User → Input → Process → Output → User Action
 
 ```text
 USER
 Sinh viên tài chính / nhà đầu tư cá nhân giai đoạn đầu
     ↓
 INPUT
-Danh sách vị thế, số lượng hoặc giá trị, asset class và lựa chọn scenario
+Current holdings và một proposed weight change
     ↓
 PROCESS
-Chuẩn hóa dữ liệu → Tính portfolio metrics → Attribution → Scenario comparison
+Validate → Calculate → Attribute → Compare → Explain
     ↓
 OUTPUT
-Portfolio Attribution & Risk Report
+Portfolio Decision Brief cho current và alternative portfolio
     ↓
 USER ACTION
-Giữ nguyên, tái phân bổ hoặc cân nhắc phòng hộ danh mục
+Giữ nguyên hoặc tái phân bổ, kèm lý do và limitations
 ```
 
-## 2. Initial required information
+## 4. Main output specification
 
-Đây là danh sách thông tin ban đầu ở Week 2. Ý nghĩa, nguồn và quy tắc xử lý chi tiết sẽ được xác nhận trong Week 3.
+Portfolio Decision Brief phải trả lời được:
 
-| Information | Purpose | Initial note |
+| User question | Visible result | Acceptance idea |
 |---|---|---|
-| Ticker/instrument ID | Nhận diện vị thế | Cần quy tắc mapping và ticker history |
-| Asset class | Nhóm attribution | Stocks, ETFs, gold, cash; index futures nếu khả thi |
-| Quantity hoặc market value | Tính position value và weight | Phải thống nhất đơn vị |
-| Currency | Quy đổi giá trị và return | Target currency dự kiến là VND |
-| Historical adjusted prices | Tính return, volatility và covariance | Cần frequency và lookback window thống nhất |
-| Benchmark/sector classification | So sánh và giải thích exposure | Nguồn dữ liệu cần được kiểm chứng |
-| Risk parameters | Tính VaR/Expected Shortfall | Horizon và confidence level phải được công bố |
-| Scenario definition | Tính tác động giả định | Shock, affected assets và assumptions phải rõ |
+| Danh mục hiện được phân bổ thế nào? | Allocation theo vị thế/nhóm | Tổng weight bằng 100% và truy nguyên được về holdings |
+| Return đến từ đâu? | Return contribution | Tổng contribution khớp portfolio return trong sai số cho phép |
+| Risk tập trung ở đâu? | Risk contribution + concentration insight | Tổng contribution khớp portfolio risk theo phương pháp đã công bố |
+| Một thay đổi tỷ trọng có tác động gì? | Before/after comparison | Cùng dữ liệu, horizon và assumptions cho hai trạng thái |
+| Tôi nên diễn giải kết quả trong giới hạn nào? | Assumptions and limitations | Người dùng nhìn thấy period, method và cảnh báo không phải investment advice |
 
-## 3. Core process type
+## 5. Initial required information
 
-Core process gồm bốn loại logic liên kết:
+Đây là initial information inferred từ output. Week 3 sẽ xác định meaning, source và rule chi tiết.
 
-1. **Calculate:** position value, portfolio weight, historical return, volatility, VaR và Expected Shortfall.
-2. **Attribute:** phân rã return contribution và risk contribution theo vị thế/asset class.
-3. **Compare or simulate:** tính lại kết quả theo predefined scenario hoặc một thay đổi tỷ trọng.
-4. **Explain:** chuyển kết quả thành insight có thể truy nguyên về input, công thức và assumptions.
+| Information | Why the output needs it | Week 3 question |
+|---|---|---|
+| Instrument identifier | Liên kết holdings với dữ liệu lịch sử | Ticker mapping được quản lý thế nào? |
+| Quantity hoặc current value | Tính position value và allocation | Input nào dễ hiểu và ít lỗi nhất? |
+| Asset/group label | Tổng hợp contribution và concentration | Classification source nào đáng tin cậy? |
+| Compatible historical price series | Tính return, covariance và contribution | Frequency, lookback, currency và missing-data rule là gì? |
+| Proposed weights | Tạo alternative portfolio | Ràng buộc tổng weight và cash handling ra sao? |
+| Method assumptions | Giải thích và tái tạo kết quả | Convention và tolerance nào được dùng? |
 
-## 4. Backward design from the main output
+Không thu thập dữ liệu chỉ vì “có thể hữu ích”; mỗi trường phải phục vụ một phần của Decision Brief.
 
-| Visible result | Logic required | Minimum input | Component |
-|---|---|---|---|
-| Position X chiếm A% giá trị nhưng đóng góp B% portfolio risk | Weight, covariance và component risk contribution | Position value, historical returns, asset classification | Attribution engine + contribution chart |
-| Asset class Y tạo ra C% historical return | Asset-level return contribution và aggregation | Weights, returns, asset class | Performance engine + attribution table |
-| Portfolio có VaR/Expected Shortfall bằng D | Portfolio return distribution và risk calculation | Return series, horizon, confidence level | Risk engine + metric cards |
-| Nếu thay đổi tỷ trọng, risk metric đổi từ D sang E | Reweight và recompute | Current weights + proposed weights | What-if control + comparison view |
-| Trong scenario S, portfolio thay đổi F% | Apply shocks theo specification | Scenario shocks + exposures | Scenario engine + impact chart |
+## 6. Core process
 
-## 5. MVP flow
+1. **Validate:** kiểm tra identifier, value/quantity, tổng weight và data compatibility.
+2. **Calculate:** tính position value, portfolio weight, return và một risk measure cơ sở.
+3. **Attribute:** phân rã return contribution và risk contribution theo vị thế/nhóm.
+4. **Compare:** áp dụng một proposed weight change và tính lại cùng bộ chỉ số.
+5. **Explain:** tạo concentration insight, before/after statement, assumptions và limitations.
 
-Một MVP hoàn chỉnh phải cho phép người dùng đi qua một luồng từ đầu đến cuối:
+Core process không cần Monte Carlo để hoàn thành. Một kỹ thuật phân tích chỉ được thêm khi nó cải thiện main output và có acceptance test.
 
-1. Chọn sample portfolio hoặc nhập một danh mục nhỏ.
-2. Hệ thống kiểm tra và chuẩn hóa input.
-3. Hệ thống tính portfolio value, allocation và historical risk/return.
-4. Hệ thống phân rã return contribution và risk contribution.
-5. Người dùng chọn một predefined scenario hoặc thay đổi một tỷ trọng.
-6. Hệ thống tính lại và hiển thị so sánh before/after.
-7. Người dùng đọc insight và đưa ra quyết định.
+## 7. MVP flow
 
-Tiêu chí hoàn thành MVP là **một flow chạy được, giải thích được và kiểm thử được**, không phải số lượng màn hình hoặc số lượng feature.
+1. Người dùng chọn sample portfolio hoặc nhập một danh mục nhỏ thuộc instrument universe được hỗ trợ.
+2. Hệ thống xác thực input và hiển thị current allocation.
+3. Hệ thống tính return/risk contribution và chỉ ra concentration đáng chú ý.
+4. Người dùng thay đổi tỷ trọng của một vị thế; hệ thống cân bằng theo rule được công bố.
+5. Hệ thống tạo before/after comparison với cùng data period và assumptions.
+6. Decision Brief hiển thị evidence, assumptions và limitations.
+7. Người dùng ghi nhận quyết định giữ nguyên hoặc tái phân bổ và lý do.
 
-## 6. Scope
+MVP hoàn thành khi flow này chạy được, giải thích được và kiểm thử được từ input đến output.
 
-### Target scope
+## 8. Scope
 
-- Nhập hoặc chọn sample portfolio.
-- Bốn asset classes lõi: stocks, ETFs, gold và cash.
-- Portfolio value và allocation.
-- Historical return, volatility, VaR và Expected Shortfall.
-- Return attribution và risk attribution theo vị thế/asset class.
-- Một đến hai predefined stress scenarios.
-- Một what-if flow thay đổi tỷ trọng và so sánh before/after.
-- Monte Carlo distribution nếu core metrics và attribution đã được kiểm chứng.
+### Target scope — Core MVP
+
+- Một current portfolio nhỏ và một reallocation alternative.
+- Instrument universe giới hạn theo data readiness của Week 3.
+- Allocation theo vị thế/nhóm.
+- Historical return và một risk measure cơ sở được công bố.
+- Return contribution và risk contribution.
+- Concentration insight.
+- Before/after comparison.
+- Assumptions, limitations và test portfolio.
+
+### Target extension
+
+Chỉ bổ sung sau khi core flow đã được kiểm thử:
+
+- input portfolio linh hoạt hơn;
+- thêm một downside-risk metric như VaR hoặc Expected Shortfall nếu target users cần;
+- một predefined stress scenario nếu có scenario specification defensible;
+- thêm asset classes có dữ liệu tương thích.
 
 ### Fallback scope
 
-Nếu target scope không khả thi trong thời gian còn lại:
+- Một sample portfolio cố định.
+- Static historical CSV đã làm sạch.
+- Một số ít vị thế có cùng currency/frequency.
+- Allocation, return/risk contribution, concentration và một predetermined reallocation comparison.
+- Report/prototype đơn giản thay vì full dashboard.
 
-- dùng static historical CSV thay vì live market-data API;
-- dùng sample portfolio cố định thay vì input hoàn toàn tự do;
-- giới hạn ở stocks, ETFs và gold;
-- giữ historical metrics, return/risk attribution và một predefined scenario;
-- hoãn Monte Carlo và index futures nếu chưa thể giải thích hoặc kiểm thử đáng tin cậy.
+Fallback vẫn giữ nguyên problem, user task và main output.
 
-Fallback vẫn phải giữ nguyên core value: giải thích nguồn đóng góp và hỗ trợ một quyết định phân bổ.
+### Out of core scope
 
-### Out of scope for this stage
+- Monte Carlo simulation;
+- index futures và hedge execution;
+- portfolio optimization hoặc “best portfolio recommendation”;
+- live brokerage integration và đặt lệnh;
+- machine-learning forecasting;
+- đăng nhập, cloud portfolio storage và multi-user management;
+- intraday/real-time trading data;
+- mở rộng commodity ngoài gold.
 
-- đăng nhập và quản lý nhiều tài khoản người dùng;
-- kết nối tài khoản môi giới hoặc đặt lệnh thật;
-- lưu trữ nhiều danh mục trên cloud;
-- tư vấn đầu tư tự động hoặc “best portfolio recommendation”;
-- machine-learning price forecasting;
-- mở rộng thêm commodity ngoài gold;
-- tối ưu hóa danh mục nâng cao;
-- dữ liệu intraday hoặc hệ thống giao dịch thời gian thực.
+## 9. Initial route hypothesis
 
-## 7. Initial route hypothesis
+### Route selection rule
 
-### Proposed route
+Route phải chứng minh Portfolio Decision Brief nhanh, minh bạch và kiểm thử được nhất.
 
-**Code-based dashboard với analytics backend**, bao gồm:
+### Initial route
 
-- frontend nhận portfolio/scenario input và trình bày report;
-- backend xử lý dữ liệu và chạy các phép tính portfolio analytics;
-- historical dataset đã làm sạch làm nguồn dữ liệu kiểm thử chính;
-- market-data API chỉ được tích hợp sau khi static-data flow chạy ổn định;
-- test portfolios và hand-calculated cases để đối chiếu các phép tính cốt lõi.
+Một **small code-based analytics flow với dashboard/report interface**:
 
-### Why this route
+- static dataset trước, live API sau;
+- calculation layer tách khỏi presentation layer;
+- test portfolio và hand-calculated expected results;
+- interface chỉ hiển thị các trường thuộc Decision Brief.
 
-- Dashboard phù hợp với output gồm nhiều thành phần liên kết.
-- Backend tách financial logic khỏi presentation logic, giúp kiểm thử và giải thích dễ hơn.
-- Static dataset giảm dependency trong giai đoạn đầu.
-- Route này có đường fallback rõ mà không làm mất core output.
+### Fallback route
 
-Initial route là giả thuyết ở Week 2, chưa phải quyết định framework hoặc library cuối cùng.
+Notebook/spreadsheet logic proof kết hợp một report hoặc prototype interface. Fallback không được thay đổi user task hoặc giả vờ rằng mockup là working calculation.
 
-## 8. Component and dependency map
+### Why the route follows the problem
 
-```text
-Data specification ───────────────┐
-                                  ↓
-Historical dataset → Analytics engine → Report schema → Dashboard UI
-                         ↑                ↓
-Formula specification ──┘          Test cases / QA
-                         ↑
-Scenario specification ─┘
-```
+- Attribution cần calculation có thể tái tạo.
+- Before/after cần cùng logic áp dụng cho hai states.
+- Decision Brief cần nhiều kết quả liên kết nhưng không bắt buộc một full-feature platform.
+- Static data giảm dependency mà không làm mất product value.
 
-- Dataset phải tuân theo data specification.
-- Analytics engine phải dùng formula và scenario specification đã thống nhất.
-- UI phải hiển thị dữ liệu thật theo report schema, không chỉ mockup tách rời.
-- Test cases kiểm tra cả công thức lẫn kết quả hiển thị.
-
-## 9. Responsibility by output
+## 10. Responsibility by output
 
 | Owner | Responsibility | Visible output | Consumer/dependency |
 |---|---|---|---|
-| Hoàng Khánh Linh | Financial logic và scope | Formula/assumption specification cho attribution, risk và scenario | Developer, PM, report explanation |
+| Hoàng Khánh Linh | Xác định financial logic, assumptions và giới hạn diễn giải | Formula/assumption specification cho return/risk contribution và comparison | Developer, PM, Decision Brief |
 | Nguyễn Quỳnh Anh | Product coordination và QA | Test portfolio, hand-calculated cases, acceptance checklist | Developer, Product Owner, demo |
-| Lê Bảo An | Integration và implementation | Analytics modules, API/data adapter, runnable web flow | Toàn bộ MVP |
-| Trần Minh Ngọc | Information readiness | Clean dataset, data dictionary, source/limitation note | Analytics engine, tests |
-| Nguyễn Ngọc Anh | Output and interface design | User flow, report schema, Figma screens/components | Frontend implementation, user review |
+| Lê Bảo An | Integration và implementation | Calculation modules, data adapter và complete runnable flow | Decision Brief và toàn bộ MVP |
+| Trần Minh Ngọc | Information readiness | Dataset, data dictionary, source/limitation note | Calculation layer và tests |
+| Nguyễn Ngọc Anh | Output/interface design | User flow, Decision Brief schema, Figma screens/components | Frontend implementation và user review |
 
-### Shared integration rule
+### Shared specification
 
-Các workstream phải gặp nhau tại một shared specification gồm:
+Các workstream gặp nhau tại:
 
+- problem/task statement;
 - portfolio input schema;
 - formula and assumption definitions;
-- report output schema;
+- Decision Brief output schema;
 - test portfolio và expected results;
-- scenario definition.
+- reallocation comparison rule.
 
-Developer không phải là người tự kết nối các output rời rạc vào cuối dự án; mỗi owner phải kiểm tra output của mình trong luồng chung.
+## 11. Anti-solution-first guardrails
 
-## 10. Definition of done for Week 2
+- Không thêm feature chỉ vì kỹ thuật đó “ấn tượng”.
+- Không gọi dashboard là main output.
+- Không dùng “AI engine” hoặc “analytics engine” thay cho process description.
+- Không mở rộng asset classes trước data-readiness check.
+- Không đưa Monte Carlo, stress test, VaR/ES hoặc futures vào core nếu chưa có user need và acceptance test.
+- Không xem số lượng màn hình hoặc số metric là bằng chứng product value.
 
-- [x] Product form và product value được nêu rõ.
-- [x] Main output là một kết quả cụ thể, không chỉ là “dashboard”.
-- [x] Có conceptual solution chain từ user task đến user action.
-- [x] Initial required information và core process được nhìn thấy.
-- [x] Có một MVP flow hoàn chỉnh.
-- [x] Target, fallback và out-of-scope được phân biệt.
-- [x] Initial route hypothesis có lý do và fallback.
-- [x] Mỗi workstream có owner, visible output và dependency.
-- [ ] Feedback và revision sau Checkpoint 2 được cập nhật trong README.
+## 12. Definition of done for Week 2
+
+- [x] Problem direction được kế thừa rõ từ Week 1.
+- [x] User task đứng trước product form.
+- [x] Desired outcome mô tả khả năng của user, không mô tả feature.
+- [x] Main output là Portfolio Decision Brief, không phải dashboard.
+- [x] Process và input được suy ngược từ output.
+- [x] Product pattern/route được chọn sau output.
+- [x] Core, target extension, fallback và out-of-scope được phân biệt.
+- [x] Mỗi core component truy ngược được về problem/task.
+- [x] Responsibility được phân chia theo visible output và dependency.
+- [x] Revision từ solution-first sang problem-first được ghi trong README.
