@@ -89,7 +89,21 @@ Quan sát ban đầu từ Finfolio 1.0 là nhà đầu tư đã có thể nhìn 
 
 Đây là **giả thuyết vấn đề**, chưa phải kết luận đã được kiểm chứng. Nhóm cần xác nhận bằng phỏng vấn ngắn, quan sát quy trình hiện tại hoặc phản hồi từ người dùng mục tiêu.
 
-## 8. Open questions
+## 8. Đóng góp cá nhân trong Week 1
+
+Đóng góp được ghi theo **output cụ thể và vị trí có thể kiểm tra**, không chỉ theo tên vai trò.
+
+| Thành viên | Đóng góp Week 1 | Output nhìn thấy được | Evidence location |
+|---|---|---|---|
+| Hoàng Khánh Linh | Xác định financial reasoning của hướng Finfolio 2.0; làm rõ difficulty và finance relevance | Mô tả difficulty, problem statement và lập luận portfolio/risk management | [Specific difficulty](#4-specific-difficulty), [Finance and banking relevance](#6-finance-and-banking-relevance) |
+| Nguyễn Quỳnh Anh | Tổng hợp và kiểm tra tính nhất quán của các problem candidates; ghi nhận revision sau checkpoint | Bảng so sánh ba candidates và checkpoint decision | [Problem candidates](#1-problem-candidates), [Checkpoint 1 feedback and revision](#10-checkpoint-1-feedback-and-revision) |
+| Lê Bảo An | Tổ chức repository và tích hợp các phần Week 1 thành README có thể review | Cấu trúc README, liên kết evidence và lịch sử cập nhật repository | [README](README.md), [Commit history](https://github.com/FTU-Legacy-63/G09/commits/main) |
+| Trần Minh Ngọc | Rà soát bối cảnh Finfolio 1.0, giả thuyết ban đầu và các câu hỏi về information/data readiness | Initial observation và danh sách open questions cần kiểm chứng | [Initial observation](#7-initial-observation-and-assumptions-to-verify), [Open questions](#9-open-questions) |
+| Nguyễn Ngọc Anh | Làm rõ target user, user task và nhu cầu diễn giải output đối với nhà đầu tư cá nhân | Target-user definition, user task và câu hỏi về cách trình bày contribution | [Selected target user](#2-selected-target-user), [User task or decision](#3-user-task-or-decision) |
+
+Mỗi thành viên cần có khả năng giải thích phần mình phụ trách. Khi có issue, commit hoặc artefact riêng, nhóm sẽ bổ sung link tương ứng để tăng chất lượng individual evidence.
+
+## 9. Open questions
 
 1. Trong Finfolio 1.0, nhà đầu tư còn thiếu thông tin nào quan trọng nhất khi cân nhắc tái phân bổ danh mục?
 2. Người dùng hiểu “return contribution” và “risk contribution” theo cách trình bày nào dễ nhất?
@@ -97,7 +111,7 @@ Quan sát ban đầu từ Finfolio 1.0 là nhà đầu tư đã có thể nhìn 
 4. Instrument universe nhỏ nhất nào đủ để chứng minh problem và core user task?
 5. Evidence nào cần thu thập để xác nhận difficulty này thực sự tồn tại với target users?
 
-## 9. Checkpoint 1 feedback and revision
+## 10. Checkpoint 1 feedback and revision
 
 | Nội dung | Ghi nhận |
 |---|---|
