@@ -34,16 +34,16 @@ Nhóm xem xét ba hướng vấn đề trước khi chọn phạm vi dự án.
 |---|---|---|---|---|
 | Công cụ so sánh sản phẩm tiết kiệm | Người mới đi làm đang chọn kênh tiết kiệm | So sánh lãi suất, kỳ hạn và thanh khoản | Điều kiện của nhiều ngân hàng khó so sánh đồng thời | Khả thi nhưng chiều sâu phân tích định lượng còn hạn chế |
 | Công cụ so sánh khoản vay cá nhân | Người vay lần đầu | Đánh giá khả năng chi trả và so sánh các khoản vay | Lãi suất, phí và nghĩa vụ trả nợ có thể dẫn đến các kết luận khác nhau | Có ý nghĩa tài chính nhưng đã có nhiều sản phẩm tương tự |
-| **Finfolio 2.0 — Portfolio Attribution & Risk Analytics** | Sinh viên tài chính và nhà đầu tư cá nhân giai đoạn đầu đang có danh mục đa tài sản | Quyết định có nên tái phân bổ hoặc phòng hộ danh mục | Chỉ số tổng không giải thích tài sản nào tạo ra lợi nhuận và rủi ro; tác động của thay đổi phân bổ khó được đánh giá trước | **Được chọn** vì có task rõ, phù hợp quantitative finance và tận dụng được năng lực của nhóm |
+| **Finfolio 2.0 — Portfolio Attribution & Risk Analytics** | Sinh viên tài chính và nhà đầu tư cá nhân giai đoạn đầu đang có danh mục đa tài sản | Quyết định có nên giữ nguyên hoặc tái phân bổ danh mục | Chỉ số tổng không giải thích tài sản nào tạo ra lợi nhuận và rủi ro; tác động của thay đổi phân bổ khó được đánh giá trước | **Được chọn** vì có task rõ, phù hợp quantitative finance và tận dụng được năng lực của nhóm |
 
 ## 2. Selected target user
 
-Target user chính là **sinh viên tài chính và nhà đầu tư cá nhân giai đoạn đầu đã sở hữu danh mục gồm nhiều loại tài sản**, chẳng hạn cổ phiếu, ETF, vàng, tiền mặt và hợp đồng tương lai chỉ số.
+Target user chính là **sinh viên tài chính và nhà đầu tư cá nhân giai đoạn đầu đã sở hữu một danh mục nhỏ gồm nhiều vị thế**, nhưng chưa sử dụng hệ thống portfolio analytics chuyên nghiệp.
 
 - **Specific:** không nhắm đến mọi nhà đầu tư; tập trung vào người đã có danh mục nhưng chưa có quy trình phân tích chuyên sâu.
 - **Relevant:** người dùng trực tiếp gặp khó khăn khi xác định nguồn gốc lợi nhuận và rủi ro.
 - **Reachable:** nhóm có thể làm việc với sinh viên tài chính, nhà đầu tư cá nhân trong mạng lưới gần và test portfolio giả lập.
-- **Task-based:** người dùng cần đánh giá danh mục trước khi quyết định giữ nguyên, tái phân bổ hoặc hedge.
+- **Task-based:** người dùng cần đánh giá danh mục trước khi quyết định giữ nguyên hoặc tái phân bổ.
 
 Các nhà đầu tư chuyên nghiệp có thể hưởng lợi từ sản phẩm nhưng không phải target user chính của MVP vì nhu cầu và tiêu chuẩn của họ vượt quá phạm vi dự án bảy tuần.
 
@@ -53,14 +53,13 @@ Sau khi nhập danh mục, người dùng cần quyết định liệu có nên:
 
 - tăng hoặc giảm tỷ trọng một tài sản;
 - thêm một loại tài sản để đa dạng hóa;
-- loại bỏ một vị thế tạo ra rủi ro không tương xứng;
-- hoặc sử dụng hợp đồng tương lai chỉ số để phòng hộ.
+- hoặc loại bỏ một vị thế tạo ra rủi ro không tương xứng.
 
-Quyết định phải dựa trên đóng góp lợi nhuận, đóng góp rủi ro và phản ứng của toàn danh mục trước các kịch bản thị trường.
+Người dùng cần hiểu current allocation, nguồn đóng góp lợi nhuận/rủi ro và tác động của một phương án thay đổi tỷ trọng trước khi quyết định.
 
 ## 4. Specific difficulty
 
-Người dùng có thể nhìn thấy return, volatility, VaR hoặc CVaR của toàn danh mục nhưng vẫn gặp bốn khó khăn:
+Người dùng có thể nhìn thấy giá trị, return hoặc volatility của toàn danh mục nhưng vẫn gặp bốn khó khăn:
 
 1. Không biết tài sản nào thực sự tạo ra phần lớn lợi nhuận.
 2. Không biết rủi ro đang tập trung ở vị thế, nhóm tài sản hoặc exposure nào.
@@ -77,27 +76,26 @@ Problem statement tập trung vào **user, task, difficulty và context**; chưa
 
 Đây là bài toán trực tiếp của quantitative finance, portfolio management và risk management:
 
-- đo lường return, volatility, Value at Risk và Expected Shortfall;
 - phân rã performance và risk contribution;
 - đánh giá exposure và mức độ tập trung;
-- áp dụng stress testing, scenario analysis và Monte Carlo simulation;
-- hỗ trợ quyết định tái cân bằng hoặc phòng hộ danh mục.
+- so sánh current portfolio với một phương án thay đổi tỷ trọng;
+- hỗ trợ quyết định giữ nguyên hoặc tái cân bằng danh mục.
 
 Sản phẩm không chỉ hiển thị dữ liệu mà phải giúp người dùng giải thích và bảo vệ một quyết định tài chính.
 
 ## 7. Initial observation and assumptions to verify
 
-Định hướng hiện tại bắt đầu từ quan sát rằng các dashboard đầu tư phổ biến thường ưu tiên giá trị danh mục và chỉ số tổng, trong khi người dùng giai đoạn đầu cần một diễn giải đơn giản hơn về nguồn đóng góp rủi ro và lợi nhuận.
+Định hướng hiện tại bắt đầu từ quan sát rằng các công cụ theo dõi danh mục thường ưu tiên giá trị và chỉ số tổng, trong khi người dùng giai đoạn đầu có thể cần một diễn giải đơn giản hơn về nguồn đóng góp rủi ro và lợi nhuận.
 
 Đây là **giả thuyết vấn đề**, chưa phải kết luận đã được kiểm chứng. Nhóm cần xác nhận bằng phỏng vấn ngắn, quan sát quy trình hiện tại hoặc phản hồi từ người dùng mục tiêu.
 
 ## 8. Open questions
 
 1. Người dùng mục tiêu hiện sử dụng công cụ nào và thiếu thông tin gì khi tái phân bổ danh mục?
-2. Nguồn dữ liệu nào đủ ổn định cho cổ phiếu Việt Nam, ETF, vàng, tiền mặt và VN30 index futures?
+2. Người dùng hiểu “return contribution” và “risk contribution” theo cách trình bày nào dễ nhất?
 3. Nên dùng portfolio thật, portfolio giả lập hay cả hai trong demo và kiểm thử?
-4. Mức độ phức tạp nào của Monte Carlo là vừa đủ để kết quả có thể giải thích và kiểm chứng trong bảy tuần?
-5. Index futures có khả thi trong MVP hay nên được chuyển sang fallback/stretch scope?
+4. Instrument universe nhỏ nhất nào đủ để chứng minh problem và core user task?
+5. Evidence nào cần thu thập để xác nhận difficulty này thực sự tồn tại với target users?
 
 ## 9. Checkpoint 1 feedback and revision
 
@@ -112,16 +110,23 @@ Sản phẩm không chỉ hiển thị dữ liệu mà phải giúp người dù
 
 # Week 2 — Product Direction
 
-## Product decision summary
+## Problem-first product decision
+
+Week 2 bắt đầu từ difficulty đã xác định ở Week 1, không bắt đầu từ dashboard, công nghệ hoặc danh sách feature:
+
+> Người dùng không biết lợi nhuận và rủi ro đang tập trung ở đâu, vì vậy họ khó đánh giá có nên thay đổi phân bổ danh mục hay không.
 
 | Thành phần | Quyết định hiện tại |
 |---|---|
-| Product | Web dashboard phân tích attribution và rủi ro danh mục đa tài sản |
-| Desired outcome | Người dùng hiểu nguồn lợi nhuận và rủi ro, sau đó đưa ra quyết định phân bổ có căn cứ |
-| Main output | **Portfolio Attribution & Risk Report** |
-| Product pattern | Code-based dashboard application |
-| Core process | Calculate → attribute → compare/simulate → explain |
-| MVP principle | Một luồng hoàn chỉnh từ portfolio input đến báo cáo và quyết định; không mở rộng thành nền tảng đầu tư đầy đủ |
+| Problem | Chỉ số tổng không giải thích nguồn tập trung lợi nhuận/rủi ro hoặc tác động của một thay đổi tỷ trọng |
+| User task | Đánh giá danh mục hiện tại và so sánh một phương án tái phân bổ |
+| Desired outcome | Người dùng có thể giải thích quyết định giữ nguyên hoặc điều chỉnh danh mục bằng kết quả truy nguyên được |
+| Main output | **Portfolio Decision Brief** |
+| Core process | Calculate → attribute → compare → explain |
+| Product pattern | Dashboard được chọn sau khi chốt output, vì brief cần trình bày nhiều kết quả liên kết |
+| Core MVP | Allocation + return/risk contribution + concentration insight + một so sánh before/after |
+
+VaR/Expected Shortfall, stress testing, Monte Carlo và index futures không còn là yêu cầu bắt buộc của core MVP. Chúng chỉ được bổ sung nếu Week 3–4 chứng minh được nhu cầu, dữ liệu, logic và khả năng kiểm thử.
 
 Chi tiết lập luận sản phẩm nằm trong [PROJECT_PROPOSAL.md](docs/PROJECT_PROPOSAL.md). Chuỗi giải pháp, MVP, fallback, technical route và responsibility map nằm trong [SOLUTION_STRUCTURE.md](docs/SOLUTION_STRUCTURE.md).
 
@@ -131,10 +136,10 @@ Phần này được cập nhật sau Checkpoint 2 để lưu lại chu trình P
 
 | Nội dung | Ghi nhận |
 |---|---|
-| Feedback received | _Chưa cập nhật_ |
-| Decision | _Keep / Change / Simplify / Restart_ |
-| Revision made | _Chưa cập nhật_ |
-| Reason | _Chưa cập nhật_ |
+| Feedback received | Product direction có nguy cơ solution-first vì dashboard và các kỹ thuật phân tích được chốt quá sớm. |
+| Decision | **Simplify** |
+| Revision made | Đặt problem và user task trước; đổi main output thành Portfolio Decision Brief; thu hẹp core MVP; chuyển VaR/ES, stress test, Monte Carlo và futures thành conditional extensions. |
+| Reason | Mỗi thành phần của MVP phải truy ngược trực tiếp về difficulty và quyết định của người dùng. |
 
 ## Responsible use of AI
 
