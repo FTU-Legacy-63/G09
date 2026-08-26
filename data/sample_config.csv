@@ -1,0 +1,2 @@
+portfolio_id,base_currency,price_frequency,data_start,data_end,benchmark_symbol,rebalance_rule,return_price_field,annualization_factor
+G09_SAMPLE_01,VND,1d,2026-07-01,2026-07-15,E1VFVN30.VN,pro_rata_unlocked,close,252

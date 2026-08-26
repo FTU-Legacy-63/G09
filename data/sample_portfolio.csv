@@ -1,0 +1,5 @@
+portfolio_id,asset_group,symbol,exchange,trade_side,trade_date,trade_price,quantity,currency,proposed_weight_pct,min_weight_pct,max_weight_pct
+G09_SAMPLE_01,Vietnam equity,FPT.VN,HOSE,BUY,2026-07-01,70200,100,VND,30,0,60
+G09_SAMPLE_01,Vietnam equity,HPG.VN,HOSE,BUY,2026-07-01,23300,200,VND,25,0,60
+G09_SAMPLE_01,Gold proxy ETF,GLD,NYSEArca,BUY,2026-07-01,370.600006,0.5,USD,25,0,60
+G09_SAMPLE_01,Crypto,BTC-USD,CCC,BUY,2026-07-01,60003.757813,0.002,USD,20,0,60

@@ -9,6 +9,7 @@
 | Week 1 | Problem candidates, target user, user task, problem statement, đóng góp cá nhân và revision sau checkpoint trong README này |
 | Week 2 | [Project Proposal](docs/PROJECT_PROPOSAL.md) |
 | Week 2 | [Solution Structure](docs/SOLUTION_STRUCTURE.md) |
+| Week 3 | [Evidence Index, Owner and Status](docs/WEEK3_STATUS.md) |
 
 ## Team members and visible contribution
 
@@ -164,3 +165,32 @@ Phần này được cập nhật sau Checkpoint 2 để lưu lại chu trình P
 | Decision | **Simplify** |
 | Revision made | Bỏ overall score khỏi core MVP; khóa một output chính là Risk and Return Allocation Brief; công bố metric, formula, assumptions và rule tái phân bổ; đưa account, chatbot, optimization và dashboard phụ ra ngoài MVP |
 | Reason | Một output truy nguyên và kiểm thử được tạo giá trị rõ hơn một điểm tổng hợp dựa trên trọng số chưa được kiểm chứng |
+
+---
+
+# Week 3 — Information and Evidence Readiness
+
+Week 3 không mở rộng feature. Nhóm kiểm tra liệu input, source, assumptions và sample hiện tại có đủ để tạo output MVP một cách truy nguyên hay chưa.
+
+## Evidence package
+
+| Evidence | Review purpose |
+| --- | --- |
+| [Input Dictionary](docs/INPUT_DICTIONARY.md) | Meaning, type, unit, validation rule, source và output use |
+| [Source Register](docs/SOURCE_REGISTER.md) | Source → exact product use → convention → limitation |
+| [Assumptions and Limitations](docs/ASSUMPTIONS.md) | Simplification nào ảnh hưởng đến cách đọc output |
+| [Sample Input-to-Output Case](docs/SAMPLE_INPUT_OUTPUT.md) | Trace một case từ holdings và market data đến output dự kiến |
+| [Data Structure and Flow](docs/DATA_STRUCTURE_AND_FLOW.md) | Canonical entities, normalization, calculation path và failure paths |
+| [Validation and Early Logic Test](docs/VALIDATION_AND_EARLY_TEST.md) | Validation rules, expected arithmetic results và reconciliation |
+| [Sample data package](data/README.md) | Holdings giả lập, real market observations, config và provenance |
+| [Owner and Status](docs/WEEK3_STATUS.md) | Owner, readiness, checkpoint questions và revision record |
+
+## Current readiness decision
+
+Package hiện **ready for Checkpoint 3**, nhưng chưa phải production-ready methodology:
+
+- core input đã được tách khỏi benchmark/market cap mang tính optional hoặc contextual;
+- sample holdings do nhóm tạo, còn price/FX observations là dữ liệu thực được đóng băng trong repo;
+- source prototype có coverage gaps và chưa có license/SLA cho production;
+- fixture 10 ngày chỉ dùng để test data flow và arithmetic, không dùng để diễn giải CAGR hoặc ra quyết định đầu tư;
+- feedback Checkpoint 3 và revision tương ứng vẫn phải được bổ sung sau buổi review.
