@@ -132,16 +132,25 @@ Week 2 kế thừa difficulty đã xác định ở Week 1:
 
 | Thành phần | Quyết định hiện tại |
 |---|---|
-| Target user | Nhà đầu tư cá nhân đang tự theo dõi một danh mục nhỏ gồm nhiều vị thế nhưng chưa sử dụng hệ thống portfolio analytics chuyên nghiệp |
-| Problem | Chỉ số tổng không giải thích nguồn tập trung lợi nhuận/rủi ro hoặc tác động của một thay đổi tỷ trọng |
-| User task | Đánh giá danh mục hiện tại và so sánh một phương án tái phân bổ |
-| Desired outcome | Người dùng có thể giải thích quyết định giữ nguyên hoặc điều chỉnh danh mục bằng kết quả truy nguyên được |
-| Main output | **Portfolio Decision Brief** |
-| Core process | Calculate → attribute → compare → explain |
-| Product pattern | Dashboard application, phù hợp để trình bày các kết quả liên kết trong Decision Brief |
-| Core MVP | Allocation + return/risk contribution + concentration insight + một so sánh before/after |
+| Target user | Nhà đầu tư cá nhân đã có hiểu biết cơ bản về tài chính và đầu tư, muốn kiểm tra một danh mục nhỏ gồm nhiều loại tài sản trong instrument universe được hỗ trợ |
+| Core task | Điền thông tin danh mục, kiểm tra risk/return allocation và thử một thay đổi tỷ trọng |
+| Essential input | Asset/group label, identifier, giao dịch mua/bán, quantity, currency và proposed weights có giới hạn |
+| Logic path | Validate → Calculate → Attribute → Compare → Explain |
+| Main output | **Risk and Return Allocation Brief theo từng mã/nhóm tài sản** |
+| Main measurement | CAGR và annualized volatility; contribution dùng cùng period và phương pháp được công bố |
+| User action | Ghi nhận quyết định giữ nguyên hoặc tái phân bổ và lý do |
 
-VaR/Expected Shortfall, stress testing, Monte Carlo và index futures không còn là yêu cầu bắt buộc của core MVP. Chúng chỉ được bổ sung nếu Week 3–4 chứng minh được nhu cầu, dữ liệu, logic và khả năng kiểm thử.
+MVP chỉ giữ một flow hoàn chỉnh từ input đến một output chính. Overall score, user-defined scoring weights, account system, chatbot, portfolio optimization, Monte Carlo, stress testing, VaR/Expected Shortfall, futures và các dashboard phụ chưa thuộc core MVP.
+
+## MVP cut-scope answers
+
+| Câu hỏi | Quyết định |
+|---|---|
+| Nếu chỉ giữ một output, output nào quan trọng nhất? | Risk and Return Allocation Brief theo từng mã/nhóm, kèm một before/after comparison |
+| Feature nào không cần cho core task? | Overall score, recommendation engine, chatbot, account, optimization và forecasting |
+| Có thể dùng sample data thay vì API không? | Có. Sample portfolio và static historical data là fallback chính thức |
+| Có thể chỉ hỗ trợ một user segment không? | Có. Chỉ hỗ trợ nhà đầu tư cá nhân đã có kiến thức tài chính cơ bản |
+| Có thể giới hạn asset universe không? | Có. Chỉ nhận các tài sản có daily price, currency và lịch dữ liệu tương thích |
 
 Chi tiết lập luận sản phẩm nằm trong [PROJECT_PROPOSAL.md](docs/PROJECT_PROPOSAL.md). Chuỗi giải pháp, MVP, fallback, technical route và responsibility map nằm trong [SOLUTION_STRUCTURE.md](docs/SOLUTION_STRUCTURE.md).
 
@@ -151,7 +160,7 @@ Phần này được cập nhật sau Checkpoint 2 để lưu lại chu trình P
 
 | Nội dung | Ghi nhận |
 |---|---|
-| Feedback received | _Chưa cập nhật_ |
-| Decision | _Keep / Change / Simplify / Restart_ |
-| Revision made | _Chưa cập nhật_ |
-| Reason | _Chưa cập nhật_ |
+| Feedback received | Output sau khi dùng sản phẩm chưa đủ rõ; phạm vi đang lớn; nếu dùng overall score thì phải giải thích tiêu chí, thang điểm, trọng số và liên hệ với risk tolerance |
+| Decision | **Simplify** |
+| Revision made | Bỏ overall score khỏi core MVP; khóa một output chính là Risk and Return Allocation Brief; công bố metric, formula, assumptions và rule tái phân bổ; đưa account, chatbot, optimization và dashboard phụ ra ngoài MVP |
+| Reason | Một output truy nguyên và kiểm thử được tạo giá trị rõ hơn một điểm tổng hợp dựa trên trọng số chưa được kiểm chứng |

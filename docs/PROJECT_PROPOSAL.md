@@ -2,148 +2,144 @@
 
 ## 1. Problem direction
 
-Week 1 identified the following difficulty:
+Week 1 xác định difficulty sau:
 
-> Nhà đầu tư cá nhân đang tự theo dõi một danh mục nhỏ gồm nhiều vị thế nhưng chưa sử dụng hệ thống portfolio analytics chuyên nghiệp có thể nhìn thấy giá trị, return hoặc volatility của toàn danh mục qua Finfolio 1.0 nhưng khó xác định lợi nhuận và rủi ro đang tập trung ở vị thế nào. Vì vậy, họ khó đánh giá liệu một thay đổi tỷ trọng có thực sự cải thiện danh mục hay không.
+> Nhà đầu tư cá nhân có thể nhìn thấy giá trị, return hoặc volatility của toàn danh mục nhưng khó xác định lợi nhuận và rủi ro đang được phân bổ ở vị thế nào. Vì vậy, họ khó kiểm tra một thay đổi tỷ trọng trước khi quyết định giữ nguyên hay tái phân bổ.
 
-Đây vẫn là một **problem hypothesis cần được kiểm chứng với nhóm nhà đầu tư cá nhân mục tiêu**. Week 2 chuyển hypothesis này thành một product direction có thể review và tiếp tục điều chỉnh theo evidence.
+Week 2 chuyển difficulty này thành một MVP nhỏ nhất vẫn tạo ra giá trị. MVP không cố gắng chấm điểm toàn bộ chất lượng danh mục hoặc đưa ra danh mục tối ưu.
 
-## 2. Target user, context and user task
+## 2. Target user and core task
 
 ### Primary target user
 
-Nhà đầu tư cá nhân đang tự theo dõi một danh mục nhỏ gồm nhiều vị thế nhưng chưa sử dụng hệ thống portfolio analytics chuyên nghiệp.
+**Nhà đầu tư cá nhân đã có hiểu biết cơ bản về tài chính và đầu tư, muốn kiểm tra một danh mục nhỏ gồm nhiều loại tài sản trong instrument universe được hỗ trợ.**
 
-### Context
+MVP chỉ hỗ trợ một user segment này. Người mới chưa hiểu metric tài chính, nhà quản lý quỹ chuyên nghiệp và tổ chức tài chính không phải target user của giai đoạn hiện tại.
 
-Người dùng biết danh mục đang lãi/lỗ và có thể biết tỷ trọng từng vị thế, nhưng chưa dễ trả lời:
+### Core task
 
-1. Vị thế nào tạo ra phần lớn return?
-2. Vị thế nào tạo ra phần lớn portfolio risk?
-3. Risk concentration có khác allocation concentration không?
-4. Nếu thay đổi một tỷ trọng, trạng thái danh mục thay đổi thế nào?
+> Điền thông tin danh mục, kiểm tra risk and return allocation theo từng mã/nhóm tài sản và thử tác động của một thay đổi tỷ trọng.
 
-### Core user task
+Người dùng hoàn thành core task khi có thể ghi nhận một trong hai quyết định: giữ nguyên hoặc tái phân bổ, kèm lý do dựa trên output.
 
-> Đánh giá danh mục hiện tại, so sánh với một phương án thay đổi tỷ trọng và quyết định giữ nguyên hay tái phân bổ.
+## 3. MVP definition
 
-Hedge, lựa chọn “danh mục tối ưu” và dự báo thị trường không phải core task của giai đoạn này.
-
-## 3. Desired user outcome
-
-Sau một complete flow, người dùng có thể đưa ra một câu giải thích có căn cứ, ví dụ:
-
-> “Vị thế A chỉ chiếm X% giá trị nhưng đóng góp Y% rủi ro. Khi giảm tỷ trọng A và phân bổ lại sang B, mức độ tập trung và volatility ước tính thay đổi từ C sang D; vì vậy tôi chọn/không chọn phương án này.”
-
-Desired outcome là **một quyết định có thể giải thích**, không phải việc xem nhiều biểu đồ hoặc nhận thêm nhiều chỉ số.
-
-## 4. Main visible output
-
-Main output là **Portfolio Decision Brief** trả lời ba câu hỏi:
-
-1. **Current state:** lợi nhuận và rủi ro đang tập trung ở đâu?
-2. **Alternative:** một thay đổi tỷ trọng cụ thể làm kết quả thay đổi thế nào?
-3. **Decision support:** evidence nào ủng hộ việc giữ nguyên hoặc tái phân bổ?
-
-### Minimum content of the brief
-
-| Nội dung nhìn thấy | Liên hệ với problem/task |
+| Câu hỏi | Câu trả lời của Finfolio 2.0 |
 |---|---|
-| Allocation theo vị thế/nhóm tài sản | Cho biết cấu trúc danh nghĩa của danh mục |
-| Return contribution | Cho biết nguồn tạo ra kết quả quá khứ |
-| Risk contribution | Cho biết nguồn tạo ra portfolio risk |
-| Concentration insight | Làm rõ vị thế có risk contribution không tương xứng với allocation |
-| Before/after comparison | Hỗ trợ đánh giá một phương án thay đổi tỷ trọng |
-| Assumptions and limitations | Giúp người dùng không diễn giải output như một khuyến nghị chắc chắn |
+| Core user need | Biết return và risk đang được phân bổ ở đâu trong danh mục nhiều loại tài sản |
+| Core input | Holdings/transactions, asset group, identifier, quantity, currency và proposed weights |
+| Core logic | Validate → Calculate → Attribute → Compare → Explain |
+| Core output | Risk and Return Allocation Brief theo từng mã/nhóm tài sản |
+| Must include | Current allocation, CAGR/volatility, return/risk contribution, concentration insight và một before/after comparison |
+| Not included yet | Overall score, risk-tolerance scoring, account, chatbot, optimization, forecasting và execution |
 
-Các metric như VaR/Expected Shortfall chỉ được thêm nếu chúng làm rõ một câu hỏi trong brief và có thể kiểm thử. Chúng không phải điều kiện để core output hoàn thành.
+## 4. Essential input
 
-## 5. Product statement
-
-> Finfolio 2.0 tạo một Portfolio Decision Brief từ thông tin danh mục và dữ liệu lịch sử, giúp người dùng xác định nguồn đóng góp lợi nhuận/rủi ro và so sánh một phương án tái phân bổ trước khi tự đưa ra quyết định.
-
-### Product value
-
-Chuyển từ “danh mục đang có chỉ số bao nhiêu?” sang “vì sao danh mục có kết quả đó, và một thay đổi cụ thể tạo ra khác biệt gì?”.
-
-### Product form and pattern
-
-Nhóm chọn **dashboard application** làm initial product pattern vì Decision Brief gồm nhiều kết quả liên kết và cần so sánh current/alternative state trên cùng một flow.
-
-Dashboard là cách tổ chức output, không phải lý do sản phẩm tồn tại. Nếu một report/prototype đơn giản chứng minh core output nhanh hơn, nhóm có thể dùng route đó mà không thay đổi product value.
-
-## 6. Product traceability
-
-| Problem evidence/hypothesis | Product response | Priority |
+| Input | Mục đích | MVP rule |
 |---|---|---|
-| Người dùng chỉ nhìn thấy kết quả tổng | Return/risk contribution theo vị thế | Core |
-| Allocation không phản ánh đầy đủ risk concentration | So sánh allocation với risk contribution | Core |
-| Khó đánh giá trước một thay đổi tỷ trọng | Một before/after comparison | Core |
-| Người dùng có thể hiểu sai mô hình | Hiển thị assumptions và limitations | Core |
-| Người dùng cần tail-risk metric | VaR/Expected Shortfall | Chỉ thêm sau validation |
-| Người dùng cần đánh giá cú sốc thị trường | Stress scenario | Conditional extension |
-| Người dùng cần phân phối giá trị tương lai | Monte Carlo | Stretch scope |
-| Người dùng cần hedge bằng futures | Futures module | Out of core MVP |
+| Asset/group label | Tổng hợp allocation và contribution theo nhóm | Chọn từ classification được hỗ trợ |
+| Instrument identifier | Liên kết vị thế với historical data | Phải map duy nhất tới symbol và exchange |
+| Giá mua/bán | Xác định dòng tiền và giá trị giao dịch | Giá phải dương; giao dịch bán không vượt quantity khả dụng |
+| Thời điểm mua/bán | Xác định thời gian nắm giữ | Nằm trong data period và dùng cùng timezone convention |
+| Quantity | Tính position value | Quantity hợp lệ và không âm sau khi net giao dịch |
+| Currency | Quy đổi về base currency | Chỉ nhận currency có FX series tương thích |
+| Proposed weight | Tạo alternative portfolio | Có lower/upper bound; tổng sau cân bằng bằng 100% |
 
-Feature không truy ngược được về problem evidence hoặc core task sẽ không vào MVP.
+Người dùng có thể chọn sample portfolio thay vì nhập tay. Live API không phải điều kiện để chứng minh MVP.
 
-## 7. Conceptual product chain
+## 5. Core logic path
 
-```text
-Problem
-  Không biết nguồn tập trung return/risk và tác động của thay đổi tỷ trọng
-        ↓
-User task
-  Đánh giá current portfolio và một reallocation alternative
-        ↓
-Desired outcome
-  Đưa ra quyết định có thể giải thích
-        ↓
-Main output
-  Portfolio Decision Brief
-        ↓
-Required process
-  Calculate → Attribute → Compare → Explain
-        ↓
-Required input
-  Holdings + compatible historical data + proposed weights
-        ↓
-Product pattern / route
-  Dashboard or simpler reviewable prototype
-```
+1. **Validate:** kiểm tra identifier, transaction value, quantity, currency, proposed-weight bounds và data compatibility.
+2. **Calculate:** tính position value theo base currency, portfolio weight, CAGR và annualized volatility.
+3. **Attribute:** phân rã return contribution và volatility contribution theo vị thế/nhóm.
+4. **Compare:** áp dụng một proposed weight change và tính lại cùng bộ chỉ số trên cùng dữ liệu.
+5. **Explain:** tạo concentration insight, before/after statement, assumptions và limitations.
 
-## 8. Feasibility and scope decision
+Mỗi bước phải tạo dữ liệu cho output chính. Logic không phục vụ Risk and Return Allocation Brief sẽ không vào MVP.
 
-### Why the direction is feasible
+## 6. Main visible output
 
-- Core task chỉ yêu cầu đánh giá một current portfolio và một alternative.
-- Mỗi calculation có thể đối chiếu bằng một test portfolio nhỏ.
-- Static historical dataset đủ để chứng minh core value; live API không phải dependency bắt buộc.
-- Main output vẫn hữu ích khi chưa có VaR, stress testing, Monte Carlo hoặc futures.
+Nếu chỉ giữ một output, Finfolio 2.0 giữ **Risk and Return Allocation Brief**.
 
-### Main risks and responses
-
-| Risk | Tác động | Response |
+| User question | Visible result | Acceptance idea |
 |---|---|---|
-| Problem hypothesis chưa được xác nhận | Xây đúng kỹ thuật nhưng không đúng nhu cầu | Phỏng vấn/quan sát nhà đầu tư cá nhân mục tiêu và ghi lại current workflow |
-| “Risk contribution” khó hiểu | Output không hỗ trợ quyết định | Dùng plain-language explanation và test comprehension |
-| Dữ liệu không đồng nhất | Attribution sai hoặc không so sánh được | Week 3 xác định instrument universe, frequency, currency và cleaning rules |
-| Feature expansion | Scope tăng nhưng core flow chưa hoàn chỉnh | Chỉ thêm feature khi có traceability tới problem/task và acceptance test |
-| Kết quả bị hiểu như lời khuyên đầu tư | Tạo kỳ vọng sai | Hiển thị assumptions, limitations và không đưa ra “best portfolio” |
+| Danh mục hiện được phân bổ thế nào? | Allocation theo vị thế/nhóm | Tổng weight bằng 100% và truy nguyên được về holdings |
+| Return đến từ đâu? | Return contribution | Tổng contribution khớp portfolio period return trong sai số cho phép |
+| Risk tập trung ở đâu? | Volatility contribution và concentration insight | Tổng risk contribution khớp annualized portfolio volatility theo phương pháp công bố |
+| Một thay đổi tỷ trọng có tác động gì? | Before/after comparison | Hai trạng thái dùng cùng dữ liệu, horizon, currency và assumptions |
 
-## 9. Open questions for Week 3
+Brief kết thúc bằng evidence, assumptions và limitations để người dùng tự ghi nhận quyết định. Sản phẩm không gắn nhãn “nên mua”, “nên bán” hoặc “best portfolio”.
 
-1. Nhà đầu tư cá nhân mục tiêu hiện dùng quy trình nào để nhận diện risk concentration?
-2. Họ hiểu “risk contribution” theo cách trình bày nào dễ nhất?
-3. Instrument universe nhỏ nhất nào có dữ liệu tương thích để chứng minh core output?
-4. Dữ liệu holdings và historical prices cần trường, đơn vị, currency và frequency nào?
-5. Phép đo risk contribution nào vừa đúng tài chính vừa có thể giải thích và kiểm thử trong phạm vi khóa học?
-6. Before/after comparison cần giữ yếu tố nào cố định để tránh tạo so sánh gây hiểu nhầm?
+## 7. Measurement convention
 
-## 10. Week 2 checkpoint answers
+- **CAGR** là thước đo return tổng hợp của asset và portfolio trên data period.
+- **Annualized volatility** là thước đo risk cơ sở của asset và portfolio.
+- **Return contribution** dùng period return contribution; không cộng trực tiếp individual CAGR để tạo portfolio CAGR.
+- **Risk contribution** dùng volatility contribution theo covariance/Euler decomposition để có thể kiểm tra tổng contribution.
+- Current và alternative portfolio phải dùng cùng price series, frequency, base currency, lookback và missing-data rule.
 
-- **What exactly are we building?** Một product flow tạo Portfolio Decision Brief cho current portfolio và một phương án tái phân bổ.
-- **What is the main output?** Brief giải thích allocation, return/risk contribution, concentration và before/after comparison.
-- **What is the conceptual solution chain?** Problem → user task → desired outcome → main output → process → input → product pattern/route.
-- **What is the MVP and fallback?** Core MVP giữ attribution và một comparison; fallback dùng sample portfolio và static data nhưng vẫn giữ cùng user task/output.
-- **Who owns which output?** Được ghi trong [SOLUTION_STRUCTURE.md](SOLUTION_STRUCTURE.md#10-responsibility-by-output).
+Cách tách CAGR khỏi return contribution tránh một phép cộng không hợp lệ nhưng vẫn giữ CAGR và volatility là hai đơn vị đo chính người dùng nhìn thấy.
+
+## 8. Complete user flow
+
+1. Người dùng chọn sample portfolio hoặc nhập một danh mục nhỏ thuộc instrument universe được hỗ trợ.
+2. Hệ thống xác thực input và hiển thị current allocation.
+3. Hệ thống tính return/risk contribution và chỉ ra concentration đáng chú ý.
+4. Người dùng thay đổi tỷ trọng của một vị thế; hệ thống cân bằng theo rule được công bố.
+5. Hệ thống tạo before/after comparison với cùng data period và assumptions.
+6. Risk and Return Allocation Brief hiển thị evidence, assumptions và limitations.
+7. Người dùng ghi nhận quyết định giữ nguyên hoặc tái phân bổ và lý do.
+
+Flow hoàn chỉnh mới là MVP. Một tập hợp màn hình hoặc metric rời rạc chưa được xem là MVP.
+
+## 9. Scope decisions
+
+### Core MVP
+
+- Một target user segment.
+- Một portfolio nhỏ gồm các asset classes được hỗ trợ.
+- Một base currency và compatible daily historical series.
+- Current allocation theo vị thế/nhóm.
+- CAGR và annualized volatility.
+- Return contribution và volatility contribution.
+- Một concentration insight.
+- Một proposed weight change và before/after comparison.
+- Evidence, assumptions và limitations.
+
+### Fallback MVP
+
+- Một sample portfolio cố định.
+- Static historical CSV đã làm sạch.
+- Một instrument universe nhỏ có dữ liệu tương thích.
+- Một proposed reallocation được xác định trước.
+- Cùng Risk and Return Allocation Brief như core MVP.
+
+### Not included yet
+
+- Overall portfolio score và cơ chế trọng số theo risk tolerance.
+- Account, cloud storage và multi-user management.
+- Chatbot hoặc AI recommendation.
+- Portfolio optimization hoặc “best weights”.
+- Monte Carlo, VaR/Expected Shortfall và stress testing.
+- Forecasting, real-time data, brokerage integration và đặt lệnh.
+- Full dashboard ngoài những thành phần cần để trình bày output chính.
+
+## 10. Checkpoint 2 revision
+
+| Nội dung | Ghi nhận |
+|---|---|
+| Feedback | Cần nói rõ người dùng nhận được gì; output và feature đang quá rộng; overall score cần tiêu chí, thang điểm và trọng số có căn cứ |
+| Decision | **Simplify** |
+| Change | Bỏ overall score khỏi MVP và tập trung vào một Risk and Return Allocation Brief có metric, formula và acceptance idea rõ |
+| Rationale | Contribution và before/after comparison truy nguyên được về holdings; một overall score với trọng số chưa kiểm chứng có thể tạo cảm giác chính xác giả |
+
+Risk tolerance và user-selected weights là một hypothesis cho giai đoạn sau, không phải logic đã được chấp nhận trong MVP.
+
+## 11. Questions for Week 3
+
+1. Instrument universe nhỏ nhất nào vẫn thể hiện được danh mục nhiều loại tài sản?
+2. Base currency, FX source, daily cutoff và missing-data rule là gì?
+3. Return contribution method nào phù hợp với transaction input và có thể tính tay để kiểm thử?
+4. Volatility contribution sẽ dùng covariance convention và tolerance nào?
+5. Rule cân bằng proposed weights sẽ phân bổ phần còn lại ra sao?
+6. Người dùng mục tiêu có hiểu brief và tự đưa ra quyết định mà không cần overall score hay không?
