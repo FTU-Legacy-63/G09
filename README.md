@@ -135,7 +135,7 @@ Week 2 kế thừa difficulty đã xác định ở Week 1:
 |---|---|
 | Target user | Nhà đầu tư cá nhân đã có hiểu biết cơ bản về tài chính và đầu tư, muốn kiểm tra một danh mục nhỏ gồm nhiều loại tài sản trong instrument universe được hỗ trợ |
 | Core task | Điền thông tin danh mục, kiểm tra risk/return allocation và thử một thay đổi tỷ trọng |
-| Essential input | Asset/group label, identifier, giao dịch mua/bán, quantity, currency và proposed weights có giới hạn |
+| Essential input | Current holdings snapshot (symbol, quantity), market price/FX và một target-weight change có giới hạn |
 | Logic path | Validate → Calculate → Attribute → Compare → Explain |
 | Main output | **Risk and Return Allocation Brief theo từng mã/nhóm tài sản** |
 | Main measurement | CAGR và annualized volatility; contribution dùng cùng period và phương pháp được công bố |
@@ -177,19 +177,20 @@ Week 3 không mở rộng feature. Nhóm kiểm tra liệu input, source, assump
 | Evidence | Review purpose |
 | --- | --- |
 | [Input Dictionary](docs/INPUT_DICTIONARY.md) | Meaning, type, unit, validation rule, source và output use |
-| [Source Register](docs/SOURCE_REGISTER.md) | Source → exact product use → convention → limitation |
+| [Source–Use Map](docs/SOURCE_USE_MAP.md) | Source → exact product use → convention → limitation |
 | [Assumptions and Limitations](docs/ASSUMPTIONS.md) | Simplification nào ảnh hưởng đến cách đọc output |
 | [Sample Input-to-Output Case](docs/SAMPLE_INPUT_OUTPUT.md) | Trace một case từ holdings và market data đến output dự kiến |
-| [Data Structure and Flow](docs/DATA_STRUCTURE_AND_FLOW.md) | Canonical entities, normalization, calculation path và failure paths |
-| [Validation and Early Logic Test](docs/VALIDATION_AND_EARLY_TEST.md) | Validation rules, expected arithmetic results và reconciliation |
 | [Sample data package](data/README.md) | Holdings giả lập, real market observations, config và provenance |
 | [Owner and Status](docs/WEEK3_STATUS.md) | Owner, readiness, checkpoint questions và revision record |
+
+Supporting evidence requested by the team: [Data Structure and Flow](docs/DATA_STRUCTURE_AND_FLOW.md) and [Validation and Early Logic Test](docs/VALIDATION_AND_EARLY_TEST.md). Hai file này hỗ trợ review nhưng không thay thế bốn artefact chính của Week 3.
 
 ## Current readiness decision
 
 Package hiện **ready for Checkpoint 3**, nhưng chưa phải production-ready methodology:
 
-- core input đã được tách khỏi benchmark/market cap mang tính optional hoặc contextual;
+- core input đã được khóa ở current holdings snapshot; transaction history được deferred;
+- benchmark/market cap được tách thành deferred hoặc contextual;
 - sample holdings do nhóm tạo, còn price/FX observations là dữ liệu thực được đóng băng trong repo;
 - source prototype có coverage gaps và chưa có license/SLA cho production;
 - fixture 10 ngày chỉ dùng để test data flow và arithmetic, không dùng để diễn giải CAGR hoặc ra quyết định đầu tư;

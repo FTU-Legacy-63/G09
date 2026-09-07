@@ -20,7 +20,7 @@ CORE TASK
 Điền danh mục, kiểm tra risk/return allocation và thử một thay đổi tỷ trọng
     ↓
 ESSENTIAL INPUT
-Asset/group + identifier + transaction + quantity + currency + proposed weights
+Holdings snapshot + market price/FX + one target-weight change
     ↓
 LOGIC PATH
 Validate → Calculate → Attribute → Compare → Explain
@@ -36,14 +36,12 @@ Ghi nhận quyết định giữ nguyên hoặc tái phân bổ và lý do
 
 | Field | Type/example | Validation |
 |---|---|---|
-| `asset_group` | Equity, ETF, Gold proxy, Crypto | Thuộc supported classification |
 | `symbol` | `HOSE:FPT`, `HNX:PVI`, `BTC-USD` | Map duy nhất tới instrument và exchange |
-| `trade_side` | Buy hoặc Sell | Chỉ nhận enum được hỗ trợ |
-| `trade_price` | Positive decimal | Lớn hơn 0 và cùng price convention |
-| `trade_time` | ISO date/time | Không nằm ngoài supported data period |
-| `quantity` | Positive decimal | Net quantity của vị thế không âm |
-| `currency` | VND, USD | Có base-currency hoặc FX conversion rule |
-| `proposed_weight` | Percentage | Nằm trong lower/upper bound |
+| `quantity` | Positive decimal | Current holdings snapshot; lớn hơn 0 và không short |
+| `asset_group` | Equity, ETF, Gold proxy, Crypto | System map theo supported classification |
+| `currency` | VND, USD | System resolve; có base-currency hoặc FX conversion rule |
+| `changed_symbol` | `BTC-USD` | Thuộc current holdings |
+| `target_weight` | Percentage | Nằm trong lower/upper bound; các weights khác được suy ra pro-rata |
 
 MVP có thể nhận sample portfolio thay cho manual input. Dữ liệu không tương thích về frequency, currency hoặc calendar phải bị từ chối hoặc được xử lý theo rule công bố, không được âm thầm ghép.
 
@@ -52,7 +50,7 @@ MVP có thể nhận sample portfolio thay cho manual input. Dữ liệu không 
 ### 4.1 Validate
 
 - Xác nhận identifier và asset group.
-- Kiểm tra giá, quantity, transaction chronology và currency.
+- Kiểm tra current quantity, market price, FX và currency.
 - Kiểm tra historical series có cùng frequency và đủ common dates.
 - Kiểm tra proposed-weight bounds và tổng weight.
 

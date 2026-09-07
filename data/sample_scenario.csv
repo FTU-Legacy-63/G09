@@ -1,0 +1,2 @@
+portfolio_id,scenario_id,changed_symbol,target_weight_pct,min_weight_pct,max_weight_pct,rebalance_rule
+G09_SAMPLE_01,RAISE_BTC_TO_20,BTC-USD,20,0,60,pro_rata_unlocked

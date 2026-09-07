@@ -27,7 +27,7 @@ Người dùng hoàn thành core task khi có thể ghi nhận một trong hai q
 | Câu hỏi | Câu trả lời của Finfolio 2.0 |
 |---|---|
 | Core user need | Biết return và risk đang được phân bổ ở đâu trong danh mục nhiều loại tài sản |
-| Core input | Holdings/transactions, asset group, identifier, quantity, currency và proposed weights |
+| Core input | Current holdings snapshot, market price/FX và một target-weight change |
 | Core logic | Validate → Calculate → Attribute → Compare → Explain |
 | Core output | Risk and Return Allocation Brief theo từng mã/nhóm tài sản |
 | Must include | Current allocation, CAGR/volatility, return/risk contribution, concentration insight và một before/after comparison |
@@ -37,19 +37,18 @@ Người dùng hoàn thành core task khi có thể ghi nhận một trong hai q
 
 | Input | Mục đích | MVP rule |
 |---|---|---|
-| Asset/group label | Tổng hợp allocation và contribution theo nhóm | Chọn từ classification được hỗ trợ |
-| Instrument identifier | Liên kết vị thế với historical data | Phải map duy nhất tới symbol và exchange |
-| Giá mua/bán | Xác định dòng tiền và giá trị giao dịch | Giá phải dương; giao dịch bán không vượt quantity khả dụng |
-| Thời điểm mua/bán | Xác định thời gian nắm giữ | Nằm trong data period và dùng cùng timezone convention |
-| Quantity | Tính position value | Quantity hợp lệ và không âm sau khi net giao dịch |
-| Currency | Quy đổi về base currency | Chỉ nhận currency có FX series tương thích |
-| Proposed weight | Tạo alternative portfolio | Có lower/upper bound; tổng sau cân bằng bằng 100% |
+| Instrument identifier | Liên kết current holding với historical data | Phải map duy nhất tới symbol và exchange |
+| Quantity đang nắm giữ | Tính position value tại đầu kỳ | Positive decimal; không hỗ trợ short |
+| Asset group và currency | Tổng hợp theo nhóm và quy đổi base currency | System resolve; người dùng xác nhận khi cần |
+| Daily close và FX | Tạo base-currency return series | Product information từ nguồn được map và có common dates |
+| Analysis horizon | Khóa period cho current/proposed comparison | Start < end và đủ observations theo policy |
+| Một target-weight change | Tạo alternative portfolio | Có lower/upper bound; phần còn lại được cân pro-rata về 100% |
 
 Người dùng có thể chọn sample portfolio thay vì nhập tay. Live API không phải điều kiện để chứng minh MVP.
 
 ## 5. Core logic path
 
-1. **Validate:** kiểm tra identifier, transaction value, quantity, currency, proposed-weight bounds và data compatibility.
+1. **Validate:** kiểm tra identifier, holdings quantity, currency, target-weight bounds và data compatibility.
 2. **Calculate:** tính position value theo base currency, portfolio weight, CAGR và annualized volatility.
 3. **Attribute:** phân rã return contribution và volatility contribution theo vị thế/nhóm.
 4. **Compare:** áp dụng một proposed weight change và tính lại cùng bộ chỉ số trên cùng dữ liệu.
@@ -139,7 +138,7 @@ Risk tolerance và user-selected weights là một hypothesis cho giai đoạn s
 
 1. Instrument universe nhỏ nhất nào vẫn thể hiện được danh mục nhiều loại tài sản?
 2. Base currency, FX source, daily cutoff và missing-data rule là gì?
-3. Return contribution method nào phù hợp với transaction input và có thể tính tay để kiểm thử?
+3. Return contribution method nào phù hợp với holdings snapshot và có thể tính tay để kiểm thử?
 4. Volatility contribution sẽ dùng covariance convention và tolerance nào?
 5. Rule cân bằng proposed weights sẽ phân bổ phần còn lại ra sao?
 6. Người dùng mục tiêu có hiểu brief và tự đưa ra quyết định mà không cần overall score hay không?

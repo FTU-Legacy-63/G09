@@ -5,19 +5,20 @@
 | Entity | Primary key | Important fields | Purpose |
 | --- | --- | --- | --- |
 | `portfolios` | `portfolio_id` | base_currency, owner_session, created_at | Context của một lần phân tích |
-| `transactions` | `transaction_id` | portfolio_id, symbol_id, side, quantity, trade_price, trade_date | Tái tạo holdings; có thể thay bằng opening holdings trong sample |
+| `holdings_snapshot` | (`portfolio_id`, `symbol_id`, `as_of`) | quantity | Current holdings tại đầu kỳ; MVP không nhận transaction ledger |
 | `instruments` | `symbol_id` | vendor_symbol, exchange, asset_group, quote_currency, proxy_label | Resolve instrument một cách không mơ hồ |
 | `market_prices` | (`symbol_id`, `session_date`) | close_price, source_id, retrieved_at | Chuỗi giá versioned và có provenance |
 | `fx_rates` | (`quote_currency`, `base_currency`, `session_date`) | fx_rate, source_id, retrieved_at | Đổi mọi vị thế về base currency |
-| `portfolio_scenarios` | (`portfolio_id`, `scenario_id`, `symbol_id`) | proposed_weight, min_weight, max_weight, locked | Current/proposed state |
+| `portfolio_scenarios` | (`portfolio_id`, `scenario_id`) | changed_symbol, target_weight, min_weight, max_weight, rebalance_rule | Một user change và rule tạo proposed state |
 | `metric_results` | (`portfolio_id`, `scenario_id`, `metric_id`, `as_of`) | value, unit, horizon, method_version | Output dẫn xuất, không ghi đè raw input |
 | `evidence_log` | `evidence_id` | source_id, retrieval_time, assumption_ids, limitation_ids | Trace output về nguồn và convention |
 
 ## Week 3 fixture mapping
 
-- `data/sample_portfolio.csv` gộp opening holdings và scenario để review nhanh.
-- `data/sample_config.csv` giữ base currency, horizon, frequency, benchmark và rebalance rule.
-- `data/sample_market_data.csv` gộp instrument prices và FX observations; trường `series_type` phân biệt `asset_price`, `benchmark_price` và `fx_rate`.
+- `data/sample_portfolio.csv` giữ current holdings snapshot.
+- `data/sample_scenario.csv` giữ đúng một changed symbol, target weight, bounds và pro-rata rule.
+- `data/sample_config.csv` giữ base currency, horizon, frequency, price convention và annualization factor.
+- `data/sample_market_data.csv` gộp instrument prices và FX observations; `series_type` phân biệt `asset_price` và `fx_rate`, còn `source_id` map trực tiếp sang source-use map.
 - Production implementation nên dùng các entity tách riêng ở trên, không dùng CSV phẳng làm database.
 
 ## Identity and unit rules
@@ -45,7 +46,7 @@ Position value → allocation → base-currency returns → covariance
         ↓
 Return attribution + risk attribution + concentration insight
         ↓
-Apply proposed weights with published bounds/rebalance rule
+Apply one target weight; derive remaining weights pro-rata
         ↓
 Recalculate on identical data/horizon/assumptions
         ↓
