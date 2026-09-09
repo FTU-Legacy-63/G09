@@ -10,6 +10,9 @@
 | Week 2 | [Project Proposal](docs/PROJECT_PROPOSAL.md) |
 | Week 2 | [Solution Structure](docs/SOLUTION_STRUCTURE.md) |
 | Week 3 | [Evidence Index, Owner and Status](docs/WEEK3_STATUS.md) |
+| Week 4 | [Financial Logic Specification](docs/FINANCIAL_LOGIC.md) |
+| Week 4 | [Expected Result Reference](docs/SAMPLE_INPUT_OUTPUT.md) |
+| Week 4 | [Midterm Review — Part A–E](docs/MIDTERM_REVIEW.md) |
 
 ## Team members and visible contribution
 
@@ -195,3 +198,26 @@ Package hiện **ready for Checkpoint 3**, nhưng chưa phải production-ready 
 - source prototype có coverage gaps và chưa có license/SLA cho production;
 - fixture 10 ngày chỉ dùng để test data flow và arithmetic, không dùng để diễn giải CAGR hoặc ra quyết định đầu tư;
 - feedback Checkpoint 3 và revision tương ứng vẫn phải được bổ sung sau buổi review.
+
+---
+
+# Week 4 — Logic, Expected Result and Midterm Readiness
+
+Week 4 chuyển information evidence thành một reasoning chain có thể dự đoán và kiểm tra trước implementation.
+
+## Required evidence
+
+| Week 4 requirement | Repository evidence |
+| --- | --- |
+| Logic specification | [FINANCIAL_LOGIC.md](docs/FINANCIAL_LOGIC.md) — benchmark, return/risk attribution, formula, reconciliation và data-sufficiency rules do teammate chuẩn bị |
+| Expected result | [SAMPLE_INPUT_OUTPUT.md](docs/SAMPLE_INPUT_OUTPUT.md) — một holdings fixture, current/proposed results và expected explanation |
+| Explanation and limitation | [ASSUMPTIONS.md](docs/ASSUMPTIONS.md) và claim boundary trong [MIDTERM_REVIEW.md](docs/MIDTERM_REVIEW.md#claim-boundary) |
+| Midterm evidence index | [MIDTERM_REVIEW.md](docs/MIDTERM_REVIEW.md) — Part A–E, current progress, individual output và next steps |
+
+## Current Week 4 position
+
+- Một end-to-end reasoning path và expected numeric result đã có thể review từ repository.
+- `FINANCIAL_LOGIC.md` được đưa lên nguyên bản để giữ đúng output của teammate.
+- Các nội dung advanced trong file như Brinson-Fachler, Cariño, active risk và Markowitz là logic đã được đề xuất; trạng thái chấp nhận vào core MVP phải được nhóm khóa riêng trước implementation.
+- Phản hồi chuyên môn hiện nghiêng về một performance benchmark, grouped contribution dễ đọc và giữ crypto như một asset class riêng.
+- Repo hiện chứng minh logic readiness; working MVP/executable calculation vẫn là evidence tiếp theo phải bổ sung.
