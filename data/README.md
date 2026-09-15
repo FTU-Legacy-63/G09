@@ -1,29 +1,26 @@
-# Week 3 sample data
+# Historical Week 3 sample fixture
 
-## Purpose
+Thư mục này giữ fixture đã commit trước khi nhóm khóa Core MVP ở phạm vi equity-only. Nó là test evidence/fallback kỹ thuật, không phải dữ liệu khách hàng và không phải bước chính trong user journey.
 
-This folder contains a small traceable fixture for the Week 3 information-readiness checkpoint.
+## Files
 
-- `sample_portfolio.csv` is a **team-created current-holdings snapshot**, not transaction history, customer information or problem evidence.
-- `sample_scenario.csv` records one user action: raise BTC-USD to 20%; all other target weights are derived pro-rata.
-- `sample_config.csv` records the shared calculation context.
-- `sample_market_data.csv` contains **real historical close observations** retrieved through `yahoo-finance2` on 2026-08-26 UTC.
+- `sample_portfolio.csv`: holdings giả lập gồm FPT, HPG, GLD và BTC.
+- `sample_scenario.csv`: scenario lịch sử tăng BTC lên 20%.
+- `sample_config.csv`: calculation context của fixture.
+- `sample_market_data.csv`: 10 ngày quan sát giá/FX lấy qua `yahoo-finance2` vào 2026-08-26 UTC.
 
-## Dataset boundary
+## Boundary
 
-The fixture contains 50 observations: 10 common session dates from 2026-07-01 to 2026-07-15 for FPT, HPG, GLD, BTC-USD and USD/VND. It is intentionally small so another member can inspect and reproduce the early logic test.
+Fixture có 10 common dates cho FPT, HPG, GLD, BTC-USD và USD/VND. Cửa sổ này chỉ đủ kiểm tra parsing, currency conversion, allocation, return aggregation và risk-contribution arithmetic. Nó không đủ để diễn giải CAGR/volatility cho quyết định.
 
-The 10-date window is not sufficient for a decision-grade CAGR or volatility estimate. It tests parsing, currency conversion, allocation, return aggregation and risk-contribution arithmetic only. A longer approved window is required before user-facing interpretation.
+Fixture cũng chưa có benchmark series, sector/factor mapping hoặc optimization result. Do đó, nó **không phải evidence hoàn chỉnh của Core MVP hiện tại**, vốn chỉ hỗ trợ cổ phiếu và bắt buộc có benchmark cùng constrained optimization. Phần GLD/BTC được giữ để bảo toàn historical evidence, không chứng minh current multi-asset support.
 
-## Price convention
+## Conventions
 
-- Field used: unadjusted daily `close`.
-- Return claim: price return only; dividends and transaction costs are excluded.
-- USD assets are converted to VND using the same-date `USDVND` close.
-- Dates are normalized to a session-date key before the common-date intersection.
-- `series_type` separates asset prices from FX rates; `source_id` maps each row to `SOURCE_USE_MAP.md`.
-- Values are rounded only when written to CSV; source precision is retained to six decimal places where relevant.
+- Unadjusted daily close; price return only.
+- Dividends, transaction costs, tax và slippage chưa được tính.
+- USD assets dùng same-date USD/VND close.
+- Values chỉ được làm tròn khi ghi CSV.
+- Yahoo adapter là nguồn prototype không có SLA và coverage có thể thay đổi.
 
-## Reproducibility note
-
-The source adapter is provisional. Yahoo Finance coverage and responses can change, so the committed CSV is the stable evidence for this checkpoint. Source URLs, use and limitations are documented in [`SOURCE_USE_MAP.md`](../docs/SOURCE_USE_MAP.md).
+Data requirements, source register, assumptions và readiness hiện tại được gộp tại [Week 3](../docs/WEEK3.md). Financial acceptance logic nằm tại [Week 4](../docs/WEEK4.md).
