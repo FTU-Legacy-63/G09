@@ -34,15 +34,18 @@ Week 5 chuyển logic tài chính thành một feature map và một user flow �
 ### Supporting features
 
 - Sample fixture và static data fallback phục vụ demo/test.
-- Source/method metadata panel.
-- Download/export brief nếu còn thời gian sau khi core flow chạy.
+- Input guidance: tự động viết hoa symbol, kiểm tra hậu tố `.VN`, nhãn đơn vị và lỗi ngay tại field.
+- Explanation box, tooltip thuật ngữ và source/method metadata panel.
+- Biểu đồ allocation, contribution và current–optimized comparison.
 - Filter/sort giúp đọc contribution nhưng không tạo metric mới.
+- Asset simulation chỉ là nhánh khám phá hỗ trợ; không thay thế optimized reference flow.
 
 ### Postponed / final product
 
 - Multi-asset ngoài cổ phiếu.
 - Monte Carlo simulation.
 - Account, cloud sync, chatbot và collaboration.
+- Xuất báo cáo PDF/XLSX/DOCX.
 - Real-time feed, broker integration, execution.
 - VaR/Expected Shortfall, stress testing và advanced multi-period attribution.
 - Max-Sharpe cho đến khi expected-return/risk-free inputs được bảo vệ đầy đủ.
@@ -76,6 +79,8 @@ Start
 
 - User nhập trực tiếp portfolio weights thay vì quantity; validation yêu cầu tổng 100%.
 - Nếu max-Sharpe chưa đủ input, hệ thống đề nghị dùng minimum variance thay vì tự giả định `r_f` hoặc expected return.
+- Nếu dữ liệu phiên gần nhất chưa có do ngày nghỉ, bảo trì hoặc source delay, hệ thống dùng **latest available trading session**, hiển thị ngày dữ liệu thực tế và yêu cầu user xác nhận trước khi phân tích.
+- User có thể thử thêm một mã cổ phiếu thuộc supported universe trong nhánh asset simulation; hệ thống kiểm tra dữ liệu rồi so sánh với current portfolio. Nhánh này là supporting feature, không phải điều kiện hoàn thành core flow.
 - Khi live source lỗi, nhóm có thể demo bằng equity-only fixture đã đóng băng; đây là fallback kỹ thuật, không phải bước bắt buộc của user journey.
 
 ### Error path
@@ -102,6 +107,13 @@ Start
 
 Validation xảy ra ở hai lớp: inline cho schema/value và pre-run cho data coverage, benchmark alignment, covariance, constraints và solver feasibility.
 
+Quy chuẩn hiển thị input:
+
+- Symbol được tự động viết hoa; hậu tố `.VN` được gợi ý nhưng không tự sửa sang một instrument khác khi mapping còn mơ hồ.
+- Quantity dùng đơn vị **cổ phiếu (CP)** và chỉ nhận số nguyên dương trong Core MVP.
+- Ngày hiển thị theo `YYYY-MM-DD`; `data_start` phải nhỏ hơn `data_end` và `data_end` không được vượt ngày dữ liệu mới nhất.
+- Mọi giá trị mặc định của objective/constraints phải nhìn thấy và có thể truy nguyên, không hard-code âm thầm.
+
 ## 6. Output explanation design
 
 Mỗi insight theo pattern:
@@ -116,7 +128,25 @@ Ví dụ wording:
 
 > Reference allocation có estimated volatility thấp hơn current portfolio dưới historical covariance và constraints đang hiển thị. Thay đổi chủ yếu đến từ việc giảm concentration ở ngành X. Đây là analytical scenario trên dữ liệu quá khứ, không phải lời khuyên giao dịch hoặc bảo đảm kết quả tương lai.
 
+### Phân cấp output
+
+- **Overview:** CAGR (khi đủ horizon), annualized volatility và Sharpe ratio (chỉ khi có risk-free rate hợp lệ).
+- **Attribution:** return contribution và risk contribution theo mã/ngành; factor view chỉ hiện khi có mapping/method đủ evidence.
+- **Benchmark:** benchmark return, active return và tracking error khi đủ dữ liệu.
+- **Optimization:** objective, constraints, reference weights và current–optimized deltas.
+- **Advanced metrics:** Beta, Alpha, Max Drawdown, Sortino, VaR/CVaR hoặc correlation chỉ đặt trong khu vực thu gọn khi đã được chấp nhận và triển khai; chúng không được mô tả là Core MVP mặc định.
+
+Tooltip tối thiểu giải thích CAGR, volatility, return contribution và risk contribution bằng ngôn ngữ dành cho target user. Biểu đồ phải có title, period, unit, legend và câu “Cách đọc”; không dùng màu xanh/đỏ như kết luận tốt/xấu nếu chưa có rule định lượng.
+
 ## 7. Interface/working draft
+
+### Evidence link
+
+- [Thư mục interface samples trên Google Drive](https://drive.google.com/drive/folders/1hozkS1c9ZpVh8XF4kX3bYpLBC7ivNcMP)
+- [Finfolio Homepage Draft](https://drive.google.com/file/d/15Yc-OZBaXJLOKP5AQDLHLY3HBKkYrVwx/view)
+- [Portfolio Analysis Dashboard](https://drive.google.com/file/d/1Y2k1k5Jg6PgYVMTt5PIQPloWvxSW4gXj/view)
+
+Hai PNG trên là **interface sample/wireframe**, chưa phải bằng chứng một web demo đang chạy. Dashboard đã thể hiện navigation, total-return attribution, contribution table, biểu đồ phân bổ và khu vực metrics; homepage thể hiện hướng visual của sản phẩm.
 
 ```text
 ┌ Input ────────────────────────────────────────────────┐
@@ -135,6 +165,19 @@ Ví dụ wording:
 ```
 
 Information hierarchy ưu tiên kết luận và comparison trước, công thức/source mở trong evidence panel. Giao diện không biến mỗi metric thành một dashboard riêng.
+
+### Chuẩn hóa mockup theo current MVP
+
+| Chi tiết trong sample hiện tại | Cách dùng trong MVP |
+| --- | --- |
+| `Log in` / `Join now` trên homepage | Chỉ là visual placeholder; account system đang postponed |
+| Copy nói về “optimal capital allocation” | Đổi thành “phương án phân bổ tham khảo theo objective và constraints đã công bố” |
+| Asset simulation | Supporting path cho cổ phiếu, không phải multi-asset inclusion |
+| `Weight optimization` | Giữ trong Core MVP; baseline là constrained minimum variance |
+| VaR, CVaR, Sortino và placeholder metric | Không đặt trong core overview; ẩn hoặc chuyển vào advanced/future panel |
+| Benchmark VN-Index | Giữ, nhưng phải nối với input/source thực và hiển thị period |
+| Factor attribution | Chỉ hiển thị factor có definition, source và method; không dùng số minh họa như output thật |
+| Khoảng trắng dài trong dashboard image | Không phải intended page length; implementation cần responsive layout và content-height tự nhiên |
 
 ## 8. Acceptance scenarios
 
@@ -160,13 +203,29 @@ Information hierarchy ưu tiên kết luận và comparison trước, công th�
 | Benchmark integration | Not ready/blocking | Trần Minh Ngọc + Lê Bảo An | Resolved series + coverage test |
 | Calculation engine | Logic specified | Lê Bảo An | Executable current metrics/attribution |
 | Optimizer | Logic specified | Lê Bảo An + Hoàng Khánh Linh | Solver output + feasibility tests |
-| Output screen | Text wireframe only | Nguyễn Ngọc Anh | Rendered comparison/brief |
+| Output screen | Hai PNG interface samples trên Drive + text wireframe | Nguyễn Ngọc Anh | Cập nhật mock theo scope và tạo clickable/rendered current–optimized flow |
 | Automated tests | Scenarios specified | Nguyễn Quỳnh Anh + Lê Bảo An | Test results |
 | Deployment | No evidence in reviewed repo | Lê Bảo An | URL + reproducible run instructions |
 
-Trạng thái trung thực: **feature/flow-ready, chưa có đủ implementation evidence để gọi là working MVP**.
+Trạng thái trung thực: **feature/flow và visual draft đã có; chưa có đủ implementation evidence để gọi là working MVP**.
 
-## 10. Revision log
+## 10. Repository deliverables
+
+Theo nguyên tắc một file evidence chính cho mỗi Week, các deliverable `user-flow`, `feature-scope` và `output-explanation` được gộp thành các section trong file này thay vì tách thành ba tài liệu lặp nội dung.
+
+| Deliverable được yêu cầu | Evidence location | Status |
+| --- | --- | --- |
+| Feature scope | [Feature map](#2-feature-map-gắn-với-mvp) và [Feature priority](#3-feature-priority) | Complete at specification level |
+| Happy/Alternative/Error flows | [Complete user flow](#4-complete-user-flow) | Complete at specification level |
+| Input labels và validation | [Input form](#5-input-form-và-validation-plan) | Complete at specification level |
+| Output explanation | [Output explanation design](#6-output-explanation-design) | Complete at specification level |
+| Interface draft | [Drive evidence](#evidence-link) | Available as two PNG samples |
+| Source code `src/` | Chưa có trong repository evidence được rà soát | Pending |
+| Working web demo | Chưa có URL chạy được | Pending |
+| Test cases/results | [Acceptance scenarios](#8-acceptance-scenarios) | Cases specified; execution pending |
+| Ownership | [Individual Contribution](#individual-contribution) | Owners mapped; implementation evidence pending |
+
+## 11. Revision log
 
 | Revision | Owner | Status |
 | --- | --- | --- |
@@ -176,13 +235,30 @@ Trạng thái trung thực: **feature/flow-ready, chưa có đủ implementation
 | Giữ Monte Carlo ở final product | Product Owner | Accepted |
 | Bỏ sample portfolio khỏi main user journey | Product Manager + UI/UX | Accepted |
 | Chuyển expected output sang current–optimized comparison | Product Manager + UI/UX | Specified; UI evidence pending |
+| Chuẩn hóa teammate draft: bỏ multi-asset inclusion khỏi MVP và giữ asset simulation ở supporting path | Product Owner + Product Manager | Accepted |
+| Gắn hai interface samples từ Drive và tách visual draft khỏi working demo | UI/UX + Lead Developer | Visual evidence linked; implementation pending |
+
+## 12. End-of-Week 5 checklist
+
+| Checklist item | Evidence | Status |
+| --- | --- | --- |
+| Main và Supporting features được phân định | Sections 2–3 | Complete |
+| Optional/future features được đóng băng | Section 3 | Complete |
+| Happy, Alternative và Error paths | Section 4 | Complete at specification level |
+| Input có label, unit và inline error rule | Section 5 | Complete at specification level |
+| Output có hierarchy, benchmark context và explanation box | Section 6 | Complete at specification level |
+| Có interface draft | Hai PNG trên Drive | Complete as visual draft |
+| Có working interface chạy được | Chưa có deployment URL hoặc source code evidence | **Pending** |
+| Ownership và evidence location được cập nhật | Sections 9–10 và contribution table | Complete for documentation; code evidence pending |
+| Core logic nối với UI | Chưa có executable evidence | **Pending** |
+| Acceptance tests đã chạy | Mới có test specification | **Pending** |
 
 ## Individual Contribution
 
-| Thành viên | Output Week 5 | Status |
+| Thành viên | Output Week 5 và evidence location | Status |
 | --- | --- | --- |
-| Hoàng Khánh Linh | Feature-scope decision và acceptance của benchmark/optimization assumptions | Scope documented; method sign-off pending implementation evidence |
-| Nguyễn Quỳnh Anh | Feature breakdown, paths, acceptance scenarios và revision/status register | Documented |
-| Lê Bảo An | Planned pipeline, benchmark/optimizer integration và technical tests | Planned/Pending; chưa có code evidence trong repo được rà soát |
-| Trần Minh Ngọc | Planned equity dataset, benchmark/source và sector/factor mapping | Planned/Pending |
-| Nguyễn Ngọc Anh | User flow, input labels, output hierarchy và text wireframe | Documented; clickable/rendered artefact pending |
+| Hoàng Khánh Linh | Feature-scope decision, explanation/claim boundary tại sections 3 và 6 | Documented; method sign-off pending implementation evidence |
+| Nguyễn Quỳnh Anh | Happy/Alternative/Error paths, acceptance scenarios và checklist tại sections 4, 8 và 12 | Documented; test execution pending |
+| Lê Bảo An | Pipeline, benchmark/optimizer integration và technical tests tại sections 8–9 | Planned/Pending; chưa có code evidence trong repo được rà soát |
+| Trần Minh Ngọc | Input/output labels, fallback và planned equity/benchmark/sector/factor data tại sections 5 và 9 | Specification documented; data evidence pending |
+| Nguyễn Ngọc Anh | User flow, output hierarchy, wireframe và [hai interface samples trên Drive](#evidence-link) | Visual evidence available; clickable current–optimized flow pending |
