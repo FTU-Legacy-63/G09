@@ -7,7 +7,7 @@ Week 2 chuyển problem statement thành phiên bản nhỏ nhất vẫn giúp n
 ## 2. Product reasoning chain
 
 ```text
-Nhà đầu tư cá nhân có danh mục cổ phiếu và muốn so sánh với vàng/bạc
+Nhà đầu tư cá nhân có danh mục cổ phiếu và muốn so sánh với commodity
         ↓
 Muốn biết return/risk tập trung ở đâu và performance khác benchmark ra sao
         ↓
@@ -25,19 +25,19 @@ Người dùng tự quyết định giữ nguyên hoặc cân nhắc tái phân 
 | Câu hỏi | Quyết định của Finfolio 2.0 |
 | --- | --- |
 | Target user | Nhà đầu tư cá nhân đã có kiến thức cơ bản về tài chính và đầu tư |
-| Core need | So sánh performance và risk giữa cổ phiếu, vàng và bạc trước khi tự cân nhắc tái phân bổ |
+| Core need | So sánh performance và risk giữa cổ phiếu và các commodity khả dụng trước khi tự cân nhắc tái phân bổ |
 | Core input | Holdings, dữ liệu giá, benchmark, ngành/factor, horizon và constraints tối ưu hóa |
 | Core logic | Kiểm tra dữ liệu → phân tích current portfolio → attribution → benchmark comparison → constrained optimization → current–optimized comparison → explanation |
 | Main output | **Risk and Return Allocation Brief** có một phương án phân bổ tham khảo |
 | Must include | Current allocation; security/sector/factor contribution; risk concentration; benchmark comparison; optimized reference allocation; assumptions và limitations |
-| Chưa thuộc Core MVP | Asset class ngoài cổ phiếu/vàng/bạc, Monte Carlo, tài khoản, chatbot, execution và lời khuyên mua/bán tự động |
+| Chưa thuộc Core MVP | Asset class ngoài cổ phiếu/commodity, Monte Carlo, tài khoản, chatbot, execution và lời khuyên mua/bán tự động |
 
 ## 4. Essential input
 
 | Input | Ý nghĩa và output sử dụng | Rule chính |
 | --- | --- | --- |
-| `symbol` + `venue/source` | Nhận diện cổ phiếu, vàng hoặc bạc; nối holdings với price và classification | Phải map duy nhất vào supported universe |
-| `asset_class` + `currency` | Phân biệt equity/gold/silver và chuẩn hóa về base currency | Chỉ nhận ba nhóm được hỗ trợ; phải có FX path khi cần |
+| `symbol` + `venue/source` | Nhận diện cổ phiếu hoặc commodity instrument; nối holdings với price và classification | Phải map duy nhất vào supported universe |
+| `asset_class` + `currency` | Phân biệt equity/commodity và chuẩn hóa về base currency | Commodity phải có price series và metadata khả dụng; phải có FX path khi cần |
 | `quantity` hoặc `portfolio_weight` | Tạo current allocation | Số dương theo đơn vị tài sản; nếu nhập weight thì tổng bằng 100% trong tolerance |
 | Historical prices | Tính return, volatility, covariance và contribution | Cùng frequency, đủ horizon, không có giá không dương |
 | `benchmark_symbol` | Tính performance tương đối và active return/risk | Bắt buộc; cùng horizon và price convention |
@@ -45,7 +45,7 @@ Người dùng tự quyết định giữ nguyên hoặc cân nhắc tái phân 
 | Factor data/exposure | Giải thích exposure theo factor đã công bố | Chỉ hiển thị factor đủ dữ liệu và có phương pháp rõ |
 | Analysis horizon | Khóa cửa sổ dùng chung cho mọi metric | `start < end`; đạt policy tối thiểu của metric |
 | Optimization objective | Ví dụ minimum variance hoặc max Sharpe | Người dùng chọn từ objective được hỗ trợ |
-| Constraints | Long-only, tổng weight, min/max từng mã/ngành, turnover nếu có | Hiển thị cùng optimized result; không hard-code âm thầm |
+| Constraints | Long-only, tổng weight, min/max từng mã/nhóm, turnover nếu có | Hiển thị cùng optimized result; không hard-code âm thầm |
 | Risk-free rate | Chỉ cần cho max Sharpe | Có source, date và cùng đơn vị annualized |
 
 Mỗi input phải phục vụ một phép tính hoặc phần output. Sample portfolio chỉ là fixture kiểm thử/fallback khi demo; user journey chính bắt đầu bằng danh mục của người dùng.
@@ -68,7 +68,7 @@ Kết quả optimization là **analytical scenario/reference allocation**. Finfo
 
 ## 6. Complete user flow
 
-1. Người dùng nhập danh mục hiện tại gồm cổ phiếu và, nếu có, vàng/bạc bằng symbol và quantity hoặc weight.
+1. Người dùng nhập danh mục hiện tại gồm cổ phiếu và commodity được hỗ trợ bằng symbol và quantity hoặc weight.
 2. Người dùng chọn benchmark, analysis horizon, optimization objective và constraints được hỗ trợ.
 3. Hệ thống kiểm tra identifier, weight/quantity, dữ liệu giá, benchmark, classification và mức đủ dữ liệu.
 4. Hệ thống hiển thị current allocation và performance hiện tại.
@@ -84,11 +84,11 @@ Kết quả optimization là **analytical scenario/reference allocation**. Finfo
 
 ### Core MVP
 
-Core MVP là trải nghiệm end-to-end cho **một danh mục gồm cổ phiếu, vàng và bạc**. Người dùng cung cấp holdings và benchmark; hệ thống phân tích current allocation/performance, contribution theo mã/asset class và theo sector đối với equity, risk concentration và benchmark-relative result; sau đó tạo một optimized reference allocation có objective/constraints minh bạch và so sánh với current portfolio. Toàn bộ output nằm trong một brief có giải thích và giới hạn.
+Core MVP là trải nghiệm end-to-end cho **một danh mục gồm cổ phiếu và các commodity khả dụng trong supported data universe**. Người dùng cung cấp holdings và benchmark; hệ thống phân tích current allocation/performance, contribution theo mã/asset class và theo sector đối với equity, risk concentration và benchmark-relative result; sau đó tạo một optimized reference allocation có objective/constraints minh bạch và so sánh với current portfolio. Toàn bộ output nằm trong một brief có giải thích và giới hạn.
 
 ### Final product / future extension
 
-- Mở rộng sang trái phiếu, crypto, các commodity khác và các asset class chưa được hỗ trợ.
+- Mở rộng sang trái phiếu, crypto và các asset class chưa được hỗ trợ.
 - Monte Carlo simulation và các phân tích scenario nâng cao.
 - Account/cloud storage, collaboration và lịch sử danh mục.
 - Dữ liệu real-time, broker integration và order execution nếu có cơ sở pháp lý/kỹ thuật.
@@ -96,7 +96,7 @@ Core MVP là trải nghiệm end-to-end cho **một danh mục gồm cổ phiế
 
 ## 8. Scope guardrails
 
-- Core MVP chỉ hỗ trợ equity, gold và silver; không mở rộng tùy ý sang asset class khác.
+- Core MVP chỉ hỗ trợ equity và commodity có dữ liệu hợp lệ từ supported source; không mở rộng tùy ý sang asset class khác.
 - Benchmark là input bắt buộc, không phải contextual/deferred.
 - Optimization là Core MVP nhưng phải có constraints, data-sufficiency check và nhãn tham khảo.
 - Monte Carlo không thuộc Core MVP.
@@ -108,7 +108,7 @@ Core MVP là trải nghiệm end-to-end cho **một danh mục gồm cổ phiế
 
 | Mốc | Quyết định trước | Revision hiện tại | Lý do |
 | --- | --- | --- | --- |
-| Sau Checkpoint 2 | Bỏ overall score; optimization từng được đưa ra ngoài MVP để cắt scope | Giữ bỏ overall score; đưa constrained optimization vào Core MVP và khóa universe ở equity, gold và silver | Ba nhóm này đáp ứng nhu cầu so sánh asset class nhưng vẫn giữ phạm vi có thể kiểm thử |
+| Sau Checkpoint 2 | Bỏ overall score; optimization từng được đưa ra ngoài MVP để cắt scope | Giữ bỏ overall score; đưa constrained optimization vào Core MVP và khóa universe ở equity cùng commodity khả dụng | Đáp ứng nhu cầu so sánh asset class trong giới hạn dữ liệu có thể validation |
 | Benchmark | Từng được xem là optional/deferred | Trở thành essential input | Performance và attribution cần mốc so sánh nhất quán |
 | Sample portfolio | Từng xuất hiện như bước đầu user flow | Chỉ là test fixture/fallback | Hành trình chính phải bắt đầu từ danh mục của user |
 

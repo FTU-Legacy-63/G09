@@ -13,7 +13,7 @@ Thư mục này giữ fixture lịch sử dùng làm test evidence/fallback kỹ
 
 Fixture có 10 common dates cho FPT, HPG, GLD, BTC-USD và USD/VND. Cửa sổ này chỉ đủ kiểm tra parsing, currency conversion, allocation, return aggregation và risk-contribution arithmetic. Nó không đủ để diễn giải CAGR/volatility cho quyết định.
 
-Fixture cũng chưa có benchmark series, silver series, sector/factor mapping hoặc optimization result. FPT, HPG và GLD có thể tái sử dụng một phần cho scope cổ phiếu/vàng; BTC nằm ngoài Core MVP. Vì vậy fixture **chưa phải evidence hoàn chỉnh của Core MVP hiện tại**.
+Fixture cũng chưa có benchmark series, commodity coverage đủ rộng, sector/factor mapping hoặc optimization result. FPT, HPG và GLD có thể tái sử dụng một phần cho scope cổ phiếu/commodity; BTC nằm ngoài Core MVP. Vì vậy fixture **chưa phải evidence hoàn chỉnh của Core MVP hiện tại**.
 
 ## Conventions
 
