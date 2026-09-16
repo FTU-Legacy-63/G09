@@ -5,7 +5,7 @@
 - **Date:** 16/09/2026
 - **Team representative:** Lê Bảo An
 - **Repository:** <https://github.com/FTU-Legacy-63/G09>
-- **Instructor:** Phan Trần Trung Dũng, Foreign Trade University (FTU)
+- **Instructor:** Assoc. Prof. Phan Trần Trung Dũng, PhD
 
 ## A. Group Verification
 
