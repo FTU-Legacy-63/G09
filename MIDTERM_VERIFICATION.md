@@ -29,9 +29,9 @@ Members have also started cross-checking sections prepared by others. When two s
 
 ### 4. What will your team do next about this issue?
 
-Before and during Week 6, the team will confirm the intended output, main owner, supporting members, dependencies, and a simple acceptance check for each task before implementation begins. The primary owner will still coordinate the deliverable, but members whose work is affected by it will participate in the relevant discussion and review. This should prevent a weekly assignment from being treated as an isolated task when it actually affects several parts of the product.
+Before Week 6 implementation begins, the team will create and agree on one shared task hand-off checklist for every task. The checklist will record the intended output, main owner, supporting members, dependencies, key terms or assumptions, and one simple acceptance check. The primary owner will prepare the initial description, and members whose work depends on that task will review and confirm it before implementation starts.
 
-The team will also maintain consistent explanations for important terms, inputs, calculation rules, assumptions, and expected outputs. These explanations will be shared with the tester, UI/UX designer, and developer so that they work from the same interpretation. Short progress updates and cross-checks will continue, and any change that affects another section will be communicated before the related work is finalized.
+This single checklist will give the tester, UI/UX designer, and developer the same reference for what must be built and how completion will be checked. If a later change affects another part of the product, the relevant checklist entry will be updated and communicated before the related work is finalized. This action allows the team to keep individual ownership while preventing weekly assignments from being treated as isolated tasks.
 
 ## B. Member Contribution Verification
 
