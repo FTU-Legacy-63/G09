@@ -1,6 +1,6 @@
 # Finfolio 2.0 — Portfolio Attribution & Risk Analytics
 
-Finfolio 2.0 giúp nhà đầu tư cá nhân đã có kiến thức tài chính hiểu lợi nhuận và rủi ro đang tập trung ở đâu trong danh mục cổ phiếu, so sánh kết quả với benchmark và xem một phương án phân bổ tham khảo do mô hình tối ưu hóa tạo ra trước khi tự quyết định có tái phân bổ hay không.
+Finfolio 2.0 giúp nhà đầu tư cá nhân đã có kiến thức tài chính hiểu lợi nhuận và rủi ro đang tập trung ở đâu trong danh mục gồm cổ phiếu, vàng và bạc; so sánh kết quả với benchmark; và xem một phương án phân bổ tham khảo trước khi tự quyết định có tái phân bổ hay không.
 
 ## Repository evidence
 
@@ -24,6 +24,6 @@ Finfolio 2.0 giúp nhà đầu tư cá nhân đã có kiến thức tài chính 
 
 ## Current product scope
 
-Core MVP chỉ hỗ trợ **cổ phiếu** và một flow hoàn chỉnh: nhập danh mục → kiểm tra dữ liệu → phân tích danh mục hiện tại → phân rã return/risk → so sánh benchmark → tối ưu hóa có ràng buộc → so sánh current–optimized → giải thích kết quả để người dùng tự quyết định. Kết quả tối ưu hóa là phương án phân bổ tham khảo, không phải lời khuyên đầu tư.
+Core MVP hỗ trợ **cổ phiếu cùng hai commodity đơn giản là vàng và bạc** trong một flow hoàn chỉnh: nhập danh mục → kiểm tra dữ liệu → phân tích danh mục hiện tại → phân rã return/risk → so sánh benchmark → tối ưu hóa có ràng buộc → so sánh current–optimized → giải thích kết quả để người dùng tự quyết định. Kết quả tối ưu hóa là phương án phân bổ tham khảo, không phải lời khuyên đầu tư.
 
-Final product dự kiến mở rộng sang nhiều asset class và Monte Carlo. Sample data trong [`data/`](data/README.md) chỉ là fixture phục vụ kiểm thử/fallback, không phải hành trình chính của người dùng.
+Các asset class khác và Monte Carlo thuộc final product. Sample data trong [`data/`](data/README.md) chỉ là fixture phục vụ kiểm thử/fallback, không phải hành trình chính của người dùng.

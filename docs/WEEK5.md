@@ -21,7 +21,7 @@ Week 5 chuyển logic tài chính thành một feature map và một user flow �
 
 ### Core features
 
-1. Nhập danh mục cổ phiếu.
+1. Nhập danh mục gồm cổ phiếu và, nếu có, gold/silver.
 2. Chọn benchmark, horizon, objective và constraints.
 3. Validation và data-sufficiency checks.
 4. Current allocation/performance.
@@ -42,7 +42,7 @@ Week 5 chuyển logic tài chính thành một feature map và một user flow �
 
 ### Postponed / final product
 
-- Multi-asset ngoài cổ phiếu.
+- Asset class ngoài equity, gold và silver.
 - Monte Carlo simulation.
 - Account, cloud sync, chatbot và collaboration.
 - Xuất báo cáo PDF/XLSX/DOCX.
@@ -67,7 +67,7 @@ Start
 
 ### Happy path
 
-1. User nhập các mã cổ phiếu và quantity.
+1. User nhập các mã cổ phiếu, gold/silver được hỗ trợ và quantity.
 2. User chọn VN-Index hoặc benchmark được hỗ trợ, analysis period và minimum-variance objective.
 3. Hệ thống xác nhận mọi mã, tải/alignment dữ liệu và hiển thị allocation.
 4. Hệ thống hiển thị performance, return/risk contribution và benchmark comparison.
@@ -80,8 +80,8 @@ Start
 - User nhập trực tiếp portfolio weights thay vì quantity; validation yêu cầu tổng 100%.
 - Nếu max-Sharpe chưa đủ input, hệ thống đề nghị dùng minimum variance thay vì tự giả định `r_f` hoặc expected return.
 - Nếu dữ liệu phiên gần nhất chưa có do ngày nghỉ, bảo trì hoặc source delay, hệ thống dùng **latest available trading session**, hiển thị ngày dữ liệu thực tế và yêu cầu user xác nhận trước khi phân tích.
-- User có thể thử thêm một mã cổ phiếu thuộc supported universe trong nhánh asset simulation; hệ thống kiểm tra dữ liệu rồi so sánh với current portfolio. Nhánh này là supporting feature, không phải điều kiện hoàn thành core flow.
-- Khi live source lỗi, nhóm có thể demo bằng equity-only fixture đã đóng băng; đây là fallback kỹ thuật, không phải bước bắt buộc của user journey.
+- User có thể thử thêm một mã thuộc supported equity/gold/silver universe trong nhánh asset simulation; hệ thống kiểm tra dữ liệu rồi so sánh với current portfolio. Nhánh này là supporting feature, không phải điều kiện hoàn thành core flow.
+- Khi live source lỗi, nhóm có thể demo bằng fixture stocks/gold/silver đã đóng băng; đây là fallback kỹ thuật, không phải bước bắt buộc của user journey.
 
 ### Error path
 
@@ -95,8 +95,9 @@ Start
 
 | UI label | Field | Required | Inline validation/help |
 | --- | --- | --- | --- |
-| Mã cổ phiếu | `symbol` | Có | Nhập mã thuộc supported exchange |
-| Số lượng | `quantity` | Có nếu không nhập weight | Số lớn hơn 0; Core MVP không short |
+| Mã tài sản | `symbol` | Có | Nhập mã cổ phiếu, gold hoặc silver thuộc supported universe |
+| Nhóm tài sản | `asset_class` | Có | Equity, gold hoặc silver |
+| Số lượng | `quantity` | Có nếu không nhập weight | Số lớn hơn 0 theo đơn vị tài sản; Core MVP không short |
 | Tỷ trọng hiện tại | `portfolio_weight` | Có nếu không nhập quantity | Mỗi weight 0–100%; tổng 100% |
 | Benchmark | `benchmark_symbol` | Có | Hiển thị tên index/proxy đầy đủ |
 | Từ ngày / đến ngày | `data_start`, `data_end` | Có | Báo mức đủ dữ liệu trước khi chạy |
@@ -172,7 +173,7 @@ Information hierarchy ưu tiên kết luận và comparison trước, công th�
 | --- | --- |
 | `Log in` / `Join now` trên homepage | Chỉ là visual placeholder; account system đang postponed |
 | Copy nói về “optimal capital allocation” | Đổi thành “phương án phân bổ tham khảo theo objective và constraints đã công bố” |
-| Asset simulation | Supporting path cho cổ phiếu, không phải multi-asset inclusion |
+| Asset simulation | Supporting path trong universe equity/gold/silver, không mở thêm asset class |
 | `Weight optimization` | Giữ trong Core MVP; baseline là constrained minimum variance |
 | VaR, CVaR, Sortino và placeholder metric | Không đặt trong core overview; ẩn hoặc chuyển vào advanced/future panel |
 | Benchmark VN-Index | Giữ, nhưng phải nối với input/source thực và hiển thị period |
@@ -183,7 +184,7 @@ Information hierarchy ưu tiên kết luận và comparison trước, công th�
 
 | ID | Scenario | Expected result | Status |
 | --- | --- | --- | --- |
-| W5-T01 | Valid equity holdings + benchmark + feasible constraints | Đi hết flow và tạo brief | Specified; executable test pending |
+| W5-T01 | Valid stocks/gold/silver holdings + benchmark + feasible constraints | Đi hết flow và tạo brief | Specified; executable test pending |
 | W5-T02 | Weights tổng khác 100% | Block input, hiển thị residual | Specified |
 | W5-T03 | Benchmark thiếu/misaligned | Block benchmark-dependent output | Specified |
 | W5-T04 | Contribution calculation | Security và sector totals reconcile | Specified |
@@ -199,7 +200,7 @@ Information hierarchy ưu tiên kết luận và comparison trước, công th�
 | --- | --- | --- | --- |
 | One core flow | Specified | Nguyễn Ngọc Anh + Nguyễn Quỳnh Anh | Clickable/working flow |
 | Input form | Labels/validation specified | Nguyễn Ngọc Anh + Lê Bảo An | Implemented form |
-| Equity-only data | Not ready | Trần Minh Ngọc | Long-window fixture + provenance |
+| Stocks/gold/silver data | Not ready | Trần Minh Ngọc | Long-window fixture + provenance; gold/silver labels rõ |
 | Benchmark integration | Not ready/blocking | Trần Minh Ngọc + Lê Bảo An | Resolved series + coverage test |
 | Calculation engine | Logic specified | Lê Bảo An | Executable current metrics/attribution |
 | Optimizer | Logic specified | Lê Bảo An + Hoàng Khánh Linh | Solver output + feasibility tests |
@@ -229,13 +230,13 @@ Theo nguyên tắc một file evidence chính cho mỗi Week, các deliverable `
 
 | Revision | Owner | Status |
 | --- | --- | --- |
-| Thu hẹp Core MVP từ multi-asset xuống equity-only | Product Owner | Accepted |
+| Thu hẹp multi-asset scope xuống equity, gold và silver | Product Owner | Accepted |
 | Chuyển benchmark thành essential input | Product Owner + Business Analyst | Accepted; integration pending |
 | Đưa constrained optimization vào Core MVP | Product Owner + Lead Developer | Accepted; implementation pending |
 | Giữ Monte Carlo ở final product | Product Owner | Accepted |
 | Bỏ sample portfolio khỏi main user journey | Product Manager + UI/UX | Accepted |
 | Chuyển expected output sang current–optimized comparison | Product Manager + UI/UX | Specified; UI evidence pending |
-| Chuẩn hóa teammate draft: bỏ multi-asset inclusion khỏi MVP và giữ asset simulation ở supporting path | Product Owner + Product Manager | Accepted |
+| Chuẩn hóa teammate draft: giữ gold/silver để giải quyết cross-asset pain point; asset simulation vẫn là supporting path | Product Owner + Product Manager | Accepted |
 | Gắn hai interface samples từ Drive và tách visual draft khỏi working demo | UI/UX + Lead Developer | Visual evidence linked; implementation pending |
 
 ## 12. End-of-Week 5 checklist
@@ -260,5 +261,5 @@ Theo nguyên tắc một file evidence chính cho mỗi Week, các deliverable `
 | Hoàng Khánh Linh | Feature-scope decision, explanation/claim boundary tại sections 3 và 6 | Documented; method sign-off pending implementation evidence |
 | Nguyễn Quỳnh Anh | Happy/Alternative/Error paths, acceptance scenarios và checklist tại sections 4, 8 và 12 | Documented; test execution pending |
 | Lê Bảo An | Pipeline, benchmark/optimizer integration và technical tests tại sections 8–9 | Planned/Pending; chưa có code evidence trong repo được rà soát |
-| Trần Minh Ngọc | Input/output labels, fallback và planned equity/benchmark/sector/factor data tại sections 5 và 9 | Specification documented; data evidence pending |
+| Trần Minh Ngọc | Input/output labels, fallback và planned stocks/gold/silver/benchmark data tại sections 5 và 9 | Specification documented; data evidence pending |
 | Nguyễn Ngọc Anh | User flow, output hierarchy, wireframe và [hai interface samples trên Drive](#evidence-link) | Visual evidence available; clickable current–optimized flow pending |

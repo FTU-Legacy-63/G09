@@ -8,17 +8,17 @@ Week 4 biến input đã xác định thành một reasoning chain tài chính c
 
 | Hạng mục | Quyết định hiện tại |
 | --- | --- |
-| Asset universe | Chỉ cổ phiếu thuộc supported universe |
-| Benchmark | Một performance benchmark bắt buộc; với danh mục cổ phiếu Việt Nam, VN-Index là lựa chọn mặc định nếu nguồn được xác minh |
+| Asset universe | Cổ phiếu cùng gold và silver thuộc supported universe |
+| Benchmark | Một performance benchmark bắt buộc; VN-Index là lựa chọn mặc định cho sample có trọng tâm cổ phiếu Việt Nam nếu nguồn được xác minh |
 | Return | Price return theo cùng period/convention cho portfolio và benchmark |
-| Return attribution | Contribution theo mã; cộng theo sector và factor/exposure đã định nghĩa |
+| Return attribution | Contribution theo mã/asset class; cộng theo sector đối với equity |
 | Risk | Annualized volatility và Euler risk contribution |
 | Benchmark comparison | Portfolio return − benchmark return; tracking error/active-risk contribution khi đủ dữ liệu |
 | Optimization | Constrained long-only minimum variance là baseline Core MVP |
 | Comparison | Current và optimized dùng chung return matrix, covariance, horizon và assumptions |
 | Main output | Một Risk and Return Allocation Brief |
 
-Full Brinson-Fachler, multi-period Cariño linking, active attribution nhiều tầng, Ledoit–Wolf nâng cao và max-Sharpe là các phương pháp optional chỉ được bật khi có đủ data/method evidence. Monte Carlo và multi-asset thuộc final product, không thuộc Core MVP.
+Full Brinson-Fachler, multi-period Cariño linking, active attribution nhiều tầng, Ledoit–Wolf nâng cao và max-Sharpe là các phương pháp optional chỉ được bật khi có đủ data/method evidence. Monte Carlo và các asset class ngoài equity/gold/silver thuộc final product.
 
 ## 3. End-to-end financial logic
 
@@ -37,10 +37,10 @@ Mọi module phải dùng chung symbol mapping, analysis horizon, return frequen
 
 ## 4. Current portfolio calculation
 
-Với cổ phiếu `i`, giá đầu kỳ `P_i,0` và quantity `q_i`:
+Với tài sản `i`, giá đầu kỳ `P_i,0`, quantity `q_i` và tỷ giá về base currency `FX_i,0`:
 
 ```text
-position_value_i = q_i × P_i,0
+position_value_i = q_i × P_i,0 × FX_i,0
 weight_i = position_value_i / Σ position_value_i
 return_i,t = P_i,t / P_i,t-1 − 1
 portfolio_return_t = Σ weight_i × return_i,t
@@ -61,12 +61,12 @@ Core MVP dùng phép phân rã dễ giải thích:
 ```text
 security_return_contribution_i = start_weight_i × period_return_i
 portfolio_period_return = Σ security_return_contribution_i
-sector_contribution_g = Σ contribution_i, i thuộc sector g
+group_contribution_g = Σ contribution_i, i thuộc asset class/sector g
 ```
 
 Factor/exposure view áp dụng cùng nguyên tắc group/tag khi mapping là mutually exclusive. Nếu exposure là liên tục hoặc chồng lấn, output phải dùng mô hình riêng đã công bố; không cộng các factor như sector buckets.
 
-Core questions:
+Sector chỉ áp dụng cho equity; gold và silver được trình bày theo asset class. Core questions:
 
 - mã nào đóng góp return lớn nhất/nhỏ nhất;
 - ngành nào tập trung phần lớn return;
@@ -127,7 +127,7 @@ subject to
         Σ w_i = 1
         w_i ≥ 0
         min_weight_i ≤ w_i ≤ max_weight_i
-        Σ_(i thuộc sector g) w_i ≤ sector_cap_g
+        Σ_(i thuộc group g) w_i ≤ group_cap_g
 ```
 
 Nhóm có thể thêm turnover constraint nếu input và UI đã hỗ trợ. Constraint set phải feasible và được hiển thị cạnh kết quả.
@@ -198,9 +198,9 @@ Risk and Return Allocation Brief phải theo thứ tự **Result → Reason → 
 
 ### Existing arithmetic evidence
 
-Fixture lịch sử trong [`data/`](../data/README.md) đã từng reconcile allocation, period return và Euler risk contribution cho FPT, HPG, GLD và BTC trên 9 returns. Nó chỉ chứng minh shape/arithmetic cũ; vì chứa multi-asset, thiếu benchmark và chưa có optimizer nên **không phải expected result hoàn chỉnh của Core MVP hiện tại**.
+Fixture lịch sử trong [`data/`](../data/README.md) đã từng reconcile allocation, period return và Euler risk contribution cho FPT, HPG, GLD và BTC trên 9 returns. FPT, HPG và GLD là partial evidence cho scope hiện tại; BTC nằm ngoài MVP, còn silver, benchmark và optimizer vẫn thiếu.
 
-Expected result current-scope sẽ chỉ được đánh dấu complete khi repo có equity-only fixture với benchmark, sector/factor mapping, constraint config, optimized weights và current–optimized metrics. Không điền số giả để tạo cảm giác implementation đã tồn tại.
+Expected result current-scope sẽ chỉ được đánh dấu complete khi repo có fixture cổ phiếu/gold/silver với benchmark, mapping, constraint config, optimized weights và current–optimized metrics. Không điền số giả để tạo cảm giác implementation đã tồn tại.
 
 ## 12. Limitations và open dependencies
 
@@ -208,7 +208,7 @@ Expected result current-scope sẽ chỉ được đánh dấu complete khi repo
 | --- | --- | --- |
 | VN-Index chưa resolve qua Yahoo adapter cũ | Chặn benchmark output | Chọn/validate provider; fallback phải ghi nhãn proxy |
 | Chưa có sector/factor mapping point-in-time | Chặn grouped/factor output đầy đủ | Commit source, mapping và effective date |
-| Fixture chỉ có 9 returns | Không đủ cho risk/optimization interpretation | Tạo equity-only long-window fixture |
+| Fixture chỉ có 9 returns và chưa có silver | Không đủ cho risk/optimization interpretation | Tạo long-window fixture cho stocks/gold/silver |
 | Expected return/risk-free source chưa khóa | Max-Sharpe không đáng tin cậy | Giữ min-variance baseline; validate source trước khi bật |
 | Price return không gồm dividend, fee, tax | Không phải net/total investor return | Disclosure bắt buộc |
 | Historical covariance không phải forecast | Optimized weights phụ thuộc sample | Hiển thị horizon, estimator và sensitivity warning |
@@ -218,7 +218,7 @@ Expected result current-scope sẽ chỉ được đánh dấu complete khi repo
 
 | Previous position | Current decision | Reason |
 | --- | --- | --- |
-| Multi-asset MVP | Equity-only Core MVP | Giảm data/calendar/FX complexity để hoàn thành flow |
+| Multi-asset scope rộng | Khóa Core MVP ở equity, gold và silver | Đáp ứng nhu cầu so sánh asset class nhưng không mở toàn bộ multi-asset universe |
 | Benchmark từng deferred | Benchmark essential | Cần cho performance-relative evidence |
 | Optimization từng out of scope | Constrained minimum variance trong Core MVP | Tạo reference allocation có thể so sánh và hành động; vẫn giữ claim boundary |
 | Advanced Brinson/Carhart như hướng chính | Simple security/sector/factor contribution là Core; advanced attribution optional | Dễ hiểu hơn cho investor-facing monitoring và phù hợp data readiness |

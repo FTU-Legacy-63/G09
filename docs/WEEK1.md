@@ -12,9 +12,9 @@ Nhóm xem xét ba hướng trước khi chọn đề tài.
 
 ## 2. Target user
 
-Target user là **nhà đầu tư cá nhân đã có kiến thức cơ bản về tài chính và đang tự theo dõi một danh mục cổ phiếu nhưng chưa sử dụng hệ thống portfolio analytics chuyên nghiệp**.
+Target user là **nhà đầu tư cá nhân đã có kiến thức cơ bản về tài chính, đang tự theo dõi cổ phiếu và muốn so sánh thêm với vàng/bạc nhưng chưa sử dụng hệ thống portfolio analytics chuyên nghiệp**.
 
-Nhóm không nhắm tới người hoàn toàn mới, nhà quản lý quỹ chuyên nghiệp hoặc tổ chức tài chính. Tầm nhìn dài hạn có thể phục vụ danh mục nhiều asset class, nhưng phạm vi triển khai Core MVP hiện tại chỉ là cổ phiếu.
+Nhóm không nhắm tới người hoàn toàn mới, nhà quản lý quỹ chuyên nghiệp hoặc tổ chức tài chính. Core MVP chỉ mở rộng vừa đủ từ cổ phiếu sang vàng và bạc; các asset class khác thuộc tầm nhìn dài hạn.
 
 ## 3. Core user task
 
@@ -31,7 +31,7 @@ Người dùng có thể nhìn thấy giá trị, return hoặc volatility tổn
 
 ## 5. Problem statement
 
-> Nhà đầu tư cá nhân đang tự theo dõi danh mục cổ phiếu gặp khó khăn khi quyết định giữ nguyên hay tái phân bổ vì các chỉ số tổng hợp không giải thích return và risk tập trung ở đâu, kết quả khác benchmark như thế nào, và một phương án phân bổ khác làm thay đổi trade-off return–risk ra sao.
+> Nhà đầu tư cá nhân đang tự theo dõi cổ phiếu và muốn so sánh với vàng/bạc gặp khó khăn khi quyết định giữ nguyên hay tái phân bổ vì các chỉ số tổng hợp không giải thích return và risk tập trung ở đâu, kết quả khác benchmark như thế nào, và một phương án phân bổ khác làm thay đổi trade-off return–risk ra sao.
 
 Problem statement tập trung vào user, task, difficulty và context; benchmark hay optimization là lựa chọn giải pháp ở các tuần sau, không phải một phần của định nghĩa vấn đề ban đầu.
 
@@ -57,7 +57,7 @@ Quan sát từ Finfolio 1.0 cho thấy người dùng đã có thể nhìn thấ
 | --- | --- |
 | Quyết định ban đầu | Chọn Finfolio 2.0 trong ba problem candidates |
 | Feedback | Vai trò và output của từng thành viên cần rõ; phạm vi cần đủ nhỏ để tạo một flow hoàn chỉnh |
-| Revision hiện tại | Giữ tầm nhìn portfolio analytics rộng nhưng khóa Core MVP ở cổ phiếu; làm rõ benchmark và phương án tối ưu hóa là các phương tiện hỗ trợ user task |
+| Revision hiện tại | Giữ Core MVP đủ hẹp ở cổ phiếu, vàng và bạc; làm rõ benchmark và phương án tối ưu hóa là các phương tiện hỗ trợ user task |
 | Câu hỏi còn mở | Target user hiểu contribution và current–optimized comparison theo cách trình bày nào dễ nhất? |
 
 ## 9. Evidence/output của Week 1

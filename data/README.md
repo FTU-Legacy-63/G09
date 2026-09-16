@@ -1,6 +1,6 @@
 # Historical Week 3 sample fixture
 
-Thư mục này giữ fixture đã commit trước khi nhóm khóa Core MVP ở phạm vi equity-only. Nó là test evidence/fallback kỹ thuật, không phải dữ liệu khách hàng và không phải bước chính trong user journey.
+Thư mục này giữ fixture lịch sử dùng làm test evidence/fallback kỹ thuật, không phải dữ liệu khách hàng và không phải bước chính trong user journey.
 
 ## Files
 
@@ -13,7 +13,7 @@ Thư mục này giữ fixture đã commit trước khi nhóm khóa Core MVP ở 
 
 Fixture có 10 common dates cho FPT, HPG, GLD, BTC-USD và USD/VND. Cửa sổ này chỉ đủ kiểm tra parsing, currency conversion, allocation, return aggregation và risk-contribution arithmetic. Nó không đủ để diễn giải CAGR/volatility cho quyết định.
 
-Fixture cũng chưa có benchmark series, sector/factor mapping hoặc optimization result. Do đó, nó **không phải evidence hoàn chỉnh của Core MVP hiện tại**, vốn chỉ hỗ trợ cổ phiếu và bắt buộc có benchmark cùng constrained optimization. Phần GLD/BTC được giữ để bảo toàn historical evidence, không chứng minh current multi-asset support.
+Fixture cũng chưa có benchmark series, silver series, sector/factor mapping hoặc optimization result. FPT, HPG và GLD có thể tái sử dụng một phần cho scope cổ phiếu/vàng; BTC nằm ngoài Core MVP. Vì vậy fixture **chưa phải evidence hoàn chỉnh của Core MVP hiện tại**.
 
 ## Conventions
 
