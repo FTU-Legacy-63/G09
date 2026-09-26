@@ -31,7 +31,7 @@ Các asset class khác và Monte Carlo thuộc final product. Sample data trong 
 
 ## Week 6 working demo
 
-[Mở mã nguồn demo](demo/index.html). Demo dùng backend Python tải giá qua yfinance mỗi lần người dùng phân tích; không cần API key hoặc account. Để chạy local:
+[Mở demo công khai](https://g09-finfolio.vercel.app/) · [Mã nguồn demo](demo/index.html). Website được host trên Vercel như project SHB; Python Function tải giá qua yfinance mỗi lần người dùng phân tích. Không cần API key hoặc account. Để chạy local:
 
 ```bash
 cd G09-Finfolio
@@ -49,3 +49,5 @@ python3 -m unittest discover -s demo -p 'test_*.py'
 ```
 
 Demo hiện chỉ mở ba mã; yfinance cung cấp chuỗi giá lịch sử mới nhất khả dụng, không bảo đảm báo giá khớp lệnh real-time. Volatility và tối ưu hóa phụ thuộc vào khoảng ngày; đây không phải lời khuyên đầu tư. Việc hỗ trợ toàn bộ commodity khả dụng từ provider là phạm vi sản phẩm, chưa phải khả năng của demo Week 6. [Phạm vi, test table, bug log và trạng thái triển khai](docs/WEEK6.md).
+
+Production: <https://g09-finfolio.vercel.app/>. Hiện project Vercel chưa kết nối GitHub org để tự deploy khi push; sau khi thay đổi code, người có quyền Vercel chạy `vercel deploy --prod` tại thư mục repo hoặc cấp quyền GitHub App của Vercel cho repo `FTU-Legacy-63/G09`.

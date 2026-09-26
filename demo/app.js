@@ -185,7 +185,6 @@ document.querySelector('#decision-form').addEventListener('submit', (event) => {
 drawHoldings();
 const now = new Date();
 const endDate = new Date(now);
-endDate.setDate(endDate.getDate() + 1);
 const startDate = new Date(now);
 startDate.setMonth(startDate.getMonth() - 6);
 const localDate = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;

@@ -1,0 +1,15 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "functions": {
+    "api/market-data.py": {
+      "maxDuration": 60,
+      "excludeFiles": "{data/**,docs/**,demo/finance.test.mjs,demo/test_server.py}"
+    }
+  },
+  "rewrites": [
+    { "source": "/", "destination": "/demo/index.html" },
+    { "source": "/demo", "destination": "/demo/index.html" },
+    { "source": "/demo/", "destination": "/demo/index.html" }
+  ]
+}

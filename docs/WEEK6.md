@@ -25,7 +25,7 @@ Mã Finfolio 1.0 là tham chiếu cho input danh mục, dashboard và cách trì
 | Logic -> output | Brief phản ánh input mới | Browser hiển thị kết quả từ 127 ngày giá chung tải qua API, có thời điểm tải và ngày giá cuối | Pass Safari local, 26/09/2026 |
 | Output -> action | User có thể ghi nhận lựa chọn và lý do | Form ở cuối brief ghi nhận lựa chọn trong phiên | Implemented; browser review pending |
 | Repo -> local run | Người khác chạy được bằng lệnh README | Cài requirements, chạy `python3 demo/server.py`, mở `/demo/` | Pass, HTTP 200 và API 200 |
-| Repo -> public URL | Link mở trên thiết bị khác | Backend Python không thể chạy trên GitHub Pages; cần Python host riêng | Deployment blocker cần host |
+| Repo -> public URL | Link mở trên thiết bị khác | [g09-finfolio.vercel.app](https://g09-finfolio.vercel.app/) chạy static UI và Python Function | Pass, production HTTP 200 và API 200 ngày 26/09/2026 |
 
 ### Sample input để trình bày tại lớp
 
@@ -74,6 +74,7 @@ API boundary tests chạy bằng `python3 -m unittest discover -s demo -p 'test_
 | B03 | Sau khi sửa input, brief cũ có thể gây nhầm | Major | Kết quả cũ bị ẩn đến khi chạy lại | UI invalidates result khi form thay đổi; interaction review pending | Lê Bảo An / Nguyễn Quỳnh Anh review pending |
 | B04 | Demo chỉ mở ba mã và một commodity proxy | Major limitation | Không diễn giải như toàn bộ commodity universe | Warning và scope rõ; cần mở rộng universe sau Week 6 | Trần Minh Ngọc / Hoàng Khánh Linh review pending |
 | B05 | Dữ liệu cũ không có performance index benchmark | Major limitation | Benchmark được định danh đúng | Demo dùng GLD ETF proxy như performance comparator và ghi rõ; index integration pending | Trần Minh Ngọc / Hoàng Khánh Linh review pending |
+| B06 | Vercel GitHub App chưa được cấp quyền vào repo tổ chức `FTU-Legacy-63/G09` | Minor deployment workflow | Push lên main tự tạo deployment | Production đã deploy bằng CLI; các lần cập nhật cần `vercel deploy --prod` hoặc cấp quyền GitHub App | Lê Bảo An / org admin |
 
 ## Scope freeze và ownership
 
@@ -88,3 +89,10 @@ Freeze cho bản Week 6 demo: một route với ba instrument tải từ yfinanc
 | UI/UX | Nguyễn Ngọc Anh | Hai interface samples Drive và màn hình demo | Review copy, responsive và user comprehension |
 
 Các tên trong bảng là owner theo phân công đã ghi ở Week 5, không đồng nghĩa các thành viên đã tự chạy hoặc xác nhận bản build này. Việc xác nhận cá nhân cần được ghi bổ sung sau khi từng người kiểm tra.
+
+## Production deployment
+
+- URL: <https://g09-finfolio.vercel.app/>. Vercel project `g09-finfolio` thuộc cùng tài khoản đang host project SHB; là project riêng, không sửa cấu hình SHB.
+- `vercel.json` chọn static frontend và Python Function tại `/api/market-data`; `requirements.txt` pin phiên bản yfinance. Backend không cache và không fallback về fixture khi Yahoo lỗi.
+- Kiểm tra production ngày 26/09/2026: `/`, `/demo/styles.css`, `/demo/app.js`, `/docs/WEEK6.md` và `/api/market-data` đều HTTP 200. API trả nguồn Yahoo Finance qua yfinance cùng `fetched_at_utc`.
+- GitHub integration tự động chưa có quyền với repo org. CLI deploy hoạt động; sau mỗi cập nhật cần deploy lại thủ công cho đến khi quyền Vercel GitHub App được cấp.
