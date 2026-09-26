@@ -65,3 +65,32 @@ test('T06 invalid: insufficient dates and infeasible cap give clear errors', () 
   assert.throws(() => analyzePortfolio(rows, { ...baseInput, startDate: '2026-07-13' }), /5 ngày giá chung/);
   assert.throws(() => analyzePortfolio(rows, { ...baseInput, maxAssetPercent: 30 }), /quá thấp/);
 });
+
+test('T07 capital-based chart starts at input value and PnL reconciles', () => {
+  const result = analyzePortfolio(rows, { ...baseInput, initialCapital: 250000000 });
+  near(result.current.valuePath[0], 250000000, 1e-5);
+  near(result.reference.valuePath[0], 250000000, 1e-5);
+  near(result.benchmark.valuePath[0], 250000000, 1e-5);
+  near(result.current.pnlPath.at(-1), result.current.valuePath.at(-1) - 250000000, 1e-5);
+  near(result.current.pnlPath.at(-1), 250000000 * result.current.periodReturn, 1e-5);
+});
+
+test('T08 user-selected VN ticker and benchmark work without USD/FX', () => {
+  const extra = rows.filter((row) => row.symbol === 'FPT.VN').map((row) => ({ ...row, symbol: 'VCB.VN', close: Number(row.close) * 0.8 }));
+  const benchmark = rows.filter((row) => row.symbol === 'FPT.VN').map((row) => ({ ...row, symbol: 'E1VFVN30.VN', close: Number(row.close) * 0.35 }));
+  const result = analyzePortfolio([...rows, ...extra, ...benchmark], {
+    ...baseInput,
+    holdings: [{ symbol: 'VCB', weight: 55 }, { symbol: 'HPG.VN', weight: 45 }],
+    benchmarkSymbol: 'E1VFVN30.VN',
+    initialCapital: 120000000,
+  });
+  assert.deepEqual(result.symbols, ['VCB.VN', 'HPG.VN']);
+  assert.equal(result.benchmark.symbol, 'E1VFVN30.VN');
+  assert.equal(result.observations, 10);
+  near(result.current.valuePath[0], 120000000, 1e-5);
+});
+
+test('T09 invalid capital and unknown commodity code are rejected', () => {
+  assert.throws(() => analyzePortfolio(rows, { ...baseInput, initialCapital: 0 }), /Giá trị danh mục/);
+  assert.throws(() => analyzePortfolio(rows, { ...baseInput, holdings: [{ symbol: 'FPT.VN', weight: 50 }, { symbol: 'GC=F', weight: 50 }] }), /Mã cổ phiếu Việt Nam/);
+});

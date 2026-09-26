@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import math
+import re
 from datetime import date, datetime, timedelta, timezone
 from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
@@ -14,11 +15,32 @@ import yfinance as yf
 
 
 ROOT = Path(__file__).resolve().parents[1]
-ALLOWED_SYMBOLS = {"FPT.VN", "HPG.VN", "GLD"}
+COMMODITY_PROXIES = {"GLD", "SLV", "USO", "CPER", "DBA"}
+BENCHMARK_PRESETS = {"E1VFVN30.VN", "FUEVFVND.VN", "GLD", "SLV"}
+VN_STOCK_RE = re.compile(r"^[A-Z0-9]{2,10}\.VN$")
 YAHOO_FX = "VND=X"
 
 
-def fetch_market_data(start_text: str, end_text: str, selected: list[str]) -> dict:
+def normalize_vn_symbol(raw: str) -> str:
+    symbol = raw.strip().upper()
+    if re.fullmatch(r"[A-Z0-9]{2,10}", symbol):
+        symbol += ".VN"
+    if not VN_STOCK_RE.fullmatch(symbol):
+        raise ValueError("Mã cổ phiếu Việt Nam phải có dạng FPT hoặc FPT.VN.")
+    return symbol
+
+
+def normalize_holding(raw: str) -> str:
+    symbol = raw.strip().upper()
+    return symbol if symbol in COMMODITY_PROXIES else normalize_vn_symbol(symbol)
+
+
+def normalize_benchmark(raw: str) -> str:
+    symbol = raw.strip().upper()
+    return symbol if symbol in BENCHMARK_PRESETS else normalize_vn_symbol(symbol)
+
+
+def fetch_market_data(start_text: str, end_text: str, selected: list[str], benchmark: str = "GLD") -> dict:
     """Fetch unadjusted daily closes; no persistent or fixture fallback."""
     try:
         start = date.fromisoformat(start_text)
@@ -29,10 +51,14 @@ def fetch_market_data(start_text: str, end_text: str, selected: list[str]) -> di
         raise ValueError("Khoảng ngày không hợp lệ hoặc nằm trong tương lai.")
     if (end - start).days > 366 * 5:
         raise ValueError("Demo chỉ hỗ trợ tối đa 5 năm dữ liệu mỗi lần tải.")
-    if len(selected) < 2 or len(selected) > 3 or len(set(selected)) != len(selected) or not set(selected) <= ALLOWED_SYMBOLS:
-        raise ValueError("Chọn 2–3 mã hợp lệ, không trùng lặp.")
+    if len(selected) < 2 or len(selected) > 3:
+        raise ValueError("Chọn từ 2 đến 3 tài sản hợp lệ.")
+    holdings = [normalize_holding(symbol) for symbol in selected]
+    if len(set(holdings)) != len(holdings):
+        raise ValueError("Mã tài sản không được trùng lặp.")
+    benchmark_symbol = normalize_benchmark(benchmark)
 
-    symbols = sorted(set(selected) | {"GLD", YAHOO_FX})
+    symbols = sorted(set(holdings) | {benchmark_symbol} | ({YAHOO_FX} if any(symbol in COMMODITY_PROXIES for symbol in [*holdings, benchmark_symbol]) else set()))
     try:
         frame = yf.download(
             symbols,
@@ -51,6 +77,9 @@ def fetch_market_data(start_text: str, end_text: str, selected: list[str]) -> di
 
     rows = []
     close = frame["Close"]
+    missing = [symbol for symbol in symbols if symbol not in close or close[symbol].dropna().empty]
+    if missing:
+        raise RuntimeError(f"Yahoo Finance không có dữ liệu cho: {', '.join(missing)}. Hãy kiểm tra mã hoặc chọn benchmark khác.")
     for timestamp, record in close.iterrows():
         session_date = timestamp.date().isoformat()
         for symbol in symbols:
@@ -64,6 +93,7 @@ def fetch_market_data(start_text: str, end_text: str, selected: list[str]) -> di
         "source": "Yahoo Finance via yfinance",
         "fetched_at_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "requested_symbols": symbols,
+        "benchmark": benchmark_symbol,
     }
 
 
@@ -78,6 +108,7 @@ class Handler(SimpleHTTPRequestHandler):
                 query.get("start", [""])[0],
                 query.get("end", [""])[0],
                 query.get("symbol", []),
+                query.get("benchmark", ["GLD"])[0],
             )
             self.send_json(200, result)
         except ValueError as exc:

@@ -39,7 +39,7 @@ python3 -m pip install -r demo/requirements.txt
 python3 demo/server.py
 ```
 
-Mở <http://127.0.0.1:8123/demo/>. Không mở `index.html` bằng `file://` hoặc `python3 -m http.server`: hai cách đó không có API yfinance. Dữ liệu đầu vào minh họa gồm FPT.VN 40%, HPG.VN 35%, GLD 25%, 6 tháng gần nhất, benchmark GLD quy đổi sang VND, giới hạn 80% mỗi mã và 60% commodity. Chọn **Phân tích danh mục** để tải giá mới và xem brief, sau đó ghi nhận một quyết định và lý do. Nếu Yahoo Finance không trả dữ liệu, ứng dụng báo lỗi và không tự dùng fixture.
+Mở <http://127.0.0.1:8123/demo/>. Không mở `index.html` bằng `file://` hoặc `python3 -m http.server`: hai cách đó không có API yfinance. Dữ liệu đầu vào minh họa gồm FPT.VN 40%, HPG.VN 35%, GLD 25%, 6 tháng gần nhất, benchmark VN30 ETF, giới hạn 80% mỗi mã và 60% commodity. Có thể nhập một mã cổ phiếu VN khác (ví dụ `VCB` hoặc `VCB.VN`), chọn một trong năm commodity ETF proxy, chọn benchmark và nhập giá trị danh mục đầu kỳ bằng VND. Chọn **Phân tích danh mục** để tải giá mới và xem brief, sau đó ghi nhận một quyết định và lý do. Nếu Yahoo Finance không trả dữ liệu cho mã đã chọn, ứng dụng báo lỗi và không tự dùng fixture.
 
 Kiểm tra logic tự động:
 
@@ -48,6 +48,6 @@ node --test demo/finance.test.mjs
 python3 -m unittest discover -s demo -p 'test_*.py'
 ```
 
-Demo hiện chỉ mở ba mã; yfinance cung cấp chuỗi giá lịch sử mới nhất khả dụng, không bảo đảm báo giá khớp lệnh real-time. Volatility và tối ưu hóa phụ thuộc vào khoảng ngày; đây không phải lời khuyên đầu tư. Việc hỗ trợ toàn bộ commodity khả dụng từ provider là phạm vi sản phẩm, chưa phải khả năng của demo Week 6. [Phạm vi, test table, bug log và trạng thái triển khai](docs/WEEK6.md).
+Demo phân tích 2–3 tài sản một lần: mã cổ phiếu `.VN` có dữ liệu từ Yahoo và năm ETF proxy đại diện cho vàng, bạc, dầu, đồng, nông sản. Biểu đồ có một đường tổng giá trị danh mục bắt đầu từ vốn đầu kỳ, các mốc ngày và tooltip giá trị/PnL; hai đường phụ là phương án tham khảo và benchmark. ETF proxy không phải giá commodity spot hay futures. yfinance cung cấp chuỗi giá lịch sử mới nhất khả dụng, không bảo đảm báo giá khớp lệnh real-time. Volatility và tối ưu hóa phụ thuộc vào khoảng ngày; đây không phải lời khuyên đầu tư. Việc hỗ trợ toàn bộ commodity khả dụng từ provider là phạm vi sản phẩm, chưa phải khả năng của demo. [Phạm vi, test table, bug log và trạng thái triển khai](docs/WEEK6.md).
 
 Production: <https://g09-finfolio.vercel.app/>. Hiện project Vercel chưa kết nối GitHub org để tự deploy khi push; sau khi thay đổi code, người có quyền Vercel chạy `vercel deploy --prod` tại thư mục repo hoặc cấp quyền GitHub App của Vercel cho repo `FTU-Legacy-63/G09`.

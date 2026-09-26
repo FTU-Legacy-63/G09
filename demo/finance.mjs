@@ -1,13 +1,6 @@
-export const INSTRUMENTS = {
-  'FPT.VN': { name: 'FPT', className: 'Equity', group: 'Technology', currency: 'VND' },
-  'HPG.VN': { name: 'Hòa Phát', className: 'Equity', group: 'Materials', currency: 'VND' },
-  GLD: { name: 'SPDR Gold Shares', className: 'Commodity proxy', group: 'Gold', currency: 'USD' },
-};
+import { COMMODITIES, benchmarkFor, instrumentFor, normalizeStockSymbol } from './instruments.mjs';
 
-export const BENCHMARK = {
-  symbol: 'GLD',
-  label: 'GLD (gold ETF proxy, VND)',
-};
+export const BENCHMARK = { symbol: 'GLD', label: 'Vàng (GLD ETF proxy, VND)' };
 
 export function parseMarketCsv(csv) {
   const lines = csv.trim().split(/\r?\n/);
@@ -32,7 +25,7 @@ function portfolioVariance(weights, covariance) {
   return weights.reduce((sum, weight, i) => sum + weight * weights.reduce((inner, other, j) => inner + other * covariance[i][j], 0), 0);
 }
 
-function portfolioResult(symbols, weights, prices, covariance) {
+function portfolioResult(symbols, weights, prices, covariance, initialCapital) {
   const firstValues = symbols.map((symbol) => prices[symbol][0]);
   const normalizedPaths = symbols.map((symbol, i) => prices[symbol].map((price) => price / firstValues[i]));
   const path = prices[symbols[0]].map((_, dateIndex) =>
@@ -48,7 +41,16 @@ function portfolioResult(symbols, weights, prices, covariance) {
     const marginal = weights.reduce((sum, weight, j) => sum + covariance[i][j] * weight, 0);
     return weights[i] * marginal / dailyVolatility * Math.sqrt(252);
   });
-  return { path, periodReturn, contribution, volatility, riskContribution, dailyVariance };
+  return {
+    path,
+    valuePath: path.map((ratio) => ratio * initialCapital),
+    pnlPath: path.map((ratio) => (ratio - 1) * initialCapital),
+    periodReturn,
+    contribution,
+    volatility,
+    riskContribution,
+    dailyVariance,
+  };
 }
 
 function optimizeOnOnePercentGrid(symbols, covariance, maxAssetWeight, maxCommodityWeight) {
@@ -65,7 +67,7 @@ function optimizeOnOnePercentGrid(symbols, covariance, maxAssetWeight, maxCommod
       if (!best || variance < best.variance) best = { weights, variance };
       return;
     }
-    const isCommodity = INSTRUMENTS[symbols[index]].className === 'Commodity proxy';
+    const isCommodity = instrumentFor(symbols[index]).className === 'Commodity proxy';
     const upper = Math.min(cap, remaining, isCommodity ? commodityCap - commodityUnits : 100);
     for (let unit = 0; unit <= upper; unit += 1) {
       units[index] = unit;
@@ -79,14 +81,21 @@ function optimizeOnOnePercentGrid(symbols, covariance, maxAssetWeight, maxCommod
 }
 
 export function analyzePortfolio(rows, input) {
-  const { holdings, startDate, endDate, maxAssetPercent = 80, maxCommodityPercent = 60 } = input;
+  const { holdings, startDate, endDate, maxAssetPercent = 80, maxCommodityPercent = 60, benchmarkSymbol = BENCHMARK.symbol, initialCapital = 100000000 } = input;
   if (!Array.isArray(holdings) || holdings.length < 2 || holdings.length > 3) {
-    throw new Error('Chọn từ 2 đến 3 mã trong bộ dữ liệu demo.');
+    throw new Error('Chọn từ 2 đến 3 tài sản để phân tích.');
   }
-  const symbols = holdings.map((item) => String(item.symbol || '').toUpperCase());
-  if (new Set(symbols).size !== symbols.length || symbols.some((symbol) => !INSTRUMENTS[symbol])) {
-    throw new Error('Mã bị trùng hoặc không thuộc bộ dữ liệu demo.');
+  const symbols = holdings.map((item) => {
+    const raw = String(item.symbol || '').trim().toUpperCase();
+    return COMMODITIES[raw] ? raw : normalizeStockSymbol(raw);
+  });
+  if (new Set(symbols).size !== symbols.length) {
+    throw new Error('Mã tài sản bị trùng.');
   }
+  const selectedBenchmark = benchmarkFor(String(benchmarkSymbol || '').trim().toUpperCase());
+  if (!selectedBenchmark) throw new Error('Benchmark không thuộc danh sách hỗ trợ.');
+  const capital = Number(initialCapital);
+  if (!Number.isFinite(capital) || capital <= 0 || capital > 1e15) throw new Error('Giá trị danh mục đầu kỳ phải lớn hơn 0 VND.');
   const weightNumbers = holdings.map((item) => Number(item.weight));
   if (weightNumbers.some((weight) => !Number.isFinite(weight) || weight < 0 || weight > 100)) {
     throw new Error('Mỗi tỷ trọng phải là số từ 0% đến 100%.');
@@ -105,7 +114,9 @@ export function analyzePortfolio(rows, input) {
     throw new Error('Giới hạn mỗi mã quá thấp để tổng tỷ trọng đạt 100%.');
   }
 
-  const required = [...new Set([...symbols, BENCHMARK.symbol, 'USDVND'])];
+  const instruments = Object.fromEntries([...new Set([...symbols, selectedBenchmark.symbol])].map((symbol) => [symbol, instrumentFor(symbol)]));
+  const needsFx = Object.values(instruments).some((instrument) => instrument.currency === 'USD');
+  const required = [...new Set([...symbols, selectedBenchmark.symbol, ...(needsFx ? ['USDVND'] : [])])];
   const observations = new Map();
   for (const row of rows) {
     if (row.session_date < startDate || row.session_date > endDate || !required.includes(row.symbol)) continue;
@@ -120,10 +131,10 @@ export function analyzePortfolio(rows, input) {
   if (dates.length < 5) throw new Error('Cần ít nhất 5 ngày giá chung để chạy bản demo. Hãy chọn khoảng dài hơn.');
 
   const prices = {};
-  for (const symbol of [...new Set([...symbols, BENCHMARK.symbol])]) {
+  for (const symbol of [...new Set([...symbols, selectedBenchmark.symbol])]) {
     prices[symbol] = dates.map((date) => {
       const point = observations.get(date);
-      return point[symbol] * (INSTRUMENTS[symbol].currency === 'USD' ? point.USDVND : 1);
+      return point[symbol] * (instruments[symbol].currency === 'USD' ? point.USDVND : 1);
     });
   }
   const returns = Object.fromEntries(Object.entries(prices).map(([symbol, series]) => [symbol,
@@ -131,29 +142,33 @@ export function analyzePortfolio(rows, input) {
   ]));
   const covariance = symbols.map((left) => symbols.map((right) => sampleCovariance(returns[left], returns[right])));
   const currentWeights = weightNumbers.map((weight) => weight / 100);
-  const current = portfolioResult(symbols, currentWeights, prices, covariance);
+  const current = portfolioResult(symbols, currentWeights, prices, covariance, capital);
   const referenceWeights = optimizeOnOnePercentGrid(symbols, covariance, assetCap, commodityCap);
-  const reference = portfolioResult(symbols, referenceWeights, prices, covariance);
-  const benchmarkPath = prices[BENCHMARK.symbol].map((price) => price / prices[BENCHMARK.symbol][0]);
+  const reference = portfolioResult(symbols, referenceWeights, prices, covariance, capital);
+  const benchmarkPath = prices[selectedBenchmark.symbol].map((price) => price / prices[selectedBenchmark.symbol][0]);
   const benchmarkReturn = benchmarkPath.at(-1) - 1;
-  const groups = [...new Set(symbols.map((symbol) => INSTRUMENTS[symbol].className))].map((className) => ({
+  const groups = [...new Set(symbols.map((symbol) => instruments[symbol].className))].map((className) => ({
     className,
-    weight: symbols.reduce((sum, symbol, i) => sum + (INSTRUMENTS[symbol].className === className ? currentWeights[i] : 0), 0),
-    contribution: symbols.reduce((sum, symbol, i) => sum + (INSTRUMENTS[symbol].className === className ? current.contribution[i] : 0), 0),
+    weight: symbols.reduce((sum, symbol, i) => sum + (instruments[symbol].className === className ? currentWeights[i] : 0), 0),
+    contribution: symbols.reduce((sum, symbol, i) => sum + (instruments[symbol].className === className ? current.contribution[i] : 0), 0),
   }));
   return {
     dates,
     symbols,
+    instruments,
+    initialCapital: capital,
     prices,
     current: { ...current, weights: currentWeights },
     reference: { ...reference, weights: referenceWeights },
-    benchmark: { symbol: BENCHMARK.symbol, label: BENCHMARK.label, path: benchmarkPath, periodReturn: benchmarkReturn },
+    benchmark: { ...selectedBenchmark, path: benchmarkPath, valuePath: benchmarkPath.map((ratio) => ratio * capital), periodReturn: benchmarkReturn },
     activeReturn: current.periodReturn - benchmarkReturn,
     groups,
     observations: dates.length,
     assumptions: [
       'Giá close chưa điều chỉnh; không gồm cổ tức, phí và thuế.',
-      'GLD là ETF proxy cho vàng, được quy đổi theo USD/VND cùng ngày.',
+      'Các commodity được biểu diễn bằng ETF proxy (GLD, SLV, USO, CPER, DBA), không phải giá spot hay vị thế futures trực tiếp.',
+      'Giá USD được quy đổi theo USD/VND cùng ngày; benchmark ETF tại Việt Nam dùng giá VND.',
+      'Giá trị đầu kỳ được phân bổ theo tỷ trọng và giả định mua tại giá close đầu tiên; không phải lịch sử giao dịch thực tế.',
       'Period return giả định mua và giữ với tỷ trọng đầu kỳ; volatility là ước lượng từ covariance và tỷ trọng đầu kỳ.',
       'Reference allocation tối thiểu hóa variance trên lưới 1%, long-only, cùng dữ liệu và giới hạn đã chọn.',
       'yfinance tải giá mới khi phân tích; phiên gần nhất có thể trễ và không phải giá giao dịch real-time.',

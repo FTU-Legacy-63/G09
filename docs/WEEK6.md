@@ -96,3 +96,13 @@ Các tên trong bảng là owner theo phân công đã ghi ở Week 5, không đ
 - `vercel.json` chọn static frontend và Python Function tại `/api/market-data`; `requirements.txt` pin phiên bản yfinance. Backend không cache và không fallback về fixture khi Yahoo lỗi.
 - Kiểm tra production ngày 26/09/2026: `/`, `/demo/styles.css`, `/demo/app.js`, `/docs/WEEK6.md` và `/api/market-data` đều HTTP 200. API trả nguồn Yahoo Finance qua yfinance cùng `fetched_at_utc`.
 - GitHub integration tự động chưa có quyền với repo org. CLI deploy hoạt động; sau mỗi cập nhật cần deploy lại thủ công cho đến khi quyền Vercel GitHub App được cấp.
+
+## Bản mở rộng demo sau Week 6
+
+Phần scope freeze và các kết quả kiểm thử ở trên ghi lại bản Week 6 gốc, không phải toàn bộ khả năng của bản demo hiện tại. Theo phản hồi mới, form hiện cho nhập **mã cổ phiếu Việt Nam** (`FPT` tự chuẩn hóa thành `FPT.VN`) hoặc chọn một trong năm commodity ETF proxy: GLD (vàng), SLV (bạc), USO (dầu thô), CPER (đồng), DBA (nông sản). Một lần phân tích vẫn giới hạn 2–3 vị thế để giữ logic tối ưu và giao diện MVP gọn. Mã không có chuỗi giá Yahoo phù hợp sẽ báo lỗi, không được giả định là khả dụng chỉ vì đúng cú pháp.
+
+Người dùng chọn performance benchmark riêng: E1VFVN30.VN (VN30 ETF), FUEVFVND.VN (VN Diamond ETF), GLD, SLV hoặc một mã `.VN` khác có dữ liệu. Đây là chuỗi để **so sánh hiệu suất**, không phải policy benchmark tổng hợp nhiều asset class. ETF proxy có tracking error và khác giá spot/futures; hai ETF Việt Nam cũng không được gọi là chính chỉ số VN30/VN Diamond.
+
+Biểu đồ theo tinh thần PnL chart của Finfolio 1.0 nhưng sửa mốc gốc: đường chính là **giá trị tổng danh mục bằng VND**, bắt đầu tại vốn đầu kỳ người dùng nhập, không chuẩn hóa thành 100. Cùng biểu đồ có đường phương án tham khảo và benchmark, có mốc ngày ở trục ngang, giá trị VND ở trục dọc và tooltip khi rê chuột hoặc dùng phím mũi tên; tooltip nêu giá trị và PnL danh mục ở ngày tương ứng. Giá trị từng ngày dựa trên số lượng giả định mua ở close đầu kỳ và giữ nguyên, quy đổi USD/VND cùng ngày cho proxy USD. Đây là mô phỏng buy-and-hold, không phải lịch sử giao dịch thật của người dùng.
+
+Kiểm thử bổ sung: `node --test demo/finance.test.mjs` kiểm tra chuỗi giá trị/PnL khớp vốn đầu kỳ, mã VN và benchmark động, cùng input vốn/commodity sai; `python3 -m unittest discover -s demo -p 'test_*.py'` kiểm tra API nhận symbol/benchmark mới và từ chối mã không có dữ liệu. Browser smoke test đã dùng yfinance thật với VCB.VN 40%, HPG.VN 35%, SLV 25%, vốn 250 triệu VND và benchmark GLD; biểu đồ cập nhật theo lựa chọn này và tooltip hiện giá trị ở từng ngày.

@@ -1,31 +1,41 @@
-import { analyzePortfolio, BENCHMARK, INSTRUMENTS } from './finance.mjs';
+import { analyzePortfolio } from './finance.mjs';
+import { COMMODITIES, normalizeStockSymbol } from './instruments.mjs';
 
 const form = document.querySelector('#portfolio-form');
 const holdingsList = document.querySelector('#holdings-list');
 const errorBox = document.querySelector('#form-error');
 const resultContent = document.querySelector('#result-content');
 const emptyState = document.querySelector('#empty-state');
-const symbolsAvailable = Object.keys(INSTRUMENTS);
 let holdings = [
-  { symbol: 'FPT.VN', weight: 40 },
-  { symbol: 'HPG.VN', weight: 35 },
-  { symbol: 'GLD', weight: 25 },
+  { kind: 'stock', symbol: 'FPT.VN', weight: 40 },
+  { kind: 'stock', symbol: 'HPG.VN', weight: 35 },
+  { kind: 'commodity', symbol: 'GLD', weight: 25 },
 ];
 let result = null;
 
 const percent = (value, digits = 2) => `${(value * 100).toFixed(digits)}%`;
 const points = (value) => `${value >= 0 ? '+' : ''}${(value * 100).toFixed(2)} đ.%`;
 const signedPercent = (value) => `${value >= 0 ? '+' : ''}${percent(value)}`;
+const vnd = (value) => `${new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 0 }).format(Math.round(value))} ₫`;
+const signedVnd = (value) => `${value >= 0 ? '+' : '-'}${vnd(Math.abs(value))}`;
+const compactVnd = (value) => {
+  const absolute = Math.abs(value);
+  if (absolute >= 1e9) return `${(value / 1e9).toFixed(1)} tỷ`;
+  if (absolute >= 1e6) return `${(value / 1e6).toFixed(0)} tr`;
+  return `${(value / 1e3).toFixed(0)} nghìn`;
+};
+const dateLabel = (date) => new Intl.DateTimeFormat('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC' }).format(new Date(`${date}T00:00:00Z`));
 const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
 
 function drawHoldings() {
   holdingsList.innerHTML = holdings.map((holding, index) => `
     <div class="holding-row">
-      <label class="asset-select-wrap"><span class="visually-hidden">Mã tài sản ${index + 1}</span><select data-index="${index}" data-field="symbol" aria-label="Mã tài sản ${index + 1}">
-        ${symbolsAvailable.map((symbol) => `<option value="${symbol}" ${holding.symbol === symbol ? 'selected' : ''}>${symbol} · ${INSTRUMENTS[symbol].name}</option>`).join('')}
-      </select></label>
-      <label class="weight-wrap"><span class="visually-hidden">Tỷ trọng mã ${index + 1}</span><input type="number" data-index="${index}" data-field="weight" min="0" max="100" step="0.1" value="${holding.weight}" aria-label="Tỷ trọng ${holding.symbol}" /><span>%</span></label>
-      <button type="button" class="remove-row" data-remove="${index}" aria-label="Xóa ${holding.symbol}">×</button>
+      <label class="asset-kind-wrap"><span class="visually-hidden">Loại tài sản ${index + 1}</span><select data-index="${index}" data-field="kind" aria-label="Loại tài sản ${index + 1}"><option value="stock" ${holding.kind === 'stock' ? 'selected' : ''}>Cổ phiếu VN</option><option value="commodity" ${holding.kind === 'commodity' ? 'selected' : ''}>Commodity</option></select></label>
+      ${holding.kind === 'stock'
+    ? `<label class="asset-symbol-wrap"><span class="visually-hidden">Mã cổ phiếu ${index + 1}</span><input type="text" data-index="${index}" data-field="symbol" value="${escapeHtml(holding.symbol)}" list="vn-stock-examples" spellcheck="false" autocomplete="off" aria-label="Mã cổ phiếu ${index + 1}" placeholder="VD: FPT hoặc FPT.VN" /></label>`
+    : `<label class="asset-symbol-wrap"><span class="visually-hidden">Commodity ${index + 1}</span><select data-index="${index}" data-field="symbol" aria-label="Commodity ${index + 1}">${Object.entries(COMMODITIES).map(([symbol, info]) => `<option value="${symbol}" ${holding.symbol === symbol ? 'selected' : ''}>${info.name} (${symbol} proxy)</option>`).join('')}</select></label>`}
+      <label class="weight-wrap"><span class="visually-hidden">Tỷ trọng mã ${index + 1}</span><input type="number" data-index="${index}" data-field="weight" min="0" max="100" step="0.1" value="${holding.weight}" aria-label="Tỷ trọng ${escapeHtml(holding.symbol)}" /><span>%</span></label>
+      <button type="button" class="remove-row" data-remove="${index}" aria-label="Xóa ${escapeHtml(holding.symbol)}">×</button>
     </div>`).join('');
   updateTotal();
 }
@@ -51,42 +61,98 @@ function invalidateResult() {
   document.querySelector('#decision-feedback').textContent = '';
 }
 
-function chartSvg(series) {
-  const width = 760;
-  const height = 226;
-  const padding = { left: 10, right: 10, top: 16, bottom: 28 };
-  const values = series.flatMap((item) => item.values);
-  const min = Math.min(...values);
-  const max = Math.max(...values);
-  const spread = Math.max(0.005, max - min);
-  const floor = min - spread * 0.15;
-  const ceiling = max + spread * 0.15;
-  const x = (index) => padding.left + index / (series[0].values.length - 1) * (width - padding.left - padding.right);
-  const y = (value) => height - padding.bottom - (value - floor) / (ceiling - floor) * (height - padding.top - padding.bottom);
-  const grid = [0, 0.5, 1].map((ratio) => {
-    const lineY = padding.top + ratio * (height - padding.top - padding.bottom);
-    return `<line x1="0" x2="${width}" y1="${lineY}" y2="${lineY}" class="chart-grid"/>`;
+function renderChart(data) {
+  const chart = document.querySelector('#performance-chart');
+  const width = Math.max(340, chart.clientWidth);
+  const height = 320;
+  const left = 75;
+  const right = 14;
+  const top = 17;
+  const bottom = 43;
+  const series = [
+    { label: 'Danh mục', values: data.current.valuePath, className: 'line-current' },
+    { label: 'Tham khảo', values: data.reference.valuePath, className: 'line-reference' },
+    { label: data.benchmark.label, values: data.benchmark.valuePath, className: 'line-benchmark' },
+  ];
+  const allValues = series.flatMap((item) => item.values);
+  const minimum = Math.min(...allValues);
+  const maximum = Math.max(...allValues);
+  const spread = Math.max(data.initialCapital * 0.01, maximum - minimum);
+  const floor = Math.max(0, minimum - spread * 0.12);
+  const ceiling = maximum + spread * 0.12;
+  const x = (index) => left + (index / (data.dates.length - 1)) * (width - left - right);
+  const y = (value) => height - bottom - ((value - floor) / (ceiling - floor)) * (height - top - bottom);
+  const fractions = width < 600 ? [0, 0.5, 1] : [0, 0.25, 0.5, 0.75, 1];
+  const ticks = [...new Set(fractions.map((fraction) => Math.round(fraction * (data.dates.length - 1))))];
+  const grid = [0, 1, 2, 3, 4].map((index) => {
+    const value = floor + (ceiling - floor) * index / 4;
+    const yy = y(value);
+    return `<line x1="${left}" x2="${width - right}" y1="${yy}" y2="${yy}" class="chart-grid"/><text x="${left - 10}" y="${yy + 3}" text-anchor="end" class="chart-axis-label">${compactVnd(value)}</text>`;
   }).join('');
+  const xLabels = ticks.map((index) => `<text x="${x(index)}" y="${height - 11}" text-anchor="${index === 0 ? 'start' : index === data.dates.length - 1 ? 'end' : 'middle'}" class="chart-axis-label">${dateLabel(data.dates[index])}</text>`).join('');
   const paths = series.map((item) => `<polyline points="${item.values.map((value, index) => `${x(index)},${y(value)}`).join(' ')}" class="chart-line ${item.className}"/>`).join('');
-  return `<svg role="img" aria-label="Biểu đồ giá trị hiện tại, tham khảo và benchmark theo thời gian" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none">${grid}${paths}</svg>`;
+  const currentPoints = series[0].values.map((value, index) => `${x(index)},${y(value)}`).join(' ');
+  const area = `<polygon points="${x(0)},${y(floor)} ${currentPoints} ${x(data.dates.length - 1)},${y(floor)}" fill="url(#portfolio-area)"/>`;
+  chart.innerHTML = `<div class="chart-frame" tabindex="0" aria-label="Biểu đồ giá trị danh mục theo ngày. Dùng phím mũi tên trái hoặc phải để xem từng phiên."><svg role="img" aria-label="Giá trị danh mục, phương án tham khảo và benchmark theo ngày, đơn vị VND" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none"><defs><linearGradient id="portfolio-area" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="#159566" stop-opacity="0.19"/><stop offset="100%" stop-color="#159566" stop-opacity="0"/></linearGradient></defs>${grid}${xLabels}${area}${paths}<line id="chart-crosshair" y1="${top}" y2="${height - bottom}" class="chart-crosshair" hidden/>${series.map((item, index) => `<circle id="chart-dot-${index}" r="5" class="chart-dot ${item.className}" hidden/>`).join('')}</svg><div id="chart-tooltip" class="chart-tooltip" role="tooltip" hidden></div></div>`;
+  const frame = chart.querySelector('.chart-frame');
+  const svg = chart.querySelector('svg');
+  const tooltip = chart.querySelector('#chart-tooltip');
+  let activeIndex = data.dates.length - 1;
+  function showAt(index) {
+    activeIndex = Math.max(0, Math.min(data.dates.length - 1, index));
+    const xx = x(activeIndex);
+    const line = chart.querySelector('#chart-crosshair');
+    line.setAttribute('x1', xx);
+    line.setAttribute('x2', xx);
+    line.hidden = false;
+    series.forEach((item, itemIndex) => {
+      const dot = chart.querySelector(`#chart-dot-${itemIndex}`);
+      dot.setAttribute('cx', xx);
+      dot.setAttribute('cy', y(item.values[activeIndex]));
+      dot.hidden = false;
+    });
+    tooltip.innerHTML = `<strong>${dateLabel(data.dates[activeIndex])}</strong>${series.map((item) => `<span>${escapeHtml(item.label)} <b>${vnd(item.values[activeIndex])}</b></span>`).join('')}<span class="tooltip-pnl">PnL danh mục <b>${signedVnd(data.current.pnlPath[activeIndex])}</b></span>`;
+    tooltip.hidden = false;
+    const pixelX = xx / width * frame.clientWidth;
+    tooltip.style.left = `${Math.max(8, Math.min(frame.clientWidth - 220, pixelX + 12))}px`;
+  }
+  function hide() {
+    tooltip.hidden = true;
+    chart.querySelector('#chart-crosshair').hidden = true;
+    series.forEach((_, index) => { chart.querySelector(`#chart-dot-${index}`).hidden = true; });
+  }
+  svg.addEventListener('pointermove', (event) => {
+    const rect = svg.getBoundingClientRect();
+    const coordinate = (event.clientX - rect.left) / rect.width * width;
+    showAt(Math.round((coordinate - left) / (width - left - right) * (data.dates.length - 1)));
+  });
+  svg.addEventListener('pointerleave', hide);
+  frame.addEventListener('focus', () => showAt(activeIndex));
+  frame.addEventListener('blur', hide);
+  frame.addEventListener('keydown', (event) => {
+    if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+      event.preventDefault();
+      showAt(activeIndex + (event.key === 'ArrowRight' ? 1 : -1));
+    }
+  });
 }
 
 function renderResult(data) {
   const { current, reference, benchmark, symbols } = data;
+  emptyState.hidden = true;
+  resultContent.hidden = false;
   document.querySelector('#results-subtitle').textContent = `${data.dates[0]} đến ${data.dates.at(-1)} · ${data.observations} ngày giá chung · tải lúc ${new Date(data.fetchedAtUtc).toLocaleString('vi-VN')} · base currency VND`;
-  const riskDelta = reference.volatility - current.volatility;
-  document.querySelector('#lead-headline').textContent = `Reference volatility ${riskDelta <= 0 ? 'thấp hơn' : 'cao hơn'} ${percent(Math.abs(riskDelta))} so với hiện tại.`;
-  document.querySelector('#lead-explanation').textContent = `Return kỳ của danh mục hiện tại là ${signedPercent(current.periodReturn)}, so với ${signedPercent(benchmark.periodReturn)} của ${BENCHMARK.label}. Đây là so sánh lịch sử trên cùng ${data.observations} ngày giá.`;
+  const pnl = current.valuePath.at(-1) - data.initialCapital;
+  document.querySelector('#lead-headline').textContent = `Danh mục ${pnl >= 0 ? 'tăng' : 'giảm'} ${vnd(Math.abs(pnl))} trong kỳ phân tích.`;
+  document.querySelector('#lead-explanation').textContent = `Giá trị đầu kỳ ${vnd(data.initialCapital)}; cuối kỳ ${vnd(current.valuePath.at(-1))}. Return ${signedPercent(current.periodReturn)} so với ${signedPercent(benchmark.periodReturn)} của ${benchmark.label}.`;
   document.querySelector('#metric-strip').innerHTML = [
-    ['Return kỳ', signedPercent(current.periodReturn), 'Mua và giữ từ tỷ trọng đầu kỳ'],
+    ['Giá trị cuối kỳ', vnd(current.valuePath.at(-1)), 'Danh mục hiện tại'],
+    ['PnL kỳ', signedVnd(pnl), signedPercent(current.periodReturn)],
     ['Volatility ước lượng', percent(current.volatility), 'Annualized, covariance lịch sử'],
-    ['Active return', points(data.activeReturn), `So với ${BENCHMARK.label}`],
   ].map(([label, value, description]) => `<div class="metric"><span>${label}</span><strong>${value}</strong><small>${description}</small></div>`).join('');
-  document.querySelector('#performance-chart').innerHTML = chartSvg([
-    { values: current.path, className: 'line-current' },
-    { values: reference.path, className: 'line-reference' },
-    { values: benchmark.path, className: 'line-benchmark' },
-  ]);
+  document.querySelector('#chart-start-value').textContent = `Đầu kỳ: ${vnd(data.initialCapital)}`;
+  document.querySelector('#benchmark-legend').textContent = benchmark.label;
+  renderChart(data);
   const allocationColors = ['#1f8c5c', '#84a978', '#e2bd54'];
   const cumulative = current.weights.reduce((out, weight, index) => {
     const start = index === 0 ? 0 : out[index - 1].end;
@@ -95,13 +161,11 @@ function renderResult(data) {
   }, []);
   document.querySelector('#allocation-visual').innerHTML = `<div class="allocation-bar" role="img" aria-label="Phân bổ danh mục hiện tại: ${symbols.map((symbol, i) => `${symbol} ${percent(current.weights[i], 0)}`).join(', ')}" style="background:linear-gradient(90deg,${cumulative.map((item) => `${item.color} ${item.start}% ${item.end}%`).join(',')})"></div><div class="allocation-labels">${symbols.map((symbol, i) => `<div><span class="allocation-swatch" style="background:${allocationColors[i]}"></span><span>${symbol}</span><strong>${percent(current.weights[i], 0)}</strong></div>`).join('')}</div>`;
   document.querySelector('#allocation-groups').innerHTML = data.groups.map((group) => `<p><span>${escapeHtml(group.className)}</span><strong>${percent(group.weight, 0)} · ${points(group.contribution)} return</strong></p>`).join('');
-  document.querySelector('#contribution-rows').innerHTML = symbols.map((symbol, i) => `<tr><th scope="row">${symbol}</th><td>${escapeHtml(INSTRUMENTS[symbol].group)}</td><td>${percent(current.weights[i], 0)}</td><td class="${current.contribution[i] >= 0 ? 'positive' : 'negative'}">${points(current.contribution[i])}</td><td>${points(current.riskContribution[i])}</td></tr>`).join('');
+  document.querySelector('#contribution-rows').innerHTML = symbols.map((symbol, i) => `<tr><th scope="row">${escapeHtml(symbol)}</th><td>${escapeHtml(data.instruments[symbol].group)}</td><td>${percent(current.weights[i], 0)}</td><td class="${current.contribution[i] >= 0 ? 'positive' : 'negative'}">${points(current.contribution[i])}</td><td>${points(current.riskContribution[i])}</td></tr>`).join('');
   document.querySelector('#contribution-total').innerHTML = `<tr><th scope="row" colspan="2">Tổng danh mục</th><td>100%</td><td>${points(current.periodReturn)}</td><td>${points(current.volatility)}</td></tr>`;
   document.querySelector('#comparison-metrics').innerHTML = `<div class="comparison-head"><span>Chỉ số</span><span>Hiện tại</span><span>Tham khảo</span></div><div><span>Return kỳ</span><strong>${signedPercent(current.periodReturn)}</strong><strong>${signedPercent(reference.periodReturn)}</strong></div><div><span>Volatility</span><strong>${percent(current.volatility)}</strong><strong>${percent(reference.volatility)}</strong></div><div><span>So với benchmark</span><strong>${points(current.periodReturn - benchmark.periodReturn)}</strong><strong>${points(reference.periodReturn - benchmark.periodReturn)}</strong></div>`;
   document.querySelector('#comparison-weights').innerHTML = `<div class="comparison-head"><span>Tỷ trọng</span><span>Hiện tại</span><span>Tham khảo</span></div>${symbols.map((symbol, i) => `<div><span>${symbol}</span><strong>${percent(current.weights[i], 0)}</strong><strong>${percent(reference.weights[i], 0)}</strong></div>`).join('')}`;
   document.querySelector('#assumptions-list').innerHTML = data.assumptions.map((assumption) => `<li>${escapeHtml(assumption)}</li>`).join('');
-  emptyState.hidden = true;
-  resultContent.hidden = false;
   document.querySelector('#decision-feedback').textContent = '';
   document.querySelector('#results').scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
 }
@@ -116,7 +180,15 @@ holdingsList.addEventListener('input', (event) => {
 });
 holdingsList.addEventListener('change', (event) => {
   const target = event.target;
-  if (target.dataset.field === 'symbol') {
+  if (target.dataset.field === 'kind') {
+    const holding = holdings[Number(target.dataset.index)];
+    holding.kind = target.value;
+    holding.symbol = target.value === 'commodity'
+      ? Object.keys(COMMODITIES).find((symbol) => !holdings.some((item) => item !== holding && item.symbol === symbol)) || 'GLD'
+      : ['FPT.VN', 'HPG.VN', 'VCB.VN', 'VNM.VN'].find((symbol) => !holdings.some((item) => item !== holding && item.symbol === symbol)) || 'FPT.VN';
+    drawHoldings();
+    invalidateResult();
+  } else if (target.dataset.field === 'symbol') {
     holdings[Number(target.dataset.index)].symbol = target.value;
     drawHoldings();
     invalidateResult();
@@ -130,19 +202,24 @@ holdingsList.addEventListener('click', (event) => {
   invalidateResult();
 });
 document.querySelector('#add-holding').addEventListener('click', () => {
-  if (holdings.length >= 3) return showError('Bộ dữ liệu demo có tối đa 3 mã.');
-  const next = symbolsAvailable.find((symbol) => !holdings.some((item) => item.symbol === symbol));
-  holdings.push({ symbol: next, weight: 0 });
+  if (holdings.length >= 3) return showError('Demo phân tích tối đa 3 tài sản mỗi lần.');
+  const next = ['FPT.VN', 'HPG.VN', 'VCB.VN', 'VNM.VN'].find((symbol) => !holdings.some((item) => item.symbol === symbol)) || 'VCB.VN';
+  holdings.push({ kind: 'stock', symbol: next, weight: 0 });
   drawHoldings();
   showError('');
   invalidateResult();
 });
-for (const id of ['start-date', 'end-date', 'asset-cap', 'commodity-cap']) {
+for (const id of ['start-date', 'end-date', 'asset-cap', 'commodity-cap', 'initial-capital', 'custom-benchmark']) {
   document.querySelector(`#${id}`).addEventListener('input', () => {
     showError('');
     invalidateResult();
   });
 }
+document.querySelector('#benchmark').addEventListener('change', (event) => {
+  document.querySelector('#custom-benchmark-wrap').hidden = event.target.value !== 'custom';
+  showError('');
+  invalidateResult();
+});
 form.addEventListener('submit', async (event) => {
   event.preventDefault();
   const button = document.querySelector('#analyze-button');
@@ -152,15 +229,29 @@ form.addEventListener('submit', async (event) => {
   try {
     const startDate = document.querySelector('#start-date').value;
     const endDate = document.querySelector('#end-date').value;
+    const normalizedHoldings = holdings.map((holding) => ({
+      symbol: holding.kind === 'stock' ? normalizeStockSymbol(holding.symbol) : holding.symbol,
+      weight: Number(holding.weight),
+    }));
+    if (normalizedHoldings.length < 2 || new Set(normalizedHoldings.map((holding) => holding.symbol)).size !== normalizedHoldings.length) throw new Error('Chọn 2-3 mã tài sản không trùng nhau.');
+    const total = normalizedHoldings.reduce((sum, holding) => sum + holding.weight, 0);
+    if (Math.abs(total - 100) > 0.01) throw new Error(`Tổng tỷ trọng phải bằng 100%, hiện là ${total.toFixed(1)}%.`);
+    const benchmarkChoice = document.querySelector('#benchmark').value;
+    const benchmarkSymbol = benchmarkChoice === 'custom' ? normalizeStockSymbol(document.querySelector('#custom-benchmark').value) : benchmarkChoice;
+    const initialCapital = Number(document.querySelector('#initial-capital').value);
+    if (!Number.isFinite(initialCapital) || initialCapital <= 0) throw new Error('Nhập giá trị danh mục đầu kỳ lớn hơn 0 VND.');
     const params = new URLSearchParams({ start: startDate, end: endDate });
-    holdings.forEach((holding) => params.append('symbol', holding.symbol));
+    normalizedHoldings.forEach((holding) => params.append('symbol', holding.symbol));
+    params.set('benchmark', benchmarkSymbol);
     const response = await fetch(`/api/market-data?${params}`, { cache: 'no-store' });
     const marketData = await response.json();
     if (!response.ok) throw new Error(marketData.error || 'Không tải được dữ liệu từ yfinance.');
     result = analyzePortfolio(marketData.rows, {
-      holdings,
+      holdings: normalizedHoldings,
       startDate,
       endDate,
+      benchmarkSymbol,
+      initialCapital,
       maxAssetPercent: document.querySelector('#asset-cap').value,
       maxCommodityPercent: document.querySelector('#commodity-cap').value,
     });
