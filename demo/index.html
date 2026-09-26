@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#21563f" />
+    <meta name="description" content="Finfolio Week 6 demo: phân tích danh mục cổ phiếu và commodity proxy với dữ liệu Yahoo Finance tải qua yfinance." />
+    <title>Finfolio | Week 6 demo</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <script type="module" src="./app.js"></script>
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="Điều hướng">
+        <a class="brand" href="#home" aria-label="Finfolio - về đầu trang"><span class="brand-mark" aria-hidden="true">⌁</span><span>Finfolio</span></a>
+        <div class="sidebar-middle">
+          <p class="sidebar-caption">Workspace</p>
+          <nav class="sidebar-nav">
+            <a href="#home" class="nav-link active">Tổng quan</a>
+            <a href="#portfolio-input" class="nav-link">Danh mục</a>
+            <a href="#results" class="nav-link">Phân tích</a>
+            <a href="#method" class="nav-link">Phương pháp</a>
+          </nav>
+        </div>
+        <div class="sidebar-footer"><span>G09 · FTU</span><span>Week 6 demo</span></div>
+      </aside>
+
+      <main id="home" class="main-content">
+        <header class="topbar">
+          <span class="topbar-name">Portfolio Analysis Dashboard</span>
+          <a href="#portfolio-input" class="topbar-action">Nhập danh mục <span aria-hidden="true">↗</span></a>
+        </header>
+
+        <section class="hero" aria-labelledby="hero-title">
+          <div class="hero-copy">
+            <span class="hero-label">Finfolio 2.0 · Demo Week 6</span>
+            <h1 id="hero-title">Hiểu danh mục trước khi điều chỉnh.</h1>
+            <p>Cùng một dữ liệu, xem lợi nhuận và rủi ro đến từ đâu, rồi so sánh với một phân bổ tham khảo.</p>
+            <a class="primary-button" href="#portfolio-input">Bắt đầu phân tích <span aria-hidden="true">→</span></a>
+          </div>
+          <div class="hero-visual" aria-label="Danh mục minh họa có cổ phiếu và gold ETF proxy">
+            <p>Danh mục mẫu</p>
+            <div class="hero-asset"><span>FPT.VN</span><span>Cổ phiếu</span></div>
+            <div class="hero-asset"><span>HPG.VN</span><span>Cổ phiếu</span></div>
+            <div class="hero-asset"><span>GLD</span><span>Gold ETF proxy</span></div>
+            <div class="hero-visual-foot">Một luồng từ dữ liệu đầu vào đến Decision Brief</div>
+          </div>
+        </section>
+
+        <section id="portfolio-input" class="work-section" aria-labelledby="input-title">
+          <div class="section-heading">
+            <h2 id="input-title">Danh mục cần phân tích</h2>
+            <p>Chỉnh tỷ trọng để xem dữ liệu mới nhất nguồn trả về dẫn đến kết quả nào. Demo hiện hỗ trợ FPT, HPG và GLD.</p>
+          </div>
+          <form id="portfolio-form" novalidate>
+            <div class="form-topline"><span>Mã tài sản</span><span>Tỷ trọng đầu kỳ</span></div>
+            <div id="holdings-list" class="holdings-list"></div>
+            <div class="form-tools">
+              <button id="add-holding" class="text-button" type="button">+ Thêm mã</button>
+              <span id="weight-total" class="total-weight">Tổng: 100%</span>
+            </div>
+
+            <div class="form-grid">
+              <label>Từ ngày<input id="start-date" type="date" required /></label>
+              <label>Đến ngày (bao gồm)<input id="end-date" type="date" required /></label>
+              <label>Performance benchmark
+                <select id="benchmark" required><option value="GLD">GLD · Gold ETF proxy (VND)</option></select>
+              </label>
+              <label>Giới hạn mỗi mã (%)<input id="asset-cap" type="number" min="0" max="100" step="1" value="80" required /></label>
+              <label>Giới hạn commodity (%)<input id="commodity-cap" type="number" min="0" max="100" step="1" value="60" required /></label>
+            </div>
+            <p class="form-help">Giới hạn áp dụng cho phương án tham khảo; tỷ trọng hiện tại vẫn được giữ để so sánh.</p>
+            <div id="form-error" class="form-error" role="alert" hidden></div>
+            <div class="form-bottom">
+              <span>Nguồn: Yahoo Finance qua yfinance · tải lại mỗi lần phân tích</span>
+              <button id="analyze-button" class="primary-button" type="submit">Phân tích danh mục <span aria-hidden="true">→</span></button>
+            </div>
+          </form>
+        </section>
+
+        <section id="results" class="results-section" aria-labelledby="results-title">
+          <div class="section-heading">
+            <h2 id="results-title">Risk and Return Allocation Brief</h2>
+            <p id="results-subtitle">Nhập danh mục rồi chọn “Phân tích danh mục” để xem kết quả.</p>
+          </div>
+          <div id="empty-state" class="empty-state">
+            <span aria-hidden="true">↗</span>
+            <p>Một kết quả chính, đủ để hiểu danh mục hiện tại và một phương án phân bổ khác.</p>
+          </div>
+          <div id="result-content" hidden>
+            <div class="notice" role="note"><strong>Giá mới nhất nguồn trả về, không phải giá khớp lệnh real-time.</strong> Dữ liệu có thể trễ; volatility và phương án tham khảo nhạy với khoảng thời gian chọn. Không dùng kết quả như lời khuyên đầu tư.</div>
+            <div class="lead-result"><div><span>Kết quả chính</span><h3 id="lead-headline"></h3><p id="lead-explanation"></p></div><div class="lead-icon" aria-hidden="true">↗</div></div>
+            <div id="metric-strip" class="metric-strip"></div>
+            <div class="result-grid">
+              <section class="chart-panel" aria-labelledby="chart-title"><div class="panel-heading"><h3 id="chart-title">Diễn biến giá trị</h3><span>Gốc 100</span></div><div id="performance-chart" class="performance-chart"></div><div class="legend"><span class="legend-current">Hiện tại</span><span class="legend-reference">Tham khảo</span><span class="legend-benchmark">GLD benchmark</span></div></section>
+              <section class="allocation-panel" aria-labelledby="allocation-title"><div class="panel-heading"><h3 id="allocation-title">Phân bổ hiện tại</h3><span>100%</span></div><div id="allocation-visual"></div><div id="allocation-groups"></div></section>
+            </div>
+            <section class="table-panel" aria-labelledby="contribution-title"><div class="panel-heading"><h3 id="contribution-title">Đóng góp theo từng mã</h3><span>Đơn vị: điểm %</span></div><div class="table-scroll"><table><thead><tr><th>Mã</th><th>Nhóm</th><th>Tỷ trọng</th><th>Return contribution</th><th>Risk contribution</th></tr></thead><tbody id="contribution-rows"></tbody><tfoot id="contribution-total"></tfoot></table></div><p class="table-footnote">Return contribution cộng lại bằng return của danh mục. Risk contribution cộng lại bằng volatility ước lượng.</p></section>
+            <section class="comparison-panel" aria-labelledby="comparison-title"><div class="panel-heading"><h3 id="comparison-title">Hiện tại và phương án tham khảo</h3><span>Minimum variance · lưới 1%</span></div><div class="comparison-layout"><div id="comparison-metrics"></div><div id="comparison-weights"></div></div><p class="table-footnote">Cùng chuỗi giá, ngày phân tích và covariance. Phương án tham khảo không tự thay đổi danh mục của bạn.</p></section>
+            <section class="decision-panel" aria-labelledby="decision-title"><div><h3 id="decision-title">Bạn sẽ làm gì tiếp?</h3><p>Ghi lại lựa chọn và lý do sau khi xem số liệu, giả định và giới hạn.</p></div><form id="decision-form"><fieldset><legend>Lựa chọn</legend><label><input type="radio" name="decision" value="Giữ nguyên" required /> Giữ nguyên</label><label><input type="radio" name="decision" value="Cân nhắc tái phân bổ" /> Cân nhắc tái phân bổ</label></fieldset><label for="decision-reason">Lý do ngắn gọn</label><textarea id="decision-reason" required minlength="8" placeholder="Ví dụ: Tôi muốn xem thêm dữ liệu dài hạn trước khi cân nhắc điều chỉnh."></textarea><button class="secondary-button" type="submit">Ghi nhận quyết định</button><p id="decision-feedback" role="status"></p></form></section>
+          </div>
+        </section>
+
+        <section id="method" class="method-section" aria-labelledby="method-title"><div class="section-heading"><h2 id="method-title">Phương pháp và nguồn dữ liệu</h2><p>Những thông tin cần có để kiểm tra và giải thích kết quả.</p></div><div class="method-grid"><div><h3>Phép tính chính</h3><p>Return kỳ là tổng tỷ trọng đầu kỳ nhân return từng mã. Risk dùng covariance của daily price return, annualize với 252 phiên; Euler risk contribution được cộng theo mã.</p></div><div><h3>Nguồn dữ liệu</h3><p>Backend tải giá close mới từ Yahoo Finance qua yfinance mỗi lần phân tích: FPT.VN, HPG.VN, GLD và VND=X. GLD quy đổi sang VND theo tỷ giá cùng ngày. Nếu nguồn lỗi, hệ thống báo lỗi; không dùng dữ liệu cũ thay thế.</p></div><div><h3>Phạm vi</h3><p>Demo chỉ mở ba mã để giữ luồng kiểm thử rõ ràng. Sản phẩm tiếp tục hướng tới cổ phiếu và commodity khả dụng từ nguồn được hỗ trợ.</p></div></div><details><summary>Xem giả định đầy đủ</summary><ul id="assumptions-list"><li>Phân tích chỉ dùng dữ liệu lịch sử và không tạo lệnh giao dịch.</li></ul></details></section>
+        <footer class="footer"><span>Finfolio · G09</span><a href="../docs/WEEK6.md">Xem bằng chứng Week 6</a></footer>
+      </main>
+    </div>
+  </body>
+</html>
