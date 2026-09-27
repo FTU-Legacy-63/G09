@@ -12,6 +12,10 @@ from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
 import yfinance as yf
+if __package__:
+    from .symbol_search import search_stocks
+else:
+    from symbol_search import search_stocks
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -100,6 +104,14 @@ def fetch_market_data(start_text: str, end_text: str, selected: list[str], bench
 class Handler(SimpleHTTPRequestHandler):
     def do_GET(self):
         url = urlparse(self.path)
+        if url.path == "/api/search-symbols":
+            try:
+                self.send_json(200, search_stocks(parse_qs(url.query).get("q", [""])[0]))
+            except ValueError as exc:
+                self.send_json(400, {"error": str(exc)})
+            except RuntimeError as exc:
+                self.send_json(502, {"error": str(exc)})
+            return
         if url.path != "/api/market-data":
             return super().do_GET()
         query = parse_qs(url.query)

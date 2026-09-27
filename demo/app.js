@@ -12,6 +12,7 @@ let holdings = [
   { kind: 'commodity', symbol: 'GLD', weight: 25 },
 ];
 let result = null;
+let stockSearch = null;
 
 const percent = (value, digits = 2) => `${(value * 100).toFixed(digits)}%`;
 const points = (value) => `${value >= 0 ? '+' : ''}${(value * 100).toFixed(2)} đ.%`;
@@ -28,16 +29,74 @@ const dateLabel = (date) => new Intl.DateTimeFormat('vi-VN', { day: '2-digit', m
 const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
 
 function drawHoldings() {
+  closeStockSearch();
   holdingsList.innerHTML = holdings.map((holding, index) => `
     <div class="holding-row">
       <label class="asset-kind-wrap"><span class="visually-hidden">Loại tài sản ${index + 1}</span><select data-index="${index}" data-field="kind" aria-label="Loại tài sản ${index + 1}"><option value="stock" ${holding.kind === 'stock' ? 'selected' : ''}>Cổ phiếu VN</option><option value="commodity" ${holding.kind === 'commodity' ? 'selected' : ''}>Commodity</option></select></label>
       ${holding.kind === 'stock'
-    ? `<label class="asset-symbol-wrap"><span class="visually-hidden">Mã cổ phiếu ${index + 1}</span><input type="text" data-index="${index}" data-field="symbol" value="${escapeHtml(holding.symbol)}" list="vn-stock-examples" spellcheck="false" autocomplete="off" aria-label="Mã cổ phiếu ${index + 1}" placeholder="VD: FPT hoặc FPT.VN" /></label>`
+    ? `<div class="asset-symbol-wrap stock-picker"><label for="stock-search-${index}" class="visually-hidden">Tìm cổ phiếu ${index + 1}</label><input id="stock-search-${index}" type="search" role="combobox" data-index="${index}" data-field="stock-search" value="${escapeHtml(holding.symbol)}" spellcheck="false" autocomplete="off" aria-autocomplete="list" aria-expanded="false" aria-controls="stock-options-${index}" aria-label="Tìm cổ phiếu ${index + 1} theo tên hoặc mã" placeholder="Tìm tên công ty hoặc mã..." /><div id="stock-options-${index}" class="stock-options" role="listbox" aria-label="Kết quả tìm cổ phiếu ${index + 1}" hidden></div></div>`
     : `<label class="asset-symbol-wrap"><span class="visually-hidden">Commodity ${index + 1}</span><select data-index="${index}" data-field="symbol" aria-label="Commodity ${index + 1}">${Object.entries(COMMODITIES).map(([symbol, info]) => `<option value="${symbol}" ${holding.symbol === symbol ? 'selected' : ''}>${info.name} (${symbol} proxy)</option>`).join('')}</select></label>`}
       <label class="weight-wrap"><span class="visually-hidden">Tỷ trọng mã ${index + 1}</span><input type="number" data-index="${index}" data-field="weight" min="0" max="100" step="0.1" value="${holding.weight}" aria-label="Tỷ trọng ${escapeHtml(holding.symbol)}" /><span>%</span></label>
       <button type="button" class="remove-row" data-remove="${index}" aria-label="Xóa ${escapeHtml(holding.symbol)}">×</button>
     </div>`).join('');
   updateTotal();
+}
+
+function closeStockSearch() {
+  if (!stockSearch) return;
+  clearTimeout(stockSearch.timer);
+  stockSearch.controller?.abort();
+  stockSearch.input.setAttribute('aria-expanded', 'false');
+  stockSearch.input.removeAttribute('aria-activedescendant');
+  stockSearch.list.hidden = true;
+  stockSearch = null;
+}
+
+function renderStockOptions(search, message = '') {
+  if (stockSearch !== search) return;
+  search.list.innerHTML = message
+    ? `<div class="stock-search-message" role="status">${escapeHtml(message)}</div>`
+    : search.results.map((item, index) => `<div id="stock-option-${search.index}-${index}" class="stock-option${index === search.activeIndex ? ' active' : ''}" role="option" aria-selected="${index === search.activeIndex}" data-stock-option="${index}"><strong>${escapeHtml(item.symbol)}</strong><span>${escapeHtml(item.name)}</span><small>${escapeHtml(item.exchange || 'VN')}</small></div>`).join('');
+  search.list.hidden = false;
+  search.input.setAttribute('aria-expanded', 'true');
+  if (search.activeIndex >= 0 && !message) search.input.setAttribute('aria-activedescendant', `stock-option-${search.index}-${search.activeIndex}`);
+  else search.input.removeAttribute('aria-activedescendant');
+}
+
+function selectStock(search, item) {
+  if (stockSearch !== search) return;
+  holdings[search.index].symbol = item.symbol;
+  closeStockSearch();
+  drawHoldings();
+  showError('');
+  invalidateResult();
+  holdingsList.querySelector(`[data-field="weight"][data-index="${search.index}"]`).focus({ preventScroll: true });
+}
+
+function startStockSearch(input) {
+  if (stockSearch?.input !== input) closeStockSearch();
+  if (!stockSearch) stockSearch = { input, index: Number(input.dataset.index), list: input.nextElementSibling, results: [], activeIndex: -1, controller: null, timer: null };
+  const search = stockSearch;
+  const query = input.value.trim();
+  clearTimeout(search.timer);
+  search.controller?.abort();
+  search.results = [];
+  search.activeIndex = -1;
+  if (query.length < 2) return renderStockOptions(search, 'Nhập ít nhất 2 ký tự để tìm tên hoặc mã.');
+  renderStockOptions(search, 'Đang tìm cổ phiếu...');
+  search.timer = setTimeout(async () => {
+    search.controller = new AbortController();
+    try {
+      const response = await fetch(`/api/search-symbols?q=${encodeURIComponent(query)}`, { signal: search.controller.signal });
+      const payload = await response.json();
+      if (stockSearch !== search || input.value.trim() !== query) return;
+      if (!response.ok) throw new Error(payload.error || 'Không tìm được mã lúc này.');
+      search.results = payload.results || [];
+      renderStockOptions(search, search.results.length ? '' : 'Không có mã phù hợp. Thử tên khác hoặc ticker.');
+    } catch (error) {
+      if (error.name !== 'AbortError' && stockSearch === search) renderStockOptions(search, error.message || 'Không thể tìm cổ phiếu lúc này.');
+    }
+  }, 260);
 }
 
 function updateTotal() {
@@ -172,6 +231,13 @@ function renderResult(data) {
 
 holdingsList.addEventListener('input', (event) => {
   const target = event.target;
+  if (target.dataset.field === 'stock-search') {
+    holdings[Number(target.dataset.index)].symbol = '';
+    startStockSearch(target);
+    showError('');
+    invalidateResult();
+    return;
+  }
   if (!target.dataset.field) return;
   holdings[Number(target.dataset.index)][target.dataset.field] = target.dataset.field === 'weight' ? Number(target.value) : target.value;
   updateTotal();
@@ -193,6 +259,36 @@ holdingsList.addEventListener('change', (event) => {
     drawHoldings();
     invalidateResult();
   }
+});
+holdingsList.addEventListener('focusin', (event) => {
+  if (event.target.dataset.field === 'stock-search') startStockSearch(event.target);
+});
+holdingsList.addEventListener('focusout', (event) => {
+  if (event.target.dataset.field === 'stock-search') setTimeout(() => {
+    if (stockSearch?.input === event.target && document.activeElement !== event.target) closeStockSearch();
+  }, 120);
+});
+holdingsList.addEventListener('keydown', (event) => {
+  const search = stockSearch;
+  if (!search || event.target !== search.input) return;
+  if (event.key === 'Escape') {
+    event.preventDefault();
+    closeStockSearch();
+  } else if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+    event.preventDefault();
+    if (!search.results.length) return;
+    search.activeIndex = (search.activeIndex + (event.key === 'ArrowDown' ? 1 : -1) + search.results.length) % search.results.length;
+    renderStockOptions(search);
+  } else if (event.key === 'Enter') {
+    event.preventDefault();
+    if (search.activeIndex >= 0) selectStock(search, search.results[search.activeIndex]);
+  }
+});
+holdingsList.addEventListener('pointerdown', (event) => {
+  const option = event.target.closest('[data-stock-option]');
+  if (!option || !stockSearch) return;
+  event.preventDefault();
+  selectStock(stockSearch, stockSearch.results[Number(option.dataset.stockOption)]);
 });
 holdingsList.addEventListener('click', (event) => {
   const button = event.target.closest('[data-remove]');
@@ -227,6 +323,7 @@ form.addEventListener('submit', async (event) => {
   button.firstChild.textContent = 'Đang phân tích ';
   showError('');
   try {
+    if (holdings.some((holding) => holding.kind === 'stock' && !holding.symbol)) throw new Error('Chọn cổ phiếu từ danh sách gợi ý trước khi phân tích.');
     const startDate = document.querySelector('#start-date').value;
     const endDate = document.querySelector('#end-date').value;
     const normalizedHoldings = holdings.map((holding) => ({

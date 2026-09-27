@@ -39,7 +39,7 @@ python3 -m pip install -r demo/requirements.txt
 python3 demo/server.py
 ```
 
-Mở <http://127.0.0.1:8123/demo/>. Không mở `index.html` bằng `file://` hoặc `python3 -m http.server`: hai cách đó không có API yfinance. Dữ liệu đầu vào minh họa gồm FPT.VN 40%, HPG.VN 35%, GLD 25%, 6 tháng gần nhất, benchmark VN30 ETF, giới hạn 80% mỗi mã và 60% commodity. Có thể nhập một mã cổ phiếu VN khác (ví dụ `VCB` hoặc `VCB.VN`), chọn một trong năm commodity ETF proxy, chọn benchmark và nhập giá trị danh mục đầu kỳ bằng VND. Chọn **Phân tích danh mục** để tải giá mới và xem brief, sau đó ghi nhận một quyết định và lý do. Nếu Yahoo Finance không trả dữ liệu cho mã đã chọn, ứng dụng báo lỗi và không tự dùng fixture.
+Mở <http://127.0.0.1:8123/demo/>. Không mở `index.html` bằng `file://` hoặc `python3 -m http.server`: hai cách đó không có API yfinance. Dữ liệu đầu vào minh họa gồm FPT.VN 40%, HPG.VN 35%, GLD 25%, 6 tháng gần nhất, benchmark VN30 ETF, giới hạn 80% mỗi mã và 60% commodity. Với cổ phiếu, gõ **tên công ty hoặc ticker** vào ô tìm kiếm rồi **chọn một gợi ý** (ví dụ “Vietcombank” → `VCB.VN`); có thể dùng chuột hoặc phím mũi tên và Enter. Sau đó chọn commodity ETF proxy, benchmark và giá trị danh mục đầu kỳ bằng VND. Chọn **Phân tích danh mục** để tải giá mới và xem brief, rồi ghi nhận quyết định và lý do. Gợi ý tên/mã không đảm bảo có chuỗi giá; nếu Yahoo Finance không trả dữ liệu cho mã đã chọn, ứng dụng báo lỗi và không tự dùng fixture.
 
 Kiểm tra logic tự động:
 

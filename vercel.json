@@ -4,7 +4,11 @@
   "functions": {
     "api/market-data.py": {
       "maxDuration": 60,
-      "excludeFiles": "{data/**,docs/**,demo/finance.test.mjs,demo/test_server.py}"
+      "excludeFiles": "{data/**,docs/**,demo/finance.test.mjs,demo/test_server.py,demo/test_symbol_search.py}"
+    },
+    "api/search-symbols.py": {
+      "maxDuration": 15,
+      "excludeFiles": "{data/**,docs/**,demo/finance.test.mjs,demo/test_server.py,demo/test_symbol_search.py}"
     }
   },
   "rewrites": [
