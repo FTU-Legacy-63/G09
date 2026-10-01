@@ -104,7 +104,15 @@
           </div>
         </section>
 
-        <section id="method" class="method-section" aria-labelledby="method-title"><div class="section-heading"><h2 id="method-title">Phương pháp và nguồn dữ liệu</h2><p>Những thông tin cần có để kiểm tra và giải thích kết quả.</p></div><div class="method-grid"><div><h3>Phép tính chính</h3><p>Giá trị danh mục bắt đầu từ số VND người dùng nhập; mỗi vị thế được mua theo tỷ trọng tại giá đầu kỳ và giữ nguyên số lượng. PnL bằng giá trị tại ngày xem trừ giá trị đầu kỳ.</p></div><div><h3>Nguồn dữ liệu</h3><p>Backend tải close mới từ Yahoo Finance qua yfinance mỗi lần phân tích. Mã VN có hậu tố .VN. Commodity dùng ETF proxy niêm yết USD, quy đổi theo VND=X cùng ngày. Nếu thiếu dữ liệu, hệ thống báo lỗi.</p></div><div><h3>Phạm vi</h3><p>Demo hỗ trợ 2-3 tài sản một lần, gồm cổ phiếu VN có dữ liệu trên Yahoo và năm commodity proxy: vàng, bạc, dầu thô, đồng, nông sản. Benchmark chọn riêng từ ETF VN, proxy commodity hoặc một mã VN tự chọn.</p></div></div><details><summary>Xem giả định đầy đủ</summary><ul id="assumptions-list"><li>Phân tích chỉ dùng dữ liệu lịch sử và không tạo lệnh giao dịch.</li></ul></details></section>
+        <section id="method" class="method-section" aria-labelledby="method-title">
+          <div class="section-heading"><h2 id="method-title">Phương pháp và nguồn dữ liệu</h2><p>Những thông tin cần có để kiểm tra và giải thích kết quả.</p></div>
+          <div class="method-grid">
+            <div><h3>Phép tính chính</h3><p>Giá trị danh mục bắt đầu từ vốn VND người dùng nhập; mỗi vị thế mua theo tỷ trọng tại giá đầu kỳ và giữ nguyên số lượng. PnL bằng giá trị ngày xem trừ vốn đầu kỳ. Benchmark được so sánh trên cùng kỳ có giá.</p></div>
+            <div><h3>Nguồn dữ liệu</h3><p>Cổ phiếu và chỉ số VN dùng TradingView qua tvdatafeed: 26 mã phổ biến cập nhật sau phiên mỗi ngày thường, mã ngoài danh sách hoặc cache cũ tải khi phân tích. Commodity proxy và tỷ giá VND=X tải từ Yahoo Finance qua yfinance. Đây là giá lịch sử ngày, không phải báo giá real-time.</p></div>
+            <div><h3>Phạm vi</h3><p>Demo hỗ trợ 2–3 tài sản, cổ phiếu VN và năm commodity ETF proxy: vàng, bạc, dầu, đồng, nông sản. Benchmark gồm VN30, VN-Index, ETF, proxy commodity hoặc mã VN tự chọn. Dữ liệu thiếu được cảnh báo, không tự dựng giá.</p></div>
+          </div>
+          <details><summary>Xem giả định đầy đủ</summary><ul id="assumptions-list"><li>Phân tích chỉ dùng dữ liệu lịch sử và không tạo lệnh giao dịch.</li></ul></details>
+        </section>
         <footer class="footer"><span>Finfolio · G09</span><a href="../docs/WEEK6.md">Xem bằng chứng Week 6</a></footer>
       </main>
     </div>
