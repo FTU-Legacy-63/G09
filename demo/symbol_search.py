@@ -6,6 +6,12 @@ import re
 import unicodedata
 
 import yfinance as yf
+if __package__:
+    from .global_data import CATALOG, SYMBOL_RE
+    from .vn_data import UNIVERSE
+else:
+    from global_data import CATALOG, SYMBOL_RE
+    from vn_data import UNIVERSE
 
 
 VN_EQUITY_RE = re.compile(r"^[A-Z0-9]{2,10}\.VN$")
@@ -75,3 +81,42 @@ def search_stocks(raw_query: str) -> dict:
         return (0 if needle == ticker else 1 if ticker.startswith(needle) else 2 if any(name == needle for name in names) else 3 if "alias" in entry and any(name.startswith(needle) for name in names) else 4 if any(name.startswith(needle) for name in names) else 5, symbol)
 
     return {"query": query, "results": [entry for _, entry in sorted(matches.items(), key=rank)[:12]]}
+
+
+def search_instruments(raw_query, scope="all"):
+    query = raw_query.strip()
+    if not 2 <= len(query) <= 60 or any(ord(char) < 32 for char in query):
+        raise ValueError("Nhập từ 2 đến 60 ký tự để tìm instrument.")
+    if scope not in {"all", "vn", "global", "commodity", "crypto", "bond"}:
+        raise ValueError("Nhóm instrument không hợp lệ.")
+    needle, matches = fold(query), {}
+    def allowed(item):
+        is_vn = item["symbol"].endswith(".VN")
+        return scope == "all" or (scope == "vn" and is_vn) or (scope == "global" and not is_vn) or (scope == "commodity" and item.get("className") == "Commodity proxy") or (scope == "crypto" and item.get("className") == "Crypto") or (scope == "bond" and item.get("className") == "Bond ETF")
+    seeds = [(symbol, name, alias) for symbol, name, alias in POPULAR_STOCKS]
+    seeds += [(symbol, info["name"], "") for symbol, info in UNIVERSE.items() if symbol not in {"VN30.VN", "VNINDEX.VN"}]
+    seeds += [(symbol, info["name"], info["group"]) for symbol, info in CATALOG.items()]
+    for symbol, name, alias in seeds:
+        item = {"symbol": symbol, "name": name, "exchange": UNIVERSE.get(symbol, {}).get("exchange", "USD" if not symbol.endswith(".VN") else "VN"), **CATALOG.get(symbol, {})}
+        if symbol.endswith(".VN"):
+            item.update(currency="VND", className="ETF" if symbol.startswith(("FUE", "E1")) else "Equity")
+        if allowed(item) and any(needle in fold(value) for value in (symbol, name, alias)):
+            matches[symbol] = item
+    try:
+        quotes = yf.Search(fold(query), max_results=50, news_count=0, timeout=8).quotes
+    except Exception as exc:
+        if not matches:
+            raise RuntimeError("Nguồn tìm kiếm chưa phản hồi. Hãy thử lại.") from exc
+        quotes = []
+    for quote in quotes:
+        symbol, kind = str(quote.get("symbol", "")).upper(), quote.get("quoteType")
+        if not SYMBOL_RE.fullmatch(symbol) or kind not in {"EQUITY", "ETF", "MUTUALFUND", "CRYPTOCURRENCY"}:
+            continue
+        name = str(quote.get("longname") or quote.get("shortname") or symbol)
+        if re.search(r"\b([2-5]x|leveraged|inverse|ultra\w*)\b|proshares.*\bshort\b", name, re.I):
+            continue
+        is_vn = symbol.endswith(".VN")
+        item = {"symbol": symbol, "name": name, "exchange": quote.get("exchDisp") or quote.get("exchange") or "Yahoo", "className": {"EQUITY":"Equity", "ETF":"ETF", "MUTUALFUND":"Mutual fund", "CRYPTOCURRENCY":"Crypto"}[kind], "currency": "VND" if is_vn else quote.get("currency"), **CATALOG.get(symbol, {})}
+        if allowed(item) and symbol not in matches:
+            matches[symbol] = item
+    return {"query": query, "results": sorted(matches.values(), key=lambda item: (0 if needle == fold(item["symbol"]) or needle == fold(item["symbol"].removesuffix(".VN")) else 1, item["symbol"]))[:30], "notice": "Kết quả tìm kiếm chưa xác nhận lịch sử giá hoặc currency. VN dùng tvdatafeed; instrument quốc tế phải xác minh USD khi phân tích."}

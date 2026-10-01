@@ -18,6 +18,18 @@ export const BENCHMARKS = {
 };
 
 const STOCK_RE = /^[A-Z0-9]{2,10}\.VN$/;
+const registered = {};
+export function registerInstruments(entries) {
+  for (const [symbol, info] of Object.entries(entries || {})) {
+    if (!['USD', 'VND'].includes(info.currency) || !info.className || !info.name) continue;
+    registered[symbol] = info;
+    if (info.className === 'Commodity proxy') COMMODITIES[symbol] = info;
+  }
+}
+export function normalizeInstrumentSymbol(raw) {
+  const symbol = String(raw || '').trim().toUpperCase();
+  return COMMODITIES[symbol] || registered[symbol] || BENCHMARKS[symbol] ? symbol : normalizeStockSymbol(symbol);
+}
 
 export function normalizeStockSymbol(raw) {
   const text = String(raw || '').trim().toUpperCase();
@@ -27,14 +39,15 @@ export function normalizeStockSymbol(raw) {
 }
 
 export function instrumentFor(symbol) {
+  if (registered[symbol]) return registered[symbol];
   if (COMMODITIES[symbol]) return COMMODITIES[symbol];
-  if (BENCHMARKS[symbol]) return BENCHMARKS[symbol];
+  if (BENCHMARKS[symbol]) return BENCHMARKS[symbol].className === 'Benchmark ETF' ? {...BENCHMARKS[symbol],className:'Equity ETF',group:'Vietnam equity ETF'} : BENCHMARKS[symbol];
   if (STOCK_RE.test(symbol)) return { name: symbol.replace(/\.VN$/, ''), className: 'Equity', group: 'Vietnam stock', currency: 'VND' };
   return null;
 }
 
 export function benchmarkFor(symbol) {
   const instrument = instrumentFor(symbol);
-  if (!instrument || (!BENCHMARKS[symbol] && !STOCK_RE.test(symbol))) return null;
-  return { ...instrument, symbol, label: BENCHMARKS[symbol] ? `${instrument.name} (${symbol})` : `${symbol} (mã VN tự chọn)` };
+  if (!instrument) return null;
+  return { ...instrument, symbol, label: `${instrument.name} (${symbol})` };
 }

@@ -4,14 +4,14 @@ import json
 from http.server import BaseHTTPRequestHandler
 from urllib.parse import parse_qs, urlparse
 
-from demo.symbol_search import search_stocks
+from demo.symbol_search import search_instruments
 
 
 class handler(BaseHTTPRequestHandler):
     def do_GET(self):
         query = parse_qs(urlparse(self.path).query)
         try:
-            self.send_json(200, search_stocks(query.get("q", [""])[0]))
+            self.send_json(200, search_instruments(query.get("q", [""])[0], query.get("scope", ["all"])[0]))
         except ValueError as exc:
             self.send_json(400, {"error": str(exc)})
         except RuntimeError as exc:

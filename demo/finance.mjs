@@ -1,4 +1,5 @@
-import { COMMODITIES, benchmarkFor, instrumentFor, normalizeStockSymbol } from './instruments.mjs';
+import { COMMODITIES, benchmarkFor, instrumentFor, normalizeInstrumentSymbol } from './instruments.mjs';
+import { minimumVariance } from './optimizer.mjs';
 
 export const BENCHMARK = { symbol: 'GLD', label: 'Vàng (GLD ETF proxy, VND)' };
 
@@ -53,41 +54,14 @@ function portfolioResult(symbols, weights, prices, covariance, initialCapital) {
   };
 }
 
-function optimizeOnOnePercentGrid(symbols, covariance, maxAssetWeight, maxCommodityWeight) {
-  const cap = Math.round(maxAssetWeight * 100);
-  const commodityCap = Math.round(maxCommodityWeight * 100);
-  let best = null;
-  const units = Array(symbols.length).fill(0);
-
-  function search(index, remaining, commodityUnits) {
-    if (index === symbols.length) {
-      if (remaining !== 0) return;
-      const weights = units.map((unit) => unit / 100);
-      const variance = portfolioVariance(weights, covariance);
-      if (!best || variance < best.variance) best = { weights, variance };
-      return;
-    }
-    const isCommodity = instrumentFor(symbols[index]).className === 'Commodity proxy';
-    const upper = Math.min(cap, remaining, isCommodity ? commodityCap - commodityUnits : 100);
-    for (let unit = 0; unit <= upper; unit += 1) {
-      units[index] = unit;
-      search(index + 1, remaining - unit, commodityUnits + (isCommodity ? unit : 0));
-    }
-  }
-
-  search(0, 100, 0);
-  if (!best) throw new Error('Giới hạn tỷ trọng không khả thi với các mã đã chọn.');
-  return best.weights;
-}
-
 export function analyzePortfolio(rows, input) {
   const { holdings, startDate, endDate, maxAssetPercent = 80, maxCommodityPercent = 60, benchmarkSymbol = BENCHMARK.symbol, initialCapital = 100000000 } = input;
-  if (!Array.isArray(holdings) || holdings.length < 2 || holdings.length > 3) {
-    throw new Error('Chọn từ 2 đến 3 tài sản để phân tích.');
+  if (!Array.isArray(holdings) || holdings.length < 2 || holdings.length > 30) {
+    throw new Error('Chọn từ 2 đến 30 tài sản để phân tích.');
   }
   const symbols = holdings.map((item) => {
     const raw = String(item.symbol || '').trim().toUpperCase();
-    return COMMODITIES[raw] ? raw : normalizeStockSymbol(raw);
+    return normalizeInstrumentSymbol(raw);
   });
   if (new Set(symbols).size !== symbols.length) {
     throw new Error('Mã tài sản bị trùng.');
@@ -115,6 +89,7 @@ export function analyzePortfolio(rows, input) {
   }
 
   const instruments = Object.fromEntries([...new Set([...symbols, selectedBenchmark.symbol])].map((symbol) => [symbol, instrumentFor(symbol)]));
+  if (symbols.some(symbol=>instruments[symbol].className==='Benchmark index')) throw new Error('Chỉ số chỉ dùng làm benchmark, không phải vị thế đầu tư.');
   const needsFx = Object.values(instruments).some((instrument) => instrument.currency === 'USD');
   const required = [...new Set([...symbols, selectedBenchmark.symbol, ...(needsFx ? ['USDVND'] : [])])];
   const portfolioRequired = [...symbols, ...(symbols.some((symbol) => instruments[symbol].currency === 'USD') ? ['USDVND'] : [])];
@@ -147,7 +122,8 @@ export function analyzePortfolio(rows, input) {
   const covariance = symbols.map((left) => symbols.map((right) => sampleCovariance(returns[left], returns[right])));
   const currentWeights = weightNumbers.map((weight) => weight / 100);
   const current = portfolioResult(symbols, currentWeights, prices, covariance, capital);
-  const referenceWeights = optimizeOnOnePercentGrid(symbols, covariance, assetCap, commodityCap);
+  const optimization = minimumVariance(covariance, symbols.map(s=>instruments[s].className==='Commodity proxy'), assetCap, commodityCap, currentWeights);
+  const referenceWeights = optimization.weights;
   const reference = portfolioResult(symbols, referenceWeights, prices, covariance, capital);
   const benchmarkIndices = dates.map((_, index) => index).filter((index) => prices[selectedBenchmark.symbol][index] !== null);
   const benchmarkStart = benchmarkIndices[0];
@@ -159,6 +135,8 @@ export function analyzePortfolio(rows, input) {
   const comparisonPortfolioReturn = benchmarkAvailable ? current.path[benchmarkEnd] / current.path[benchmarkStart] - 1 : null;
   const comparisonReferenceReturn = benchmarkAvailable ? reference.path[benchmarkEnd] / reference.path[benchmarkStart] - 1 : null;
   const warnings = [];
+  if (!optimization.converged) warnings.push('Phương án minimum variance là nghiệm xấp xỉ; solver đã đạt giới hạn vòng lặp, không khẳng định tối ưu tuyệt đối.');
+  if (symbols.some(s=>instruments[s].className==='Crypto')) warnings.push('Crypto dùng giá ngày, căn chỉnh theo ngày chung với các thị trường khác; không mô phỏng giao dịch 24/7.');
   if (benchmarkIndices.length < dates.length) warnings.push(`Benchmark có giá ở ${benchmarkIndices.length}/${dates.length} phiên danh mục. Phần thiếu được để trống; không nội suy hoặc cắt chuỗi danh mục.`);
   if (riskIndices.length < dates.length - 1) warnings.push('Các khoảng giá cách nhau trên 7 ngày bị loại khỏi ước lượng volatility, không được coi là daily return.');
   if (riskIndices.length < 120) warnings.push('Dưới 120 quan sát return: ước lượng rủi ro và phân bổ tham khảo có độ tin cậy hạn chế.');
@@ -178,6 +156,7 @@ export function analyzePortfolio(rows, input) {
     benchmark: { ...selectedBenchmark, path: benchmarkPath, valuePath: benchmarkPath.map((ratio) => ratio === null ? null : ratio * current.valuePath[benchmarkStart]), periodReturn: benchmarkReturn, available: benchmarkAvailable, comparisonStart: benchmarkAvailable ? dates[benchmarkStart] : null, comparisonEnd: benchmarkAvailable ? dates[benchmarkEnd] : null, anchorValue: benchmarkAvailable ? current.valuePath[benchmarkStart] : null, comparisonPortfolioReturn, comparisonReferenceReturn, coverage: benchmarkIndices.length },
     activeReturn: benchmarkAvailable ? comparisonPortfolioReturn - benchmarkReturn : null,
     riskObservations: riskIndices.length,
+    optimization,
     warnings,
     groups,
     observations: dates.length,
@@ -187,8 +166,10 @@ export function analyzePortfolio(rows, input) {
       'Giá USD được quy đổi theo USD/VND cùng ngày; benchmark ETF tại Việt Nam dùng giá VND.',
       'Giá trị đầu kỳ được phân bổ theo tỷ trọng và giả định mua tại giá close đầu tiên; không phải lịch sử giao dịch thực tế.',
       'Period return giả định mua và giữ với tỷ trọng đầu kỳ; volatility là ước lượng từ covariance và tỷ trọng đầu kỳ.',
-      'Reference allocation tối thiểu hóa variance trên lưới 1%, long-only, cùng dữ liệu và giới hạn đã chọn.',
-      'VN dùng phiên ngày đã đóng từ TradingView/tvdatafeed, cập nhật hằng ngày hoặc tải trực tiếp khi cache thiếu/cũ; commodity và FX tải qua yfinance. Không phải báo giá giao dịch real-time.',
+      'Reference allocation ước lượng minimum variance bằng conditional gradient, long-only, cùng dữ liệu và giới hạn đã chọn; không bảo đảm nghiệm tối ưu tuyệt đối.',
+      'VN dùng phiên ngày đã đóng từ TradingView/tvdatafeed, cập nhật hằng ngày hoặc tải trực tiếp khi cache thiếu/cũ; quốc tế và FX tải qua yfinance, bỏ ngày UTC đang mở. Không phải báo giá real-time.',
+      'Dùng các ngày chung có đủ giá của holdings và FX, theo nhãn ngày của provider, không đồng bộ giờ đóng cửa giữa các thị trường. Annualization 252 phiên/năm là xấp xỉ, kể cả khi có crypto.',
+      'Commodity proxy có thể nắm giữ vật chất hoặc hợp đồng futures; phí quỹ và roll effects nằm trong giá proxy. Không coi return proxy là return giá spot.',
       'Chuỗi giá lịch sử không bảo đảm hiệu quả trong tương lai; không dùng kết quả làm lời khuyên đầu tư.',
     ],
   };

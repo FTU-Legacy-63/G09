@@ -5,8 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#21563f" />
     <meta name="description" content="Finfolio: phân tích danh mục VN bằng TradingView/tvdatafeed; commodity và tỷ giá bằng yfinance." />
-    <title>Finfolio | Week 6 demo</title>
+    <title>Finfolio | Portfolio attribution</title>
     <link rel="stylesheet" href="/demo/styles.css" />
+    <link rel="stylesheet" href="/demo/product.css" />
     <script type="module" src="/demo/app.js"></script>
   </head>
   <body>
@@ -22,7 +23,7 @@
             <a href="#method" class="nav-link">Phương pháp</a>
           </nav>
         </div>
-        <div class="sidebar-footer"><span>G09 · FTU</span><span>Week 6 demo</span></div>
+        <div class="sidebar-footer"><span>G09 · FTU</span><span>Danh mục giả định</span></div>
       </aside>
 
       <main id="home" class="main-content">
@@ -33,7 +34,7 @@
 
         <section class="hero" aria-labelledby="hero-title">
           <div class="hero-copy">
-            <span class="hero-label">Finfolio 2.0 · Demo Week 6</span>
+            <span class="hero-label">Finfolio · Portfolio analytics</span>
             <h1 id="hero-title">Hiểu danh mục trước khi điều chỉnh.</h1>
             <p>Cùng một dữ liệu, xem lợi nhuận và rủi ro đến từ đâu, rồi so sánh với một phân bổ tham khảo.</p>
             <a class="primary-button" href="#portfolio-input">Bắt đầu phân tích <span aria-hidden="true">→</span></a>
@@ -50,13 +51,15 @@
         <section id="portfolio-input" class="work-section" aria-labelledby="input-title">
           <div class="section-heading">
             <h2 id="input-title">Danh mục cần phân tích</h2>
-            <p>Tìm cổ phiếu Việt Nam theo tên hoặc ticker, chọn commodity proxy, rồi đặt tỷ trọng và benchmark cho danh mục của bạn.</p>
+            <p>Tạo danh mục giả định bằng vốn và tỷ trọng. Tìm instrument theo tên hoặc ticker, chọn nguồn phù hợp và so sánh cùng một kỳ.</p>
           </div>
           <form id="portfolio-form" novalidate>
             <div class="form-topline"><span>Loại</span><span>Mã tài sản</span><span>Tỷ trọng đầu kỳ</span></div>
             <div id="holdings-list" class="holdings-list"></div>
             <div class="form-tools">
               <button id="add-holding" class="text-button" type="button">+ Thêm mã</button>
+              <button id="save-portfolio" class="text-button" type="button">Lưu trên máy này</button>
+              <button id="load-portfolio" class="text-button" type="button">Mở bản đã lưu</button>
               <span id="weight-total" class="total-weight">Tổng: 100%</span>
             </div>
 
@@ -65,16 +68,17 @@
               <label>Từ ngày<input id="start-date" type="date" required /></label>
               <label>Đến ngày (bao gồm)<input id="end-date" type="date" required /></label>
               <label>Performance benchmark
-                <select id="benchmark" required><option value="VN30.VN">VN30 Index</option><option value="VNINDEX.VN">VN-Index</option><option value="FUESSV30.VN">SSIAM VN30 ETF (FUESSV30.VN)</option><option value="E1VFVN30.VN">DCVFM VN30 ETF (E1VFVN30.VN)</option><option value="FUEVN100.VN">VinaCapital VN100 ETF (FUEVN100.VN)</option><option value="FUEVFVND.VN">VN Diamond ETF (FUEVFVND.VN)</option><option value="GLD">Vàng (GLD ETF proxy)</option><option value="SLV">Bạc (SLV ETF proxy)</option><option value="custom">Mã VN tự chọn</option></select>
+                <select id="benchmark" required><option value="VN30.VN">VN30 Index</option><option value="VNINDEX.VN">VN-Index</option><option value="SPY">S&P 500 ETF (SPY)</option><option value="QQQ">Nasdaq-100 ETF (QQQ)</option><option value="VT">Global equity ETF (VT)</option><option value="BND">US bond ETF (BND)</option><option value="FUESSV30.VN">SSIAM VN30 ETF (FUESSV30.VN)</option><option value="E1VFVN30.VN">DCVFM VN30 ETF (E1VFVN30.VN)</option><option value="FUEVN100.VN">VinaCapital VN100 ETF (FUEVN100.VN)</option><option value="FUEVFVND.VN">VN Diamond ETF (FUEVFVND.VN)</option><option value="GLD">Vàng (GLD ETF proxy)</option><option value="SLV">Bạc (SLV ETF proxy)</option><option value="custom">Mã tự chọn (VN hoặc YF:SPY)</option></select>
               </label>
-              <label id="custom-benchmark-wrap" hidden>Mã benchmark VN<input id="custom-benchmark" type="text" placeholder="VD: VCB hoặc VCB.VN" spellcheck="false" autocomplete="off" /></label>
+              <label id="custom-benchmark-wrap" hidden>Mã benchmark<input id="custom-benchmark" type="text" placeholder="VD: VCB.VN, YF:^GSPC" spellcheck="false" autocomplete="off" /></label>
               <label>Giới hạn mỗi mã (%)<input id="asset-cap" type="number" min="0" max="100" step="1" value="80" required /></label>
               <label>Giới hạn commodity (%)<input id="commodity-cap" type="number" min="0" max="100" step="1" value="60" required /></label>
             </div>
-            <p class="form-help">Giá trị đầu kỳ được phân bổ theo tỷ trọng tại giá close đầu tiên. Commodity dùng ETF proxy, không phải giá spot hay vị thế futures. VN dùng dữ liệu TradingView; mã ngoài danh sách cập nhật hằng ngày được tải khi phân tích.</p>
+            <p class="form-help">2–30 vị thế, tổng tỷ trọng 100%. VN dùng TradingView; quốc tế phải có giá USD được xác minh. Commodity và trái phiếu dùng quỹ/ETF proxy, không phải vị thế spot/futures hay trái phiếu riêng lẻ. Return tính từ giá, không tái đầu tư cổ tức.</p>
+            <p id="portfolio-save-status" role="status" class="table-footnote"></p>
             <div id="form-error" class="form-error" role="alert" hidden></div>
             <div class="form-bottom">
-              <span>Cổ phiếu/chỉ số VN: TradingView · cập nhật hằng ngày. Commodity và tỷ giá: Yahoo Finance.</span>
+              <span>VN: TradingView/tvdatafeed. Quốc tế và tỷ giá: Yahoo Finance/yfinance.</span>
               <button id="analyze-button" class="primary-button" type="submit">Phân tích danh mục <span aria-hidden="true">→</span></button>
             </div>
           </form>
@@ -84,6 +88,7 @@
           <div class="section-heading">
             <h2 id="results-title">Risk and Return Allocation Brief</h2>
             <p id="results-subtitle">Nhập danh mục rồi chọn “Phân tích danh mục” để xem kết quả.</p>
+            <details class="source-details"><summary>Nguồn và thời điểm cập nhật</summary><p id="data-sources" class="table-footnote">Chưa tải dữ liệu.</p></details>
           </div>
           <div id="empty-state" class="empty-state">
             <span aria-hidden="true">↗</span>
@@ -94,12 +99,19 @@
             <div id="data-warning" class="notice" role="note" hidden></div>
             <div class="lead-result"><div><span>Kết quả chính</span><h3 id="lead-headline"></h3><p id="lead-explanation"></p></div><div class="lead-icon" aria-hidden="true">↗</div></div>
             <div id="metric-strip" class="metric-strip"></div>
+            <section id="attribution-panel" class="attribution-section" aria-labelledby="attribution-title">
+              <div class="panel-heading"><h3 id="attribution-title">Đóng góp lợi nhuận</h3><div class="export-tools"><button id="export-attribution" class="text-button" type="button">Xuất CSV / Excel</button><button id="print-report" class="text-button" type="button">In / lưu PDF</button></div></div>
+              <div class="attribution-controls"><div id="attribution-periods" class="period-buttons" role="group" aria-label="Kỳ attribution"></div><label>Nhóm theo<select id="attribution-group"><option value="symbol">Từng instrument</option><option value="class">Asset class</option><option value="group">Thị trường / commodity type</option><option value="currency">Currency niêm yết</option></select></label><label>Đơn vị contribution<select id="attribution-unit"><option value="points">Điểm phần trăm</option><option value="vnd">VND</option></select></label></div>
+              <p id="attribution-summary" class="table-footnote"></p><div id="attribution-heatmap" class="attribution-heatmap"></div>
+              <div class="table-scroll"><table id="attribution-table"><thead><tr><th><button data-attr-sort="symbol" type="button">Instrument / nhóm ↕</button></th><th><button data-attr-sort="weight" type="button">Tỷ trọng đầu kỳ ↕</button></th><th><button data-attr-sort="assetReturn" type="button">Return giá ↕</button></th><th><button data-attr-sort="contribution" type="button">Đóng góp kỳ chọn ↕</button></th><th>1M</th><th>3M</th><th>6M</th><th>YTD</th><th>1Y</th><th>5Y</th></tr></thead><tbody id="attribution-rows"></tbody><tfoot id="attribution-total"></tfoot></table></div>
+              <p class="table-footnote">Tỷ trọng tại đầu mỗi kỳ được tính từ các vị thế buy-and-hold, không dùng lại tỷ trọng đầu năm cho mọi kỳ. Các cột đa kỳ dùng kỳ thực có trong dữ liệu đã tải. Không có constituent weights/returns lịch sử nên chưa phân rã allocation, selection, interaction hay equity style.</p>
+            </section>
             <div class="result-grid">
               <section class="chart-panel" aria-labelledby="chart-title"><div class="panel-heading"><h3 id="chart-title">Giá trị danh mục và PnL</h3><span id="chart-start-value"></span></div><div id="performance-chart" class="performance-chart"></div><div class="legend"><span class="legend-current">Danh mục</span><span class="legend-reference">Tham khảo</span><span id="benchmark-legend" class="legend-benchmark"></span></div><p id="benchmark-period" class="table-footnote"></p><p class="table-footnote">Rê chuột trên biểu đồ hoặc dùng phím mũi tên để xem giá trị và PnL tại từng ngày.</p></section>
               <section class="allocation-panel" aria-labelledby="allocation-title"><div class="panel-heading"><h3 id="allocation-title">Phân bổ hiện tại</h3><span>100%</span></div><div id="allocation-visual"></div><div id="allocation-groups"></div></section>
             </div>
             <section class="table-panel" aria-labelledby="contribution-title"><div class="panel-heading"><h3 id="contribution-title">Đóng góp theo từng mã</h3><span>Đơn vị: điểm %</span></div><div class="table-scroll"><table><thead><tr><th>Mã</th><th>Nhóm</th><th>Tỷ trọng</th><th>Return contribution</th><th>Risk contribution</th></tr></thead><tbody id="contribution-rows"></tbody><tfoot id="contribution-total"></tfoot></table></div><p class="table-footnote">Return contribution cộng lại bằng return của danh mục. Risk contribution cộng lại bằng volatility ước lượng.</p></section>
-            <section class="comparison-panel" aria-labelledby="comparison-title"><div class="panel-heading"><h3 id="comparison-title">Hiện tại và phương án tham khảo</h3><span>Minimum variance · lưới 1%</span></div><div class="comparison-layout"><div id="comparison-metrics"></div><div id="comparison-weights"></div></div><p class="table-footnote">Cùng chuỗi giá, ngày phân tích và covariance. Phương án tham khảo không tự thay đổi danh mục của bạn.</p></section>
+            <section class="comparison-panel" aria-labelledby="comparison-title"><div class="panel-heading"><h3 id="comparison-title">Hiện tại và phương án tham khảo</h3><span id="solver-method"></span></div><div class="comparison-layout"><div id="comparison-metrics"></div><div id="comparison-weights"></div></div><p class="table-footnote">Cùng chuỗi giá, ngày phân tích và covariance. Phương án tham khảo không tự thay đổi danh mục của bạn.</p></section>
             <section class="decision-panel" aria-labelledby="decision-title"><div><h3 id="decision-title">Bạn sẽ làm gì tiếp?</h3><p>Ghi lại lựa chọn và lý do sau khi xem số liệu, giả định và giới hạn.</p></div><form id="decision-form"><fieldset><legend>Lựa chọn</legend><label><input type="radio" name="decision" value="Giữ nguyên" required /> Giữ nguyên</label><label><input type="radio" name="decision" value="Cân nhắc tái phân bổ" /> Cân nhắc tái phân bổ</label></fieldset><label for="decision-reason">Lý do ngắn gọn</label><textarea id="decision-reason" required minlength="8" placeholder="Ví dụ: Tôi muốn xem thêm dữ liệu dài hạn trước khi cân nhắc điều chỉnh."></textarea><button class="secondary-button" type="submit">Ghi nhận quyết định</button><p id="decision-feedback" role="status"></p></form></section>
           </div>
         </section>
@@ -108,12 +120,12 @@
           <div class="section-heading"><h2 id="method-title">Phương pháp và nguồn dữ liệu</h2><p>Những thông tin cần có để kiểm tra và giải thích kết quả.</p></div>
           <div class="method-grid">
             <div><h3>Phép tính chính</h3><p>Giá trị danh mục bắt đầu từ vốn VND người dùng nhập; mỗi vị thế mua theo tỷ trọng tại giá đầu kỳ và giữ nguyên số lượng. PnL bằng giá trị ngày xem trừ vốn đầu kỳ. Benchmark được so sánh trên cùng kỳ có giá.</p></div>
-            <div><h3>Nguồn dữ liệu</h3><p>Cổ phiếu và chỉ số VN dùng TradingView qua tvdatafeed: 26 mã phổ biến cập nhật sau phiên mỗi ngày thường, mã ngoài danh sách hoặc cache cũ tải khi phân tích. Commodity proxy và tỷ giá VND=X tải từ Yahoo Finance qua yfinance. Đây là giá lịch sử ngày, không phải báo giá real-time.</p></div>
-            <div><h3>Phạm vi</h3><p>Demo hỗ trợ 2–3 tài sản, cổ phiếu VN và năm commodity ETF proxy: vàng, bạc, dầu, đồng, nông sản. Benchmark gồm VN30, VN-Index, ETF, proxy commodity hoặc mã VN tự chọn. Dữ liệu thiếu được cảnh báo, không tự dựng giá.</p></div>
+            <div><h3>Nguồn dữ liệu</h3><p>Cổ phiếu và chỉ số VN dùng TradingView qua tvdatafeed: 26 mã phổ biến cập nhật sau phiên mỗi ngày thường, mã ngoài danh sách hoặc cache cũ tải khi phân tích. Instrument quốc tế và tỷ giá VND=X tải từ Yahoo Finance qua yfinance. Đây là giá lịch sử ngày, không phải báo giá real-time.</p></div>
+            <div><h3>Phạm vi</h3><p>Danh mục giả định 2–30 vị thế: cổ phiếu/ETF VN, cổ phiếu và quỹ niêm yết USD, commodity proxy, bond ETF, crypto. Tìm kiếm mở qua provider; kết quả tìm được không bảo đảm đủ lịch sử hoặc currency được hỗ trợ. Chưa có giao dịch thực, đòn bẩy, futures/options hay phân rã Brinson.</p></div>
           </div>
           <details><summary>Xem giả định đầy đủ</summary><ul id="assumptions-list"><li>Phân tích chỉ dùng dữ liệu lịch sử và không tạo lệnh giao dịch.</li></ul></details>
         </section>
-        <footer class="footer"><span>Finfolio · G09</span><a href="../docs/WEEK6.md">Xem bằng chứng Week 6</a></footer>
+        <footer class="footer"><span>Finfolio · G09</span><a href="../docs/PRODUCT_SCOPE.md">Phạm vi và phương pháp</a></footer>
       </main>
     </div>
   </body>

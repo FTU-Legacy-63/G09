@@ -29,9 +29,9 @@ Core MVP hỗ trợ **cổ phiếu và các commodity có chuỗi giá khả d�
 
 Các asset class khác và Monte Carlo thuộc final product. Sample data trong [`data/`](data/README.md) chỉ là fixture phục vụ kiểm thử logic, không phải hành trình chính của người dùng và không được dùng để thay thế dữ liệu live khi nguồn lỗi.
 
-## Week 6 working demo
+## Finfolio portfolio analytics
 
-[Mở demo công khai](https://g09-finfolio.vercel.app/) · [Mã nguồn demo](demo/index.html). Website host trên Vercel như project SHB. Cổ phiếu/chỉ số VN dùng TradingView qua tvdatafeed; commodity và tỷ giá vẫn tải qua yfinance khi phân tích. Không cần gửi tài khoản trong chat. Để chạy local:
+[Mở Finfolio](https://g09-finfolio.vercel.app/) · [Mã nguồn](demo/index.html) · [Phạm vi hiện tại](docs/PRODUCT_SCOPE.md). Website host trên Vercel như project SHB. Cổ phiếu/chỉ số VN dùng TradingView qua tvdatafeed; instrument quốc tế và tỷ giá tải qua yfinance khi phân tích. Mô hình được chốt là danh mục giả định từ vốn và tỷ trọng, không phải lịch sử giao dịch thật. Để chạy local:
 
 ```bash
 cd G09-Finfolio
@@ -46,10 +46,10 @@ Job [Refresh VN daily prices](.github/workflows/update-vn-data.yml) lên lịch 
 Kiểm tra logic tự động:
 
 ```bash
-node --test demo/finance.test.mjs demo/chart-utils.test.mjs
+node --test demo/*.test.mjs
 python3 -m unittest discover -s demo -p 'test_*.py'
 ```
 
-Demo phân tích 2–3 tài sản một lần: cổ phiếu VN và năm ETF proxy đại diện vàng, bạc, dầu, đồng, nông sản. Chart dùng giá trị VND từ vốn đầu kỳ, trục X theo ngày lịch, tooltip theo cả X/Y và không nối liền khoảng trống dài. Benchmark thiếu giá không cắt lịch sử danh mục; so sánh return chỉ tính trên cùng kỳ thực có. VN30/VN-Index là chỉ số trực tiếp; ETF vẫn ghi rõ là ETF proxy. Nguồn là giá lịch sử ngày, không phải báo giá khớp lệnh real-time. Volatility, phương án tham khảo phụ thuộc dữ liệu lịch sử và không phải lời khuyên đầu tư. Commodity toàn provider vẫn là định hướng, chưa phải khả năng demo. [Phạm vi, test table và trạng thái](docs/WEEK6.md).
+Danh mục hỗ trợ 2–30 vị thế: cổ phiếu/ETF VN, cổ phiếu quốc tế và quỹ/ETF niêm yết USD, commodity proxy, bond ETF và crypto. Catalog gợi ý có 45 instrument quốc tế, gồm 23 commodity proxy; tìm kiếm Yahoo có thể trả thêm mã ngoài catalog, được xác minh loại/currency khi phân tích. Không khẳng định bao phủ toàn thị trường hay mọi commodity. VN dùng tvdatafeed; ETF proxy không phải vị thế spot/futures trực tiếp, bond ETF không phải trái phiếu riêng lẻ. Chart giữ vốn đầu kỳ VND, tooltip X/Y và xử lý dữ liệu khuyết. Bảng attribution có lookback, grouping, sorting, đơn vị điểm %/VND, CSV mở bằng Excel, in/lưu PDF; bộ chọn lookback chỉ đổi attribution, chart/risk vẫn là toàn kỳ nhập. Tỷ trọng đầu mỗi lookback được tính từ giá trị vị thế tại ngày đó. Optimizer dùng conditional gradient, không vét cạn lưới 1%. Input có thể lưu cục bộ trên trình duyệt, không có account/cloud sync. Return dựa trên giá, chưa gồm tái đầu tư cổ tức. [Bằng chứng Week 6 lịch sử](docs/WEEK6.md).
 
 Production: <https://g09-finfolio.vercel.app/>. Hiện project Vercel chưa kết nối GitHub org để tự deploy khi push; sau khi thay đổi code, người có quyền Vercel chạy `vercel deploy --prod` tại thư mục repo hoặc cấp quyền GitHub App của Vercel cho repo `FTU-Legacy-63/G09`.

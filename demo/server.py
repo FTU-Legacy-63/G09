@@ -17,9 +17,13 @@ import yfinance as yf
 if __package__:
     from .symbol_search import search_stocks
     from .vn_data import get_vn_series
+    from .global_data import CATALOG, resolve_global
+    from .symbol_search import search_instruments
 else:
     from symbol_search import search_stocks
     from vn_data import get_vn_series
+    from global_data import CATALOG, resolve_global
+    from symbol_search import search_instruments
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -40,11 +44,19 @@ def normalize_vn_symbol(raw: str) -> str:
 
 def normalize_holding(raw: str) -> str:
     symbol = raw.strip().upper()
+    if symbol.startswith("YF:"):
+        return symbol[3:]
+    if symbol in CATALOG:
+        return symbol
     return symbol if symbol in COMMODITY_PROXIES else normalize_vn_symbol(symbol)
 
 
 def normalize_benchmark(raw: str) -> str:
     symbol = raw.strip().upper()
+    if symbol.startswith("YF:"):
+        return symbol[3:]
+    if symbol in CATALOG:
+        return symbol
     return symbol if symbol in BENCHMARK_PRESETS else normalize_vn_symbol(symbol)
 
 
@@ -135,14 +147,20 @@ def fetch_market_data(start_text: str, end_text: str, selected: list[str], bench
         raise ValueError("Ngày phải có định dạng YYYY-MM-DD.") from exc
     if start >= end or end > date.today() + timedelta(days=1) or (end - start).days > 366 * 5:
         raise ValueError("Chọn khoảng ngày hợp lệ, tối đa 5 năm và không trong tương lai.")
-    if not 2 <= len(selected) <= 3:
-        raise ValueError("Chọn từ 2 đến 3 tài sản hợp lệ.")
+    if not 2 <= len(selected) <= 30:
+        raise ValueError("Chọn từ 2 đến 30 tài sản hợp lệ.")
     holdings = [normalize_holding(symbol) for symbol in selected]
     if len(set(holdings)) != len(holdings):
         raise ValueError("Mã tài sản không được trùng lặp.")
     if any(symbol in {"VN30.VN", "VNINDEX.VN"} for symbol in holdings):
         raise ValueError("Chỉ số chỉ dùng làm benchmark, không phải vị thế đầu tư.")
     requested = normalize_benchmark(benchmark)
+    instrument_metadata = {}
+    global_symbols = sorted({symbol for symbol in [*holdings, requested] if not symbol.endswith(".VN")})
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        global_jobs = {symbol: pool.submit(resolve_global, symbol, symbol == requested and symbol not in holdings) for symbol in global_symbols}
+        for symbol, job in global_jobs.items():
+            instrument_metadata[symbol] = job.result()
     vn_symbols = sorted({symbol for symbol in holdings if symbol.endswith(".VN")} | ({requested} if requested.endswith(".VN") else set()))
     rows, metadata, failed = [], {}, {}
     with ThreadPoolExecutor(max_workers=4) as pool:
@@ -173,13 +191,13 @@ def fetch_market_data(start_text: str, end_text: str, selected: list[str], bench
                 break
             except RuntimeError:
                 continue
-    foreign = sorted({symbol for symbol in [*holdings, requested] if symbol in COMMODITY_PROXIES})
+    foreign = global_symbols
     if foreign:
         yahoo_symbols = foreign + [YAHOO_FX]
         try:
             frame = yf.download(yahoo_symbols, start=start_text, end=(end + timedelta(days=1)).isoformat(), interval="1d", auto_adjust=False, progress=False, threads=False, timeout=12)
         except Exception as exc:
-            if any(symbol in COMMODITY_PROXIES for symbol in holdings):
+            if any(not symbol.endswith(".VN") for symbol in holdings):
                 raise RuntimeError("Không tải được giá commodity/tỷ giá từ Yahoo Finance. Hãy thử lại sau.") from exc
             frame = pd.DataFrame()
             benchmark_notice = "Không tải được benchmark commodity; giữ nguyên kết quả danh mục VN."
@@ -187,15 +205,20 @@ def fetch_market_data(start_text: str, end_text: str, selected: list[str], bench
             for stamp, record in frame["Close"].iterrows():
                 for symbol in yahoo_symbols:
                     value = record.get(symbol)
+                    # A UTC crypto day / foreign session may still be open. Use
+                    # prior UTC dates conservatively, never an intraday close.
+                    if stamp.date() >= datetime.now(timezone.utc).date():
+                        continue
                     if value is not None and math.isfinite(float(value)) and float(value) > 0:
                         rows.append({"session_date": stamp.date().isoformat(), "symbol": "USDVND" if symbol == YAHOO_FX else symbol, "close": float(value)})
         available = {row["symbol"] for row in rows}
-        essential = {symbol for symbol in holdings if symbol in COMMODITY_PROXIES} | ({"USDVND"} if any(symbol in COMMODITY_PROXIES for symbol in holdings) else set())
+        essential = {symbol for symbol in holdings if not symbol.endswith(".VN")} | ({"USDVND"} if any(not symbol.endswith(".VN") for symbol in holdings) else set())
         if not essential.issubset(available):
-            raise RuntimeError("Yahoo Finance chưa trả đủ giá commodity/tỷ giá. Hãy thử lại sau.")
+            missing = ", ".join(sorted(essential - available))
+            raise RuntimeError(f"Yahoo Finance chưa trả đủ giá cho {missing}. Hãy thử lại sau hoặc bỏ mã thiếu dữ liệu.")
     if any(not any(row["symbol"] == symbol for row in rows) for symbol in holdings):
         raise RuntimeError("Tài sản chưa có giá trong khoảng ngày đã chọn.")
-    return {"rows": rows, "source": "TradingView via tvdatafeed (VN); Yahoo Finance via yfinance (commodity/FX)", "fetched_at_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"), "vn_sources": metadata, "requested_symbols": sorted({row["symbol"] for row in rows}), "benchmark": actual_benchmark, "benchmark_requested": requested, "benchmark_notice": benchmark_notice}
+    return {"rows": rows, "instruments": instrument_metadata, "source": "TradingView via tvdatafeed (VN); Yahoo Finance via yfinance (international/FX)", "fetched_at_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"), "vn_sources": metadata, "requested_symbols": sorted({row["symbol"] for row in rows}), "benchmark": actual_benchmark, "benchmark_requested": requested, "benchmark_notice": benchmark_notice}
 
 
 class Handler(SimpleHTTPRequestHandler):
@@ -203,7 +226,8 @@ class Handler(SimpleHTTPRequestHandler):
         url = urlparse(self.path)
         if url.path == "/api/search-symbols":
             try:
-                self.send_json(200, search_stocks(parse_qs(url.query).get("q", [""])[0]))
+                params = parse_qs(url.query)
+                self.send_json(200, search_instruments(params.get("q", [""])[0], params.get("scope", ["all"])[0]))
             except ValueError as exc:
                 self.send_json(400, {"error": str(exc)})
             except RuntimeError as exc:
