@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 import pandas as pd
 
-from server import fetch_market_data
+from server import fetch_yahoo_market_data as fetch_market_data
 
 
 class MarketDataTests(unittest.TestCase):
@@ -53,6 +53,32 @@ class MarketDataTests(unittest.TestCase):
         with patch("server.yf.download", return_value=pd.concat({"Close": close}, axis=1)):
             with self.assertRaisesRegex(RuntimeError, "PVI.VN"):
                 fetch_market_data("2026-09-24", "2026-09-25", ["PVI", "GLD"])
+
+    def test_missing_benchmark_and_its_fx_do_not_block_vn_holdings(self):
+        dates = pd.to_datetime(["2026-09-24", "2026-09-25"])
+        close = pd.DataFrame({"FPT.VN": [65000, 65100], "HPG.VN": [20000, 20100], "GLD": [float("nan")] * 2, "VND=X": [float("nan")] * 2}, index=dates)
+        with patch("server.yf.download", return_value=pd.concat({"Close": close}, axis=1)):
+            result = fetch_market_data("2026-09-24", "2026-09-25", ["FPT.VN", "HPG.VN"], "GLD")
+        self.assertEqual(len(result["rows"]), 4)
+
+    def test_broken_vn30_history_uses_same_index_etf_and_reports_switch(self):
+        dates = pd.to_datetime(["2022-10-24", "2025-01-13"])
+        close = pd.DataFrame({"FPT.VN": [65000, 65100], "HPG.VN": [20000, 20100], "E1VFVN30.VN": [25000, 22000]}, index=dates)
+        alt_dates = pd.to_datetime(["2025-01-10", "2025-01-13"])
+        alternate = pd.DataFrame({"FUESSV30.VN": [15000, 15100]}, index=alt_dates)
+        with patch("server.yf.download", side_effect=[pd.concat({"Close": close}, axis=1), pd.concat({"Close": alternate}, axis=1)]):
+            result = fetch_market_data("2022-10-24", "2025-01-13", ["FPT.VN", "HPG.VN"], "E1VFVN30.VN")
+        self.assertEqual(result["benchmark"], "FUESSV30.VN")
+        self.assertEqual(result["benchmark_requested"], "E1VFVN30.VN")
+        self.assertIn("thiếu", result["benchmark_notice"])
+
+    def test_failed_fallback_keeps_sparse_benchmark_without_blocking_portfolio(self):
+        dates = pd.to_datetime(["2022-10-24", "2025-01-13"])
+        close = pd.DataFrame({"FPT.VN": [65000, 65100], "HPG.VN": [20000, 20100], "E1VFVN30.VN": [25000, 22000]}, index=dates)
+        with patch("server.yf.download", side_effect=[pd.concat({"Close": close}, axis=1), RuntimeError("source down")]):
+            result = fetch_market_data("2022-10-24", "2025-01-13", ["FPT.VN", "HPG.VN"], "E1VFVN30.VN")
+        self.assertEqual(result["benchmark"], "E1VFVN30.VN")
+        self.assertEqual(len(result["rows"]), 6)
 
 
 if __name__ == "__main__":

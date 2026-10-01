@@ -110,3 +110,11 @@ Kiểm thử bổ sung: `node --test demo/finance.test.mjs` kiểm tra chuỗi g
 ### Tìm cổ phiếu theo tên hoặc ticker
 
 Trước khi phân tích, người dùng gõ tên công ty (có hoặc không dấu) hoặc ticker vào ô cổ phiếu và chọn một kết quả; ô không còn chấp nhận việc gõ chữ rồi ngầm chốt mã cũ. API `/api/search-symbols` dùng `yfinance.Search`, lọc kết quả về cổ phiếu `.VN` và bổ sung một số tên gọi quen thuộc mà Yahoo Search bỏ sót. Danh sách tên bổ sung chỉ hỗ trợ tìm kiếm, **không phải cơ sở dữ liệu niêm yết đầy đủ** hay xác nhận mã có giá. API phân tích vẫn tải chuỗi giá mới và báo lỗi nếu mã không có dữ liệu. Form hỗ trợ chọn bằng chuột, phím mũi tên/Enter, đóng bằng Escape; yêu cầu chọn gợi ý trước khi gửi. Test Python kiểm tra dấu tiếng Việt, thứ tự kết quả, lọc mã ngoài VN/ETF và lỗi nguồn tìm kiếm.
+
+### Cập nhật nguồn VN và biểu đồ — 01/10/2026
+
+Theo lựa chọn của nhóm, giá cổ phiếu/ETF/chỉ số VN chuyển sang TradingView qua tvdatafeed; commodity proxy và FX giữ yfinance. VN30 và VN-Index được lấy trực tiếp, không gọi ETF là chỉ số. Một job GitHub Actions lên lịch 17:30 giờ Việt Nam vào ngày thường, tải lịch sử 26 mã phổ biến và xuất snapshot giá thực lên nhánh `market-data`. Mã khác tải khi phân tích; timestamp và phiên cuối của từng mã được giữ riêng, không đổi thành thời gian request. Chỉ dùng nến ngày đã đóng; đây không phải feed real-time.
+
+Default timeframe là 5 năm, tối đa hiện tại của demo. Khoảng ngày danh mục chỉ phụ thuộc holdings và FX cần thiết, không phụ thuộc benchmark. Chart đặt X theo thời gian lịch, ngắt khoảng thiếu dài; benchmark thiếu không dựng giá giả. Return so sánh dùng cùng kỳ overlap và cùng vốn tại đầu kỳ overlap. Risk bỏ các cặp giá cách nhau quá 7 ngày lịch, không coi khoảng trống nhiều tháng là return một ngày; quy ước 252 phiên/năm là xấp xỉ cho danh mục đa thị trường. Tooltip theo X/Y, tự đổi phía và giới hạn trong chart; crosshair hiển thị bằng thuộc tính SVG đúng.
+
+Kiểm thử tự động bổ sung: 16 test JavaScript về tính toán, dữ liệu khuyết, chart và tooltip; 20 test Python về provider, routing VN/commodity, timestamp snapshot, cache hỏng/cũ và benchmark lỗi không làm mất danh mục. Các đoạn mô tả Yahoo-only ở phía trên ghi lại các phiên bản trước cập nhật này.

@@ -14,6 +14,8 @@ VN_EQUITY_RE = re.compile(r"^[A-Z0-9]{2,10}\.VN$")
 # registry and a search match does not imply historical prices are available.
 POPULAR_STOCKS = (
     ("FPT.VN", "FPT Corporation", "FPT công nghệ"),
+    ("FRT.VN", "FPT Retail", "Bán lẻ kỹ thuật số FPT"),
+    ("PVI.VN", "PVI Holdings", "Bảo hiểm PVI"),
     ("HPG.VN", "Hòa Phát", "Hoa Phat Group"),
     ("VCB.VN", "Vietcombank", "Ngân hàng Ngoại thương Việt Nam"),
     ("VNM.VN", "Vinamilk", "Sữa Việt Nam"),

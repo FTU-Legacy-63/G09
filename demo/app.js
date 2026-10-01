@@ -1,5 +1,6 @@
 import { analyzePortfolio } from './finance.mjs';
 import { COMMODITIES, normalizeStockSymbol } from './instruments.mjs';
+import { chartSegments, dateTime, nearestDateIndex, tooltipPosition } from './chart-utils.mjs';
 
 const form = document.querySelector('#portfolio-form');
 const holdingsList = document.querySelector('#holdings-list');
@@ -133,58 +134,80 @@ function renderChart(data) {
     { label: 'Tham khảo', values: data.reference.valuePath, className: 'line-reference' },
     { label: data.benchmark.label, values: data.benchmark.valuePath, className: 'line-benchmark' },
   ];
-  const allValues = series.flatMap((item) => item.values);
+  const allValues = series.flatMap((item) => item.values).filter(Number.isFinite);
   const minimum = Math.min(...allValues);
   const maximum = Math.max(...allValues);
   const spread = Math.max(data.initialCapital * 0.01, maximum - minimum);
   const floor = Math.max(0, minimum - spread * 0.12);
   const ceiling = maximum + spread * 0.12;
-  const x = (index) => left + (index / (data.dates.length - 1)) * (width - left - right);
+  const times = data.dates.map(dateTime);
+  const duration = times.at(-1) - times[0];
+  const x = (index) => left + ((times[index] - times[0]) / duration) * (width - left - right);
   const y = (value) => height - bottom - ((value - floor) / (ceiling - floor)) * (height - top - bottom);
   const fractions = width < 600 ? [0, 0.5, 1] : [0, 0.25, 0.5, 0.75, 1];
-  const ticks = [...new Set(fractions.map((fraction) => Math.round(fraction * (data.dates.length - 1))))];
+  const ticks = [...new Set(fractions.map((fraction) => nearestDateIndex(times, times[0] + fraction * duration)))];
   const grid = [0, 1, 2, 3, 4].map((index) => {
     const value = floor + (ceiling - floor) * index / 4;
     const yy = y(value);
     return `<line x1="${left}" x2="${width - right}" y1="${yy}" y2="${yy}" class="chart-grid"/><text x="${left - 10}" y="${yy + 3}" text-anchor="end" class="chart-axis-label">${compactVnd(value)}</text>`;
   }).join('');
   const xLabels = ticks.map((index) => `<text x="${x(index)}" y="${height - 11}" text-anchor="${index === 0 ? 'start' : index === data.dates.length - 1 ? 'end' : 'middle'}" class="chart-axis-label">${dateLabel(data.dates[index])}</text>`).join('');
-  const paths = series.map((item) => `<polyline points="${item.values.map((value, index) => `${x(index)},${y(value)}`).join(' ')}" class="chart-line ${item.className}"/>`).join('');
-  const currentPoints = series[0].values.map((value, index) => `${x(index)},${y(value)}`).join(' ');
-  const area = `<polygon points="${x(0)},${y(floor)} ${currentPoints} ${x(data.dates.length - 1)},${y(floor)}" fill="url(#portfolio-area)"/>`;
+  const paths = series.map((item) => chartSegments(item.values, data.dates).map((indices) => `<polyline points="${indices.map((index) => `${x(index)},${y(item.values[index])}`).join(' ')}" class="chart-line ${item.className}"/>`).join('')).join('');
+  const area = chartSegments(series[0].values, data.dates).map((indices) => `<polygon points="${x(indices[0])},${y(floor)} ${indices.map((index) => `${x(index)},${y(series[0].values[index])}`).join(' ')} ${x(indices.at(-1))},${y(floor)}" fill="url(#portfolio-area)"/>`).join('');
   chart.innerHTML = `<div class="chart-frame" tabindex="0" aria-label="Biểu đồ giá trị danh mục theo ngày. Dùng phím mũi tên trái hoặc phải để xem từng phiên."><svg role="img" aria-label="Giá trị danh mục, phương án tham khảo và benchmark theo ngày, đơn vị VND" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none"><defs><linearGradient id="portfolio-area" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="#159566" stop-opacity="0.19"/><stop offset="100%" stop-color="#159566" stop-opacity="0"/></linearGradient></defs>${grid}${xLabels}${area}${paths}<line id="chart-crosshair" y1="${top}" y2="${height - bottom}" class="chart-crosshair" hidden/>${series.map((item, index) => `<circle id="chart-dot-${index}" r="5" class="chart-dot ${item.className}" hidden/>`).join('')}</svg><div id="chart-tooltip" class="chart-tooltip" role="tooltip" hidden></div></div>`;
   const frame = chart.querySelector('.chart-frame');
   const svg = chart.querySelector('svg');
   const tooltip = chart.querySelector('#chart-tooltip');
+  const horizontal = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  horizontal.setAttribute('class', 'chart-crosshair');
+  horizontal.setAttribute('x1', left);
+  horizontal.setAttribute('x2', width - right);
+  horizontal.setAttribute('hidden', '');
+  svg.append(horizontal);
   let activeIndex = data.dates.length - 1;
-  function showAt(index) {
+  function showAt(index, pointer = null) {
     activeIndex = Math.max(0, Math.min(data.dates.length - 1, index));
     const xx = x(activeIndex);
     const line = chart.querySelector('#chart-crosshair');
     line.setAttribute('x1', xx);
     line.setAttribute('x2', xx);
-    line.hidden = false;
+    line.removeAttribute('hidden');
     series.forEach((item, itemIndex) => {
       const dot = chart.querySelector(`#chart-dot-${itemIndex}`);
+      if (!Number.isFinite(item.values[activeIndex])) {
+        dot.setAttribute('hidden', '');
+        return;
+      }
       dot.setAttribute('cx', xx);
       dot.setAttribute('cy', y(item.values[activeIndex]));
-      dot.hidden = false;
+      dot.removeAttribute('hidden');
     });
-    tooltip.innerHTML = `<strong>${dateLabel(data.dates[activeIndex])}</strong>${series.map((item) => `<span>${escapeHtml(item.label)} <b>${vnd(item.values[activeIndex])}</b></span>`).join('')}<span class="tooltip-pnl">PnL danh mục <b>${signedVnd(data.current.pnlPath[activeIndex])}</b></span>`;
+    tooltip.innerHTML = `<strong>${dateLabel(data.dates[activeIndex])}</strong>${series.map((item) => `<span>${escapeHtml(item.label)} <b>${Number.isFinite(item.values[activeIndex]) ? vnd(item.values[activeIndex]) : 'Thiếu dữ liệu'}</b></span>`).join('')}<span class="tooltip-pnl">PnL danh mục <b>${signedVnd(data.current.pnlPath[activeIndex])}</b></span>`;
     tooltip.hidden = false;
-    const pixelX = xx / width * frame.clientWidth;
-    tooltip.style.left = `${Math.max(8, Math.min(frame.clientWidth - 220, pixelX + 12))}px`;
+    const pixelX = pointer ? pointer.x : xx / width * frame.clientWidth;
+    const pixelY = pointer ? pointer.y : y(data.current.valuePath[activeIndex]) / height * frame.clientHeight;
+    const position = tooltipPosition(pixelX, pixelY, frame.clientWidth, frame.clientHeight, tooltip.offsetWidth, tooltip.offsetHeight);
+    tooltip.style.left = `${position.left}px`;
+    tooltip.style.top = `${position.top}px`;
+    const crossY = Math.max(top, Math.min(height - bottom, pixelY / frame.clientHeight * height));
+    horizontal.setAttribute('y1', crossY);
+    horizontal.setAttribute('y2', crossY);
+    horizontal.removeAttribute('hidden');
   }
   function hide() {
     tooltip.hidden = true;
-    chart.querySelector('#chart-crosshair').hidden = true;
-    series.forEach((_, index) => { chart.querySelector(`#chart-dot-${index}`).hidden = true; });
+    chart.querySelector('#chart-crosshair').setAttribute('hidden', '');
+    horizontal.setAttribute('hidden', '');
+    series.forEach((_, index) => { chart.querySelector(`#chart-dot-${index}`).setAttribute('hidden', ''); });
   }
-  svg.addEventListener('pointermove', (event) => {
+  const movePointer = (event) => {
     const rect = svg.getBoundingClientRect();
     const coordinate = (event.clientX - rect.left) / rect.width * width;
-    showAt(Math.round((coordinate - left) / (width - left - right) * (data.dates.length - 1)));
-  });
+    const targetTime = times[0] + (coordinate - left) / (width - left - right) * duration;
+    showAt(nearestDateIndex(times, targetTime), { x: event.clientX - rect.left, y: event.clientY - rect.top });
+  };
+  svg.addEventListener('pointermove', movePointer);
+  svg.addEventListener('pointerdown', movePointer);
   svg.addEventListener('pointerleave', hide);
   frame.addEventListener('focus', () => showAt(activeIndex));
   frame.addEventListener('blur', hide);
@@ -200,10 +223,15 @@ function renderResult(data) {
   const { current, reference, benchmark, symbols } = data;
   emptyState.hidden = true;
   resultContent.hidden = false;
-  document.querySelector('#results-subtitle').textContent = `${data.dates[0]} đến ${data.dates.at(-1)} · ${data.observations} ngày giá chung · tải lúc ${new Date(data.fetchedAtUtc).toLocaleString('vi-VN')} · base currency VND`;
+  document.querySelector('#results-subtitle').textContent = `${data.dates[0]} đến ${data.dates.at(-1)} · ${data.observations} phiên danh mục · tải lúc ${new Date(data.fetchedAtUtc).toLocaleString('vi-VN')} · base currency VND`;
+  const sourceDetails = Object.entries(data.vnSources || {}).map(([symbol, source]) => `${symbol}: phiên ${source.last_session}, cập nhật ${new Date(source.fetched_at_utc).toLocaleString('vi-VN')} (${source.mode === 'daily_snapshot' ? 'bản cập nhật hằng ngày' : 'tải trực tiếp'})`);
+  document.querySelector('#results-subtitle').textContent += sourceDetails.length ? ` · VN: TradingView/tvdatafeed. ${sourceDetails.join('; ')}` : '';
+  const warningBox = document.querySelector('#data-warning');
+  warningBox.textContent = [...(data.benchmarkNotice ? [data.benchmarkNotice] : []), ...data.warnings].join(' ');
+  warningBox.hidden = !warningBox.textContent;
   const pnl = current.valuePath.at(-1) - data.initialCapital;
   document.querySelector('#lead-headline').textContent = `Danh mục ${pnl >= 0 ? 'tăng' : 'giảm'} ${vnd(Math.abs(pnl))} trong kỳ phân tích.`;
-  document.querySelector('#lead-explanation').textContent = `Giá trị đầu kỳ ${vnd(data.initialCapital)}; cuối kỳ ${vnd(current.valuePath.at(-1))}. Return ${signedPercent(current.periodReturn)} so với ${signedPercent(benchmark.periodReturn)} của ${benchmark.label}.`;
+  document.querySelector('#lead-explanation').textContent = `Giá trị đầu kỳ ${vnd(data.initialCapital)}; cuối kỳ ${vnd(current.valuePath.at(-1))}. Return toàn kỳ ${signedPercent(current.periodReturn)}. ${benchmark.available ? `Trong khoảng so sánh ${dateLabel(benchmark.comparisonStart)}–${dateLabel(benchmark.comparisonEnd)}, danh mục ${signedPercent(benchmark.comparisonPortfolioReturn)}, ${benchmark.label} ${signedPercent(benchmark.periodReturn)}.` : 'Benchmark chưa có đủ dữ liệu để so sánh.'}`;
   document.querySelector('#metric-strip').innerHTML = [
     ['Giá trị cuối kỳ', vnd(current.valuePath.at(-1)), 'Danh mục hiện tại'],
     ['PnL kỳ', signedVnd(pnl), signedPercent(current.periodReturn)],
@@ -211,6 +239,7 @@ function renderResult(data) {
   ].map(([label, value, description]) => `<div class="metric"><span>${label}</span><strong>${value}</strong><small>${description}</small></div>`).join('');
   document.querySelector('#chart-start-value').textContent = `Đầu kỳ: ${vnd(data.initialCapital)}`;
   document.querySelector('#benchmark-legend').textContent = benchmark.label;
+  document.querySelector('#benchmark-period').textContent = benchmark.available ? `Benchmark so sánh từ ${dateLabel(benchmark.comparisonStart)} đến ${dateLabel(benchmark.comparisonEnd)}, cùng vốn ${vnd(benchmark.anchorValue)} tại ngày bắt đầu so sánh. Đoạn thiếu giá được để trống.` : 'Benchmark không có đủ dữ liệu; kết quả danh mục vẫn được giữ.';
   renderChart(data);
   const allocationColors = ['#1f8c5c', '#84a978', '#e2bd54'];
   const cumulative = current.weights.reduce((out, weight, index) => {
@@ -222,7 +251,7 @@ function renderResult(data) {
   document.querySelector('#allocation-groups').innerHTML = data.groups.map((group) => `<p><span>${escapeHtml(group.className)}</span><strong>${percent(group.weight, 0)} · ${points(group.contribution)} return</strong></p>`).join('');
   document.querySelector('#contribution-rows').innerHTML = symbols.map((symbol, i) => `<tr><th scope="row">${escapeHtml(symbol)}</th><td>${escapeHtml(data.instruments[symbol].group)}</td><td>${percent(current.weights[i], 0)}</td><td class="${current.contribution[i] >= 0 ? 'positive' : 'negative'}">${points(current.contribution[i])}</td><td>${points(current.riskContribution[i])}</td></tr>`).join('');
   document.querySelector('#contribution-total').innerHTML = `<tr><th scope="row" colspan="2">Tổng danh mục</th><td>100%</td><td>${points(current.periodReturn)}</td><td>${points(current.volatility)}</td></tr>`;
-  document.querySelector('#comparison-metrics').innerHTML = `<div class="comparison-head"><span>Chỉ số</span><span>Hiện tại</span><span>Tham khảo</span></div><div><span>Return kỳ</span><strong>${signedPercent(current.periodReturn)}</strong><strong>${signedPercent(reference.periodReturn)}</strong></div><div><span>Volatility</span><strong>${percent(current.volatility)}</strong><strong>${percent(reference.volatility)}</strong></div><div><span>So với benchmark</span><strong>${points(current.periodReturn - benchmark.periodReturn)}</strong><strong>${points(reference.periodReturn - benchmark.periodReturn)}</strong></div>`;
+  document.querySelector('#comparison-metrics').innerHTML = `<div class="comparison-head"><span>Chỉ số</span><span>Hiện tại</span><span>Tham khảo</span></div><div><span>Return toàn kỳ</span><strong>${signedPercent(current.periodReturn)}</strong><strong>${signedPercent(reference.periodReturn)}</strong></div><div><span>Volatility</span><strong>${percent(current.volatility)}</strong><strong>${percent(reference.volatility)}</strong></div><div><span>So với benchmark (kỳ so sánh)</span><strong>${benchmark.available ? points(benchmark.comparisonPortfolioReturn - benchmark.periodReturn) : 'Chưa đủ dữ liệu'}</strong><strong>${benchmark.available ? points(benchmark.comparisonReferenceReturn - benchmark.periodReturn) : 'Chưa đủ dữ liệu'}</strong></div>`;
   document.querySelector('#comparison-weights').innerHTML = `<div class="comparison-head"><span>Tỷ trọng</span><span>Hiện tại</span><span>Tham khảo</span></div>${symbols.map((symbol, i) => `<div><span>${symbol}</span><strong>${percent(current.weights[i], 0)}</strong><strong>${percent(reference.weights[i], 0)}</strong></div>`).join('')}`;
   document.querySelector('#assumptions-list').innerHTML = data.assumptions.map((assumption) => `<li>${escapeHtml(assumption)}</li>`).join('');
   document.querySelector('#decision-feedback').textContent = '';
@@ -342,17 +371,19 @@ form.addEventListener('submit', async (event) => {
     params.set('benchmark', benchmarkSymbol);
     const response = await fetch(`/api/market-data?${params}`, { cache: 'no-store' });
     const marketData = await response.json();
-    if (!response.ok) throw new Error(marketData.error || 'Không tải được dữ liệu từ yfinance.');
+    if (!response.ok) throw new Error(marketData.error || 'Không tải được dữ liệu thị trường.');
     result = analyzePortfolio(marketData.rows, {
       holdings: normalizedHoldings,
       startDate,
       endDate,
-      benchmarkSymbol,
+      benchmarkSymbol: marketData.benchmark || benchmarkSymbol,
       initialCapital,
       maxAssetPercent: document.querySelector('#asset-cap').value,
       maxCommodityPercent: document.querySelector('#commodity-cap').value,
     });
     result.fetchedAtUtc = marketData.fetched_at_utc;
+    result.vnSources = marketData.vn_sources;
+    result.benchmarkNotice = marketData.benchmark_notice;
     renderResult(result);
   } catch (error) {
     showError(error.message || 'Không thể phân tích dữ liệu.');
@@ -374,7 +405,7 @@ drawHoldings();
 const now = new Date();
 const endDate = new Date(now);
 const startDate = new Date(now);
-startDate.setMonth(startDate.getMonth() - 6);
+startDate.setFullYear(startDate.getFullYear() - 5);
 const localDate = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 document.querySelector('#start-date').value = localDate(startDate);
 document.querySelector('#end-date').value = localDate(endDate);

@@ -1,0 +1,42 @@
+name: Refresh VN daily prices
+on:
+  schedule:
+    - cron: '30 10 * * 1-5'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: vn-daily-prices
+  cancel-in-progress: false
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt
+      - name: Fetch and validate closed daily bars
+        env:
+          TRADINGVIEW_USERNAME: ${{ secrets.TRADINGVIEW_USERNAME }}
+          TRADINGVIEW_PASSWORD: ${{ secrets.TRADINGVIEW_PASSWORD }}
+        run: python scripts/update_vn_data.py --output /tmp/vn-prices.json
+      - name: Publish dated market snapshot
+        run: |
+          if git show-ref --verify --quiet refs/remotes/origin/market-data; then
+            git switch market-data --track origin/market-data
+          else
+            git switch -c market-data
+          fi
+          mkdir -p market-cache
+          cp /tmp/vn-prices.json market-cache/vn-prices.json
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add market-cache/vn-prices.json
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'Refresh real VN daily price snapshot'
+          git push origin market-data

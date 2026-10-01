@@ -117,6 +117,7 @@ export function analyzePortfolio(rows, input) {
   const instruments = Object.fromEntries([...new Set([...symbols, selectedBenchmark.symbol])].map((symbol) => [symbol, instrumentFor(symbol)]));
   const needsFx = Object.values(instruments).some((instrument) => instrument.currency === 'USD');
   const required = [...new Set([...symbols, selectedBenchmark.symbol, ...(needsFx ? ['USDVND'] : [])])];
+  const portfolioRequired = [...symbols, ...(symbols.some((symbol) => instruments[symbol].currency === 'USD') ? ['USDVND'] : [])];
   const observations = new Map();
   for (const row of rows) {
     if (row.session_date < startDate || row.session_date > endDate || !required.includes(row.symbol)) continue;
@@ -127,26 +128,40 @@ export function analyzePortfolio(rows, input) {
     day[row.symbol] = close;
     observations.set(row.session_date, day);
   }
-  const dates = [...observations.keys()].sort().filter((date) => required.every((symbol) => observations.get(date)[symbol] !== undefined));
+  const dates = [...observations.keys()].sort().filter((date) => portfolioRequired.every((symbol) => observations.get(date)[symbol] !== undefined));
   if (dates.length < 5) throw new Error('Cần ít nhất 5 ngày giá chung để chạy bản demo. Hãy chọn khoảng dài hơn.');
 
   const prices = {};
   for (const symbol of [...new Set([...symbols, selectedBenchmark.symbol])]) {
     prices[symbol] = dates.map((date) => {
       const point = observations.get(date);
+      if (point[symbol] === undefined || (instruments[symbol].currency === 'USD' && point.USDVND === undefined)) return null;
       return point[symbol] * (instruments[symbol].currency === 'USD' ? point.USDVND : 1);
     });
   }
-  const returns = Object.fromEntries(Object.entries(prices).map(([symbol, series]) => [symbol,
-    series.slice(1).map((price, index) => price / series[index] - 1),
+  const riskIndices = dates.slice(1).map((date, index) => index + 1).filter((index) => (Date.parse(dates[index]) - Date.parse(dates[index - 1])) / 86400000 <= 7);
+  if (riskIndices.length < 2) throw new Error('Không đủ phiên liên tiếp để tính volatility; hãy đổi khoảng ngày hoặc tài sản.');
+  const returns = Object.fromEntries(symbols.map((symbol) => [symbol,
+    riskIndices.map((index) => prices[symbol][index] / prices[symbol][index - 1] - 1),
   ]));
   const covariance = symbols.map((left) => symbols.map((right) => sampleCovariance(returns[left], returns[right])));
   const currentWeights = weightNumbers.map((weight) => weight / 100);
   const current = portfolioResult(symbols, currentWeights, prices, covariance, capital);
   const referenceWeights = optimizeOnOnePercentGrid(symbols, covariance, assetCap, commodityCap);
   const reference = portfolioResult(symbols, referenceWeights, prices, covariance, capital);
-  const benchmarkPath = prices[selectedBenchmark.symbol].map((price) => price / prices[selectedBenchmark.symbol][0]);
-  const benchmarkReturn = benchmarkPath.at(-1) - 1;
+  const benchmarkIndices = dates.map((_, index) => index).filter((index) => prices[selectedBenchmark.symbol][index] !== null);
+  const benchmarkStart = benchmarkIndices[0];
+  const benchmarkEnd = benchmarkIndices.at(-1);
+  const benchmarkAvailable = benchmarkIndices.length >= 2;
+  const benchmarkBase = benchmarkAvailable ? prices[selectedBenchmark.symbol][benchmarkStart] : null;
+  const benchmarkPath = prices[selectedBenchmark.symbol].map((price) => benchmarkAvailable && price !== null ? price / benchmarkBase : null);
+  const benchmarkReturn = benchmarkAvailable ? prices[selectedBenchmark.symbol][benchmarkEnd] / benchmarkBase - 1 : null;
+  const comparisonPortfolioReturn = benchmarkAvailable ? current.path[benchmarkEnd] / current.path[benchmarkStart] - 1 : null;
+  const comparisonReferenceReturn = benchmarkAvailable ? reference.path[benchmarkEnd] / reference.path[benchmarkStart] - 1 : null;
+  const warnings = [];
+  if (benchmarkIndices.length < dates.length) warnings.push(`Benchmark có giá ở ${benchmarkIndices.length}/${dates.length} phiên danh mục. Phần thiếu được để trống; không nội suy hoặc cắt chuỗi danh mục.`);
+  if (riskIndices.length < dates.length - 1) warnings.push('Các khoảng giá cách nhau trên 7 ngày bị loại khỏi ước lượng volatility, không được coi là daily return.');
+  if (riskIndices.length < 120) warnings.push('Dưới 120 quan sát return: ước lượng rủi ro và phân bổ tham khảo có độ tin cậy hạn chế.');
   const groups = [...new Set(symbols.map((symbol) => instruments[symbol].className))].map((className) => ({
     className,
     weight: symbols.reduce((sum, symbol, i) => sum + (instruments[symbol].className === className ? currentWeights[i] : 0), 0),
@@ -160,18 +175,20 @@ export function analyzePortfolio(rows, input) {
     prices,
     current: { ...current, weights: currentWeights },
     reference: { ...reference, weights: referenceWeights },
-    benchmark: { ...selectedBenchmark, path: benchmarkPath, valuePath: benchmarkPath.map((ratio) => ratio * capital), periodReturn: benchmarkReturn },
-    activeReturn: current.periodReturn - benchmarkReturn,
+    benchmark: { ...selectedBenchmark, path: benchmarkPath, valuePath: benchmarkPath.map((ratio) => ratio === null ? null : ratio * current.valuePath[benchmarkStart]), periodReturn: benchmarkReturn, available: benchmarkAvailable, comparisonStart: benchmarkAvailable ? dates[benchmarkStart] : null, comparisonEnd: benchmarkAvailable ? dates[benchmarkEnd] : null, anchorValue: benchmarkAvailable ? current.valuePath[benchmarkStart] : null, comparisonPortfolioReturn, comparisonReferenceReturn, coverage: benchmarkIndices.length },
+    activeReturn: benchmarkAvailable ? comparisonPortfolioReturn - benchmarkReturn : null,
+    riskObservations: riskIndices.length,
+    warnings,
     groups,
     observations: dates.length,
     assumptions: [
-      'Giá close chưa điều chỉnh; không gồm cổ tức, phí và thuế.',
+      'Giá close điều chỉnh chia tách theo provider (VN: TradingView adjustment=splits); không tái đầu tư cổ tức, không gồm phí và thuế.',
       'Các commodity được biểu diễn bằng ETF proxy (GLD, SLV, USO, CPER, DBA), không phải giá spot hay vị thế futures trực tiếp.',
       'Giá USD được quy đổi theo USD/VND cùng ngày; benchmark ETF tại Việt Nam dùng giá VND.',
       'Giá trị đầu kỳ được phân bổ theo tỷ trọng và giả định mua tại giá close đầu tiên; không phải lịch sử giao dịch thực tế.',
       'Period return giả định mua và giữ với tỷ trọng đầu kỳ; volatility là ước lượng từ covariance và tỷ trọng đầu kỳ.',
       'Reference allocation tối thiểu hóa variance trên lưới 1%, long-only, cùng dữ liệu và giới hạn đã chọn.',
-      'yfinance tải giá mới khi phân tích; phiên gần nhất có thể trễ và không phải giá giao dịch real-time.',
+      'VN dùng phiên ngày đã đóng từ TradingView/tvdatafeed, cập nhật hằng ngày hoặc tải trực tiếp khi cache thiếu/cũ; commodity và FX tải qua yfinance. Không phải báo giá giao dịch real-time.',
       'Chuỗi giá lịch sử không bảo đảm hiệu quả trong tương lai; không dùng kết quả làm lời khuyên đầu tư.',
     ],
   };

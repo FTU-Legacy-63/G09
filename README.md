@@ -31,7 +31,7 @@ Các asset class khác và Monte Carlo thuộc final product. Sample data trong 
 
 ## Week 6 working demo
 
-[Mở demo công khai](https://g09-finfolio.vercel.app/) · [Mã nguồn demo](demo/index.html). Website được host trên Vercel như project SHB; Python Function tải giá qua yfinance mỗi lần người dùng phân tích. Không cần API key hoặc account. Để chạy local:
+[Mở demo công khai](https://g09-finfolio.vercel.app/) · [Mã nguồn demo](demo/index.html). Website host trên Vercel như project SHB. Cổ phiếu/chỉ số VN dùng TradingView qua tvdatafeed; commodity và tỷ giá vẫn tải qua yfinance khi phân tích. Không cần gửi tài khoản trong chat. Để chạy local:
 
 ```bash
 cd G09-Finfolio
@@ -39,15 +39,17 @@ python3 -m pip install -r demo/requirements.txt
 python3 demo/server.py
 ```
 
-Mở <http://127.0.0.1:8123/demo/>. Không mở `index.html` bằng `file://` hoặc `python3 -m http.server`: hai cách đó không có API yfinance. Dữ liệu đầu vào minh họa gồm FPT.VN 40%, HPG.VN 35%, GLD 25%, 6 tháng gần nhất, benchmark VN30 ETF, giới hạn 80% mỗi mã và 60% commodity. Với cổ phiếu, gõ **tên công ty hoặc ticker** vào ô tìm kiếm rồi **chọn một gợi ý** (ví dụ “Vietcombank” → `VCB.VN`); có thể dùng chuột hoặc phím mũi tên và Enter. Sau đó chọn commodity ETF proxy, benchmark và giá trị danh mục đầu kỳ bằng VND. Chọn **Phân tích danh mục** để tải giá mới và xem brief, rồi ghi nhận quyết định và lý do. Gợi ý tên/mã không đảm bảo có chuỗi giá; nếu Yahoo Finance không trả dữ liệu cho mã đã chọn, ứng dụng báo lỗi và không tự dùng fixture.
+Mở <http://127.0.0.1:8123/demo/>. Không mở bằng `file://` hoặc `python3 -m http.server`: hai cách đó không có API. Input minh họa: FPT.VN 40%, HPG.VN 35%, GLD 25%, **5 năm gần nhất**, benchmark **VN30 Index**, giới hạn 80% mỗi mã và 60% commodity. Gõ tên công ty/ticker rồi chọn một gợi ý bằng chuột hoặc phím mũi tên và Enter. Sau đó chọn commodity proxy, benchmark và vốn đầu kỳ VND, bấm phân tích. Mã không có dữ liệu provider sẽ báo lỗi, không tự dùng fixture.
+
+Job [Refresh VN daily prices](.github/workflows/update-vn-data.yml) lên lịch **17:30 giờ Việt Nam, thứ Hai–thứ Sáu**, sau phiên đóng cửa (GitHub Actions có thể chạy trễ). Job tải lại lịch sử để cập nhật cả điều chỉnh chia tách, kiểm tra dữ liệu và lưu snapshot thực trên nhánh `market-data`; code vẫn ở `main`. Danh sách cập nhật gồm 26 mã cổ phiếu/ETF/chỉ số trong [vn_universe.json](demo/vn_universe.json). Mã ngoài danh sách, cache thiếu hoặc quá cũ được tải trực tiếp từ tvdatafeed khi phân tích. UI hiện timestamp riêng và phiên mới nhất của từng mã; job lỗi không giả vờ cập nhật thành công. Các ngày nghỉ không có nến mới. Hiện lấy được dữ liệu không đăng nhập; nếu provider thay đổi, có thể cấu hình GitHub Secrets và biến môi trường Vercel, không commit thông tin đăng nhập.
 
 Kiểm tra logic tự động:
 
 ```bash
-node --test demo/finance.test.mjs
+node --test demo/finance.test.mjs demo/chart-utils.test.mjs
 python3 -m unittest discover -s demo -p 'test_*.py'
 ```
 
-Demo phân tích 2–3 tài sản một lần: mã cổ phiếu `.VN` có dữ liệu từ Yahoo và năm ETF proxy đại diện cho vàng, bạc, dầu, đồng, nông sản. Biểu đồ có một đường tổng giá trị danh mục bắt đầu từ vốn đầu kỳ, các mốc ngày và tooltip giá trị/PnL; hai đường phụ là phương án tham khảo và benchmark. ETF proxy không phải giá commodity spot hay futures. yfinance cung cấp chuỗi giá lịch sử mới nhất khả dụng, không bảo đảm báo giá khớp lệnh real-time. Volatility và tối ưu hóa phụ thuộc vào khoảng ngày; đây không phải lời khuyên đầu tư. Việc hỗ trợ toàn bộ commodity khả dụng từ provider là phạm vi sản phẩm, chưa phải khả năng của demo. [Phạm vi, test table, bug log và trạng thái triển khai](docs/WEEK6.md).
+Demo phân tích 2–3 tài sản một lần: cổ phiếu VN và năm ETF proxy đại diện vàng, bạc, dầu, đồng, nông sản. Chart dùng giá trị VND từ vốn đầu kỳ, trục X theo ngày lịch, tooltip theo cả X/Y và không nối liền khoảng trống dài. Benchmark thiếu giá không cắt lịch sử danh mục; so sánh return chỉ tính trên cùng kỳ thực có. VN30/VN-Index là chỉ số trực tiếp; ETF vẫn ghi rõ là ETF proxy. Nguồn là giá lịch sử ngày, không phải báo giá khớp lệnh real-time. Volatility, phương án tham khảo phụ thuộc dữ liệu lịch sử và không phải lời khuyên đầu tư. Commodity toàn provider vẫn là định hướng, chưa phải khả năng demo. [Phạm vi, test table và trạng thái](docs/WEEK6.md).
 
 Production: <https://g09-finfolio.vercel.app/>. Hiện project Vercel chưa kết nối GitHub org để tự deploy khi push; sau khi thay đổi code, người có quyền Vercel chạy `vercel deploy --prod` tại thư mục repo hoặc cấp quyền GitHub App của Vercel cho repo `FTU-Legacy-63/G09`.

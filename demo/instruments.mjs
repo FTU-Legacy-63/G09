@@ -7,6 +7,10 @@ export const COMMODITIES = {
 };
 
 export const BENCHMARKS = {
+  'VN30.VN': { name: 'VN30 Index', className: 'Benchmark index', group: 'Vietnam equity', currency: 'VND' },
+  'VNINDEX.VN': { name: 'VN-Index', className: 'Benchmark index', group: 'Vietnam equity', currency: 'VND' },
+  'FUESSV30.VN': { name: 'SSIAM VN30 ETF', className: 'Benchmark ETF', group: 'Vietnam equity', currency: 'VND' },
+  'FUEVN100.VN': { name: 'VinaCapital VN100 ETF', className: 'Benchmark ETF', group: 'Vietnam equity', currency: 'VND' },
   'E1VFVN30.VN': { name: 'VN30 ETF', className: 'Benchmark ETF', group: 'Vietnam equity', currency: 'VND' },
   'FUEVFVND.VN': { name: 'VN Diamond ETF', className: 'Benchmark ETF', group: 'Vietnam equity', currency: 'VND' },
   GLD: COMMODITIES.GLD,

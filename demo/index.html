@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#21563f" />
-    <meta name="description" content="Finfolio Week 6 demo: phân tích danh mục cổ phiếu và commodity proxy với dữ liệu Yahoo Finance tải qua yfinance." />
+    <meta name="description" content="Finfolio: phân tích danh mục VN bằng TradingView/tvdatafeed; commodity và tỷ giá bằng yfinance." />
     <title>Finfolio | Week 6 demo</title>
     <link rel="stylesheet" href="/demo/styles.css" />
     <script type="module" src="/demo/app.js"></script>
@@ -65,16 +65,16 @@
               <label>Từ ngày<input id="start-date" type="date" required /></label>
               <label>Đến ngày (bao gồm)<input id="end-date" type="date" required /></label>
               <label>Performance benchmark
-                <select id="benchmark" required><option value="E1VFVN30.VN">VN30 ETF (E1VFVN30.VN)</option><option value="FUEVFVND.VN">VN Diamond ETF (FUEVFVND.VN)</option><option value="GLD">Vàng (GLD ETF proxy)</option><option value="SLV">Bạc (SLV ETF proxy)</option><option value="custom">Mã VN tự chọn</option></select>
+                <select id="benchmark" required><option value="VN30.VN">VN30 Index</option><option value="VNINDEX.VN">VN-Index</option><option value="FUESSV30.VN">SSIAM VN30 ETF (FUESSV30.VN)</option><option value="E1VFVN30.VN">DCVFM VN30 ETF (E1VFVN30.VN)</option><option value="FUEVN100.VN">VinaCapital VN100 ETF (FUEVN100.VN)</option><option value="FUEVFVND.VN">VN Diamond ETF (FUEVFVND.VN)</option><option value="GLD">Vàng (GLD ETF proxy)</option><option value="SLV">Bạc (SLV ETF proxy)</option><option value="custom">Mã VN tự chọn</option></select>
               </label>
               <label id="custom-benchmark-wrap" hidden>Mã benchmark VN<input id="custom-benchmark" type="text" placeholder="VD: VCB hoặc VCB.VN" spellcheck="false" autocomplete="off" /></label>
               <label>Giới hạn mỗi mã (%)<input id="asset-cap" type="number" min="0" max="100" step="1" value="80" required /></label>
               <label>Giới hạn commodity (%)<input id="commodity-cap" type="number" min="0" max="100" step="1" value="60" required /></label>
             </div>
-            <p class="form-help">Giá trị đầu kỳ được phân bổ theo tỷ trọng tại giá close đầu tiên. Commodity dùng ETF proxy, không phải giá spot hay vị thế futures. Chỉ mã có dữ liệu Yahoo Finance mới phân tích được.</p>
+            <p class="form-help">Giá trị đầu kỳ được phân bổ theo tỷ trọng tại giá close đầu tiên. Commodity dùng ETF proxy, không phải giá spot hay vị thế futures. VN dùng dữ liệu TradingView; mã ngoài danh sách cập nhật hằng ngày được tải khi phân tích.</p>
             <div id="form-error" class="form-error" role="alert" hidden></div>
             <div class="form-bottom">
-              <span>Nguồn: Yahoo Finance qua yfinance · tải lại mỗi lần phân tích</span>
+              <span>Cổ phiếu/chỉ số VN: TradingView · cập nhật hằng ngày. Commodity và tỷ giá: Yahoo Finance.</span>
               <button id="analyze-button" class="primary-button" type="submit">Phân tích danh mục <span aria-hidden="true">→</span></button>
             </div>
           </form>
@@ -90,11 +90,12 @@
             <p>Một kết quả chính, đủ để hiểu danh mục hiện tại và một phương án phân bổ khác.</p>
           </div>
           <div id="result-content" hidden>
-            <div class="notice" role="note"><strong>Giá mới nhất nguồn trả về, không phải giá khớp lệnh real-time.</strong> Dữ liệu có thể trễ; volatility và phương án tham khảo nhạy với khoảng thời gian chọn. Không dùng kết quả như lời khuyên đầu tư.</div>
+            <div class="notice" role="note"><strong>Dữ liệu ngày đã đóng phiên.</strong> Volatility và phương án tham khảo nhạy với khoảng thời gian chọn. Không dùng kết quả như lời khuyên đầu tư.</div>
+            <div id="data-warning" class="notice" role="note" hidden></div>
             <div class="lead-result"><div><span>Kết quả chính</span><h3 id="lead-headline"></h3><p id="lead-explanation"></p></div><div class="lead-icon" aria-hidden="true">↗</div></div>
             <div id="metric-strip" class="metric-strip"></div>
             <div class="result-grid">
-              <section class="chart-panel" aria-labelledby="chart-title"><div class="panel-heading"><h3 id="chart-title">Giá trị danh mục và PnL</h3><span id="chart-start-value"></span></div><div id="performance-chart" class="performance-chart"></div><div class="legend"><span class="legend-current">Danh mục</span><span class="legend-reference">Tham khảo</span><span id="benchmark-legend" class="legend-benchmark"></span></div><p class="table-footnote">Rê chuột trên biểu đồ hoặc dùng phím mũi tên để xem giá trị và PnL tại từng ngày.</p></section>
+              <section class="chart-panel" aria-labelledby="chart-title"><div class="panel-heading"><h3 id="chart-title">Giá trị danh mục và PnL</h3><span id="chart-start-value"></span></div><div id="performance-chart" class="performance-chart"></div><div class="legend"><span class="legend-current">Danh mục</span><span class="legend-reference">Tham khảo</span><span id="benchmark-legend" class="legend-benchmark"></span></div><p id="benchmark-period" class="table-footnote"></p><p class="table-footnote">Rê chuột trên biểu đồ hoặc dùng phím mũi tên để xem giá trị và PnL tại từng ngày.</p></section>
               <section class="allocation-panel" aria-labelledby="allocation-title"><div class="panel-heading"><h3 id="allocation-title">Phân bổ hiện tại</h3><span>100%</span></div><div id="allocation-visual"></div><div id="allocation-groups"></div></section>
             </div>
             <section class="table-panel" aria-labelledby="contribution-title"><div class="panel-heading"><h3 id="contribution-title">Đóng góp theo từng mã</h3><span>Đơn vị: điểm %</span></div><div class="table-scroll"><table><thead><tr><th>Mã</th><th>Nhóm</th><th>Tỷ trọng</th><th>Return contribution</th><th>Risk contribution</th></tr></thead><tbody id="contribution-rows"></tbody><tfoot id="contribution-total"></tfoot></table></div><p class="table-footnote">Return contribution cộng lại bằng return của danh mục. Risk contribution cộng lại bằng volatility ước lượng.</p></section>

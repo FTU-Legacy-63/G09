@@ -94,3 +94,36 @@ test('T09 invalid capital and unknown commodity code are rejected', () => {
   assert.throws(() => analyzePortfolio(rows, { ...baseInput, initialCapital: 0 }), /Giá trị danh mục/);
   assert.throws(() => analyzePortfolio(rows, { ...baseInput, holdings: [{ symbol: 'FPT.VN', weight: 50 }, { symbol: 'GC=F', weight: 50 }] }), /Mã cổ phiếu Việt Nam/);
 });
+
+test('T10 benchmark holes do not cut portfolio dates or change risk estimates', () => {
+  const full = analyzePortfolio(rows, baseInput);
+  const bm = rows.filter((row) => row.symbol === 'FPT.VN').filter((_, index) => index === 3 || index === 8).map((row) => ({ ...row, symbol: 'FUESSV30.VN' }));
+  const sparse = analyzePortfolio([...rows, ...bm], { ...baseInput, benchmarkSymbol: 'FUESSV30.VN' });
+  assert.deepEqual(sparse.dates, full.dates);
+  near(sparse.current.volatility, full.current.volatility);
+  assert.equal(sparse.benchmark.valuePath[0], null);
+  near(sparse.benchmark.anchorValue, sparse.current.valuePath[3]);
+  near(sparse.activeReturn, sparse.current.path[8] / sparse.current.path[3] - 1 - sparse.benchmark.periodReturn);
+});
+
+test('T11 absent benchmark preserves portfolio and returns null comparisons', () => {
+  const result = analyzePortfolio(rows, { ...baseInput, benchmarkSymbol: 'FUESSV30.VN' });
+  assert.equal(result.observations, 10);
+  assert.equal(result.benchmark.available, false);
+  assert.equal(result.activeReturn, null);
+  assert.ok(result.benchmark.valuePath.every((value) => value === null));
+});
+
+test('T12 benchmark-only FX does not cut VN holdings dates', () => {
+  const noFx = rows.filter((row) => row.symbol !== 'USDVND');
+  const result = analyzePortfolio(noFx, { ...baseInput, holdings: [{ symbol: 'FPT.VN', weight: 50 }, { symbol: 'HPG.VN', weight: 50 }] });
+  assert.equal(result.observations, 10);
+  assert.equal(result.benchmark.available, false);
+});
+
+test('T13 long holes are excluded from daily risk estimates', () => {
+  const shifted = rows.map((row) => ({ ...row, session_date: row.session_date >= '2026-07-08' ? row.session_date.replace('2026-07', '2026-08') : row.session_date }));
+  const result = analyzePortfolio(shifted, { ...baseInput, endDate: '2026-08-15' });
+  assert.equal(result.riskObservations, result.observations - 2);
+  assert.ok(result.warnings.some((warning) => warning.includes('7 ngày')));
+});
