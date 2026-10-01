@@ -18,6 +18,7 @@ test('group contribution reconciles and zero-weight holdings stay finite',()=>{
 test('month-end clamps to last day; YTD and truncated history resolve correctly',()=>{
  assert.equal(periodStart(['2026-02-28','2026-03-01','2026-03-31'],'1M'),0);
  assert.equal(periodStart(data.dates,'YTD'),0);assert.equal(periodStart(data.dates,'5Y'),0);
+ assert.equal(attributionWindow(data,'5Y').complete,false);
 });
 test('CSV names cannot become executable spreadsheet formulas',()=>{
  assert.equal(csvCell('=HYPERLINK("x")'),'"\'=HYPERLINK(""x"")"');assert.equal(csvCell(-3),'"-3"');

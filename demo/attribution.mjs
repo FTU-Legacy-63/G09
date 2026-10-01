@@ -1,13 +1,16 @@
 export const PERIODS = ['1M', '3M', '6M', 'YTD', '1Y', '5Y', 'ALL'];
-export function periodStart(dates, period) {
-  if (period === 'ALL') return 0;
+function periodBoundary(dates, period) {
+  if(period==='ALL') return dates[0];
   const end = new Date(`${dates.at(-1)}T00:00:00Z`), cutoff = new Date(end);
   if (period === 'YTD') { cutoff.setUTCMonth(0, 1); }
   else if (period.endsWith('M')) {
     const day=cutoff.getUTCDate(); cutoff.setUTCDate(1); cutoff.setUTCMonth(cutoff.getUTCMonth()-parseInt(period));
     const last=new Date(Date.UTC(cutoff.getUTCFullYear(),cutoff.getUTCMonth()+1,0)).getUTCDate(); cutoff.setUTCDate(Math.min(day,last));
   } else cutoff.setUTCFullYear(cutoff.getUTCFullYear()-parseInt(period));
-  const day=cutoff.toISOString().slice(0,10), i=dates.findIndex(d=>d>=day);
+  return cutoff.toISOString().slice(0,10);
+}
+export function periodStart(dates, period) {
+  const day=periodBoundary(dates,period), i=dates.findIndex(d=>d>=day);
   return i<0 ? dates.length-1 : i;
 }
 export function attributionWindow(data, period='ALL') {
@@ -18,8 +21,9 @@ export function attributionWindow(data, period='ALL') {
     const startValue=quantity*data.prices[symbol][start], endValue=quantity*data.prices[symbol][end];
     return {symbol,...data.instruments[symbol],weight:startValue/startCapital,assetReturn:data.prices[symbol][end]/data.prices[symbol][start]-1,pnl:endValue-startValue,contribution:(endValue-startValue)/startCapital};
   });
-  const requestedStart=period==='ALL'?data.dates[0]:null;
-  return {positions,start,end,startDate:data.dates[start],endDate:data.dates[end],startCapital,periodReturn:data.current.valuePath[end]/startCapital-1,pnl:data.current.valuePath[end]-startCapital,requestedStart,observations:end-start+1};
+  const requestedStart=periodBoundary(data.dates,period);
+  const complete=period==='ALL'||(Date.parse(data.dates[0])-Date.parse(requestedStart))/86400000<=7;
+  return {positions,start,end,startDate:data.dates[start],endDate:data.dates[end],startCapital,periodReturn:data.current.valuePath[end]/startCapital-1,pnl:data.current.valuePath[end]-startCapital,requestedStart,complete,observations:end-start+1};
 }
 export function groupAttribution(positions, mode='symbol') {
   if(mode==='symbol') return positions;

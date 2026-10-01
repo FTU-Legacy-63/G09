@@ -105,7 +105,8 @@ def search_instruments(raw_query, scope="all"):
     try:
         quotes = yf.Search(fold(query), max_results=50, news_count=0, timeout=8).quotes
     except Exception as exc:
-        if not matches:
+        can_lookup_vn = scope == 'vn' and query == query.upper() and re.fullmatch(r'[A-Z0-9]{2,10}(?:\.VN)?',query)
+        if not matches and not can_lookup_vn:
             raise RuntimeError("Nguồn tìm kiếm chưa phản hồi. Hãy thử lại.") from exc
         quotes = []
     for quote in quotes:
@@ -119,4 +120,8 @@ def search_instruments(raw_query, scope="all"):
         item = {"symbol": symbol, "name": name, "exchange": quote.get("exchDisp") or quote.get("exchange") or "Yahoo", "className": {"EQUITY":"Equity", "ETF":"ETF", "MUTUALFUND":"Mutual fund", "CRYPTOCURRENCY":"Crypto"}[kind], "currency": "VND" if is_vn else quote.get("currency"), **CATALOG.get(symbol, {})}
         if allowed(item) and symbol not in matches:
             matches[symbol] = item
+    if scope == 'vn' and (query == query.upper() or query.upper().endswith('.VN')) and re.fullmatch(r'[A-Za-z0-9]{2,10}(?:\.VN)?', query, re.I):
+        candidate=query.upper() if query.upper().endswith('.VN') else query.upper()+'.VN'
+        if candidate not in matches and candidate not in {'VN30.VN','VNINDEX.VN'}:
+            matches[candidate]={'symbol':candidate,'name':'Tra cứu ticker trên TradingView (chưa xác minh mã/sàn/giá)','exchange':'HOSE/HNX/UPCOM','currency':'VND','unverified':True}
     return {"query": query, "results": sorted(matches.values(), key=lambda item: (0 if needle == fold(item["symbol"]) or needle == fold(item["symbol"].removesuffix(".VN")) else 1, item["symbol"]))[:30], "notice": "Kết quả tìm kiếm chưa xác nhận lịch sử giá hoặc currency. VN dùng tvdatafeed; instrument quốc tế phải xác minh USD khi phân tích."}

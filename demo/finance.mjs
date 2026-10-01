@@ -135,6 +135,7 @@ export function analyzePortfolio(rows, input) {
   const comparisonPortfolioReturn = benchmarkAvailable ? current.path[benchmarkEnd] / current.path[benchmarkStart] - 1 : null;
   const comparisonReferenceReturn = benchmarkAvailable ? reference.path[benchmarkEnd] / reference.path[benchmarkStart] - 1 : null;
   const warnings = [];
+  if ((Date.parse(dates[0])-Date.parse(startDate))/86400000 > 7) warnings.push(`Dữ liệu chung bắt đầu ${dates[0]}, muộn hơn ngày yêu cầu ${startDate}; kết quả chỉ phản ánh kỳ thực có, không phải toàn bộ kỳ yêu cầu.`);
   if (!optimization.converged) warnings.push('Phương án minimum variance là nghiệm xấp xỉ; solver đã đạt giới hạn vòng lặp, không khẳng định tối ưu tuyệt đối.');
   if (symbols.some(s=>instruments[s].className==='Crypto')) warnings.push('Crypto dùng giá ngày, căn chỉnh theo ngày chung với các thị trường khác; không mô phỏng giao dịch 24/7.');
   if (benchmarkIndices.length < dates.length) warnings.push(`Benchmark có giá ở ${benchmarkIndices.length}/${dates.length} phiên danh mục. Phần thiếu được để trống; không nội suy hoặc cắt chuỗi danh mục.`);

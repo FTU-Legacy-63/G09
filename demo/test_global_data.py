@@ -6,6 +6,12 @@ from server import fetch_market_data
 import pandas as pd
 
 class GlobalTests(unittest.TestCase):
+    def test_unknown_vn_ticker_can_be_selected_for_explicit_unverified_lookup(self):
+        with patch('symbol_search.yf.Search',side_effect=RuntimeError('down')):
+            result=search_instruments('ZZZ','vn')
+        self.assertTrue(result['results'][0]['unverified'])
+        self.assertEqual(result['results'][0]['symbol'],'ZZZ.VN')
+
     def test_search_exposes_provider_equities_etfs_and_crypto_not_futures(self):
         with patch('symbol_search.yf.Search') as search:
             search.return_value.quotes=[{'symbol':'AMD','quoteType':'EQUITY','longname':'Advanced Micro Devices','currency':'USD'},{'symbol':'BTC-USD','quoteType':'CRYPTOCURRENCY','shortname':'Bitcoin'},{'symbol':'GC=F','quoteType':'FUTURE','shortname':'Gold Futures'},{'symbol':'TQQQ','quoteType':'ETF','shortname':'3x leveraged Nasdaq'}]
