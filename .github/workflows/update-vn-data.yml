@@ -28,7 +28,7 @@ jobs:
       - name: Publish dated market snapshot
         run: |
           if git show-ref --verify --quiet refs/remotes/origin/market-data; then
-            git switch market-data --track origin/market-data
+            git switch --create market-data --track origin/market-data
           else
             git switch -c market-data
           fi
