@@ -31,7 +31,7 @@ Các asset class khác và Monte Carlo thuộc final product. Sample data trong 
 
 ## Finfolio portfolio analytics
 
-[Mở Finfolio](https://g09-finfolio.vercel.app/) · [Mã nguồn](demo/index.html) · [Phạm vi hiện tại](docs/PRODUCT_SCOPE.md). Website host trên Vercel như project SHB. Cổ phiếu/chỉ số VN dùng TradingView qua tvdatafeed; instrument quốc tế và tỷ giá tải qua yfinance khi phân tích. Mô hình được chốt là danh mục giả định từ vốn và tỷ trọng, không phải lịch sử giao dịch thật. Để chạy local:
+[Mở Finfolio](https://g09-finfolio.vercel.app/) · [Mã nguồn](demo/index.html) · [Phạm vi hiện tại](docs/PRODUCT_SCOPE.md). Website host trên Vercel như project SHB. Cổ phiếu/chỉ số VN dùng TradingView qua tvdatafeed; instrument quốc tế và tỷ giá tải qua yfinance khi phân tích. Danh mục giả định nhập giá trị từng tài sản bằng USD/VND, tự suy ra tổng vốn và tỷ trọng; không phải lịch sử giao dịch thật. Workspace tách thành Tổng quan, Danh mục, Phân tích và Phương pháp, mỗi trang có URL riêng. Để chạy local:
 
 ```bash
 cd G09-Finfolio
@@ -39,7 +39,7 @@ python3 -m pip install -r demo/requirements.txt
 python3 demo/server.py
 ```
 
-Mở <http://127.0.0.1:8123/demo/>. Không mở bằng `file://` hoặc `python3 -m http.server`: hai cách đó không có API. Input minh họa: FPT.VN 40%, HPG.VN 35%, GLD 25%, **5 năm gần nhất**, benchmark **VN30 Index**, giới hạn 80% mỗi mã và 60% commodity. Gõ tên công ty/ticker rồi chọn một gợi ý bằng chuột hoặc phím mũi tên và Enter. Sau đó chọn commodity proxy, benchmark và vốn đầu kỳ VND, bấm phân tích. Mã không có dữ liệu provider sẽ báo lỗi, không tự dùng fixture.
+Mở <http://127.0.0.1:8123/portfolio>. Không mở bằng `file://` hoặc `python3 -m http.server`: hai cách đó không có API. Input minh họa: FPT.VN 40 triệu VND, HPG.VN 35 triệu VND, GLD 25 triệu VND, **5 năm gần nhất**, benchmark **VN30 Index**, giới hạn 80% mỗi mã và 60% commodity. Gõ tên công ty/ticker rồi chọn một gợi ý bằng chuột hoặc phím mũi tên và Enter. Chọn giá trị và currency riêng cho mỗi vị thế rồi bấm phân tích. Khoản USD quy đổi bằng tỷ giá tại phiên đầu tiên có đủ giá chung; kết quả hiển thị tổng vốn VND và tỷ trọng tự tính. Mã không có dữ liệu provider sẽ báo lỗi, không tự dùng fixture.
 
 Job [Refresh VN daily prices](.github/workflows/update-vn-data.yml) lên lịch **17:30 giờ Việt Nam, thứ Hai–thứ Sáu**, sau phiên đóng cửa (GitHub Actions có thể chạy trễ). Job tải lại lịch sử để cập nhật cả điều chỉnh chia tách, kiểm tra dữ liệu và lưu snapshot thực trên nhánh `market-data`; code vẫn ở `main`. Danh sách cập nhật gồm 26 mã cổ phiếu/ETF/chỉ số trong [vn_universe.json](demo/vn_universe.json). Mã ngoài danh sách, cache thiếu hoặc quá cũ được tải trực tiếp từ tvdatafeed khi phân tích. UI hiện timestamp riêng và phiên mới nhất của từng mã; job lỗi không giả vờ cập nhật thành công. Các ngày nghỉ không có nến mới. Hiện lấy được dữ liệu không đăng nhập; nếu provider thay đổi, có thể cấu hình GitHub Secrets và biến môi trường Vercel, không commit thông tin đăng nhập.
 

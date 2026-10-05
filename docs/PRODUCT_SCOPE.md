@@ -1,10 +1,10 @@
 # Finfolio: hypothetical portfolio analytics
 
-Cập nhật 01/10/2026 theo lựa chọn của nhóm. Target user là nhà đầu tư cá nhân đã có hiểu biết tài chính, muốn so sánh đóng góp và rủi ro giữa các loại tài sản.
+Cập nhật 05/10/2026 theo lựa chọn của nhóm. Target user là nhà đầu tư cá nhân đã có hiểu biết tài chính, muốn so sánh đóng góp và rủi ro giữa các loại tài sản.
 
 ## Mô hình danh mục
 
-Input: vốn VND, tỷ trọng đầu kỳ tổng 100%, 2–30 instrument khác nhau, thời gian tối đa 5 năm, performance benchmark và giới hạn phân bổ. Hệ thống giả định mua tại close đầu kỳ, cho phép fractional units và giữ nguyên quantity. Không thêm cash flow, giao dịch mua/bán, phí/thuế hay đòn bẩy. PnL là chênh lệch giá trị VND so với vốn đầu kỳ; không phải PnL tài khoản brokerage.
+Input: giá trị đầu kỳ của từng vị thế, chọn USD hoặc VND riêng; 2–30 instrument khác nhau, thời gian tối đa 5 năm, performance benchmark và giới hạn phân bổ. Khoản USD được quy đổi bằng VND=X tại phiên đầu tiên có đủ giá holdings và FX, không dùng tỷ giá hiện tại cho vốn lịch sử. Tổng vốn VND và tỷ trọng được suy ra tự động. Currency nhập giá trị độc lập với currency niêm yết. Hệ thống giả định mua tại close đầu kỳ, cho phép fractional units và giữ nguyên quantity. Không thêm cash flow, giao dịch mua/bán, phí/thuế hay đòn bẩy. PnL là chênh lệch giá trị VND so với vốn đầu kỳ; không phải PnL tài khoản brokerage.
 
 ## Instrument universe
 
@@ -31,14 +31,16 @@ Input: vốn VND, tỷ trọng đầu kỳ tổng 100%, 2–30 instrument khác 
 
 ## User flow và xuất báo cáo
 
-Tìm/chọn instrument → nhập vốn, weights, kỳ, benchmark → xác minh metadata/giá/currency → căn chỉnh ngày chung holdings/FX → portfolio value/PnL → attribution heatmap/table → risk và minimum-variance scenario → ghi nhận quyết định.
+Tìm/chọn instrument → nhập giá trị và USD/VND từng vị thế, kỳ, benchmark → xác minh metadata/giá/currency → căn chỉnh ngày chung holdings/FX → quy đổi vốn và tính weights → portfolio value/PnL → attribution heatmap/table → risk và minimum-variance scenario → ghi nhận quyết định.
+
+Workspace có bốn URL riêng: `/` tổng quan, `/portfolio` nhập danh mục, `/analysis` kết quả, `/method` phương pháp. Không hiển thị tất cả phần trên cùng một trang. Hỗ trợ Back/Forward, tải trực tiếp URL và điều hướng mobile.
 
 Lookback chỉ điều khiển bảng/heatmap attribution; chart PnL và risk vẫn dùng toàn kỳ đã nhập, được ghi rõ trên màn hình. Cột đa kỳ thiếu lịch sử hiện N/A, không trình bày vài ngày dữ liệu thành return 5 năm; kỳ chọn bị rút gọn được cảnh báo. Đổi đơn vị VND/điểm %, sort và grouping cập nhật bảng/CSV. CSV có ngày thực của từng lookback, nguồn, đơn vị, tổng; có bảo vệ spreadsheet formula injection. PDF dùng chức năng in của trình duyệt, không phải native Excel `.xlsx` hay PDF generator server.
 
-Input lưu trong localStorage khi người dùng lưu/phân tích; không lưu giá lịch sử, không cloud sync và không account. Mở bản lưu vẫn cần tải lại giá mới. Những notes Week 1–6 là evidence theo giai đoạn, không bị viết lại thành claim đã có toàn bộ final roadmap.
+Input lưu trong localStorage khi người dùng lưu/phân tích/chuyển trang; bản lưu vốn + weights cũ chuyển thành giá trị VND. Kết quả gần nhất lưu sessionStorage trong tab để chuyển trang/reload không mất kết quả, kèm timestamp; đây không phải lần fetch giá mới. Bấm phân tích luôn tải lại dữ liệu. Không cloud sync và không account. Những notes Week 1–6 là evidence theo giai đoạn, không bị viết lại thành claim đã có toàn bộ final roadmap.
 
 ## Verification
 
-26 Python tests: provider routing, search, currency/type validation, index-only benchmark, unverified VN ticker lookup và error handling. 22 JavaScript tests: tài chính, risk identities, dữ liệu khuyết, chart, lookback, grouping, export escaping và optimizer 30 assets.
+27 Python tests: provider routing, search, currency/type validation, index-only benchmark, unverified VN ticker lookup, FX cho input USD dù holdings đều VN và error handling. 25 JavaScript tests: tài chính, quy đổi giá trị đầu kỳ/weights, validation amounts, risk identities, dữ liệu khuyết, chart, lookback, grouping, export escaping và optimizer 30 assets.
 
 Real-data integration: VIC/AAPL/TLT/BTC-USD/CORN, mỗi mã 20%, vốn 100 triệu, 01/10/2021–01/10/2026, SPY benchmark: 1.201 ngày chung; return contribution và Euler risk contribution reconcile trong sai số float, optimizer hội tụ trong ca kiểm tra. Các số là kết quả kiểm tra lịch sử, không dự báo hiệu suất.

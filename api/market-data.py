@@ -16,6 +16,7 @@ class handler(BaseHTTPRequestHandler):
                 query.get("end", [""])[0],
                 query.get("symbol", []),
                 query.get("benchmark", ["VN30.VN"])[0],
+                input_usd=query.get("input_usd", ["0"])[0] == "1",
             )
             self.send_json(200, result)
         except ValueError as exc:

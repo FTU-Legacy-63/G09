@@ -9,9 +9,9 @@ const errorBox = document.querySelector('#form-error');
 const resultContent = document.querySelector('#result-content');
 const emptyState = document.querySelector('#empty-state');
 let holdings = [
-  { kind: 'stock', symbol: 'FPT.VN', weight: 40 },
-  { kind: 'stock', symbol: 'HPG.VN', weight: 35 },
-  { kind: 'commodity', symbol: 'GLD', weight: 25 },
+  { kind: 'stock', symbol: 'FPT.VN', value: 40000000, inputCurrency: 'VND' },
+  { kind: 'stock', symbol: 'HPG.VN', value: 35000000, inputCurrency: 'VND' },
+  { kind: 'commodity', symbol: 'GLD', value: 25000000, inputCurrency: 'VND' },
 ];
 let result = null;
 let stockSearch = null;
@@ -44,7 +44,7 @@ function drawHoldings() {
       ${holding.kind !== 'commodity'
     ? `<div class="asset-symbol-wrap stock-picker"><label for="stock-search-${index}" class="visually-hidden">Tìm cổ phiếu ${index + 1}</label><input id="stock-search-${index}" type="search" role="combobox" data-index="${index}" data-field="stock-search" value="${escapeHtml(holding.symbol)}" spellcheck="false" autocomplete="off" aria-autocomplete="list" aria-expanded="false" aria-controls="stock-options-${index}" aria-label="Tìm cổ phiếu ${index + 1} theo tên hoặc mã" placeholder="Tìm tên công ty hoặc mã..." /><div id="stock-options-${index}" class="stock-options" role="listbox" aria-label="Kết quả tìm cổ phiếu ${index + 1}" hidden></div></div>`
     : `<label class="asset-symbol-wrap"><span class="visually-hidden">Commodity ${index + 1}</span><select data-index="${index}" data-field="symbol" aria-label="Commodity ${index + 1}">${Object.entries(COMMODITIES).map(([symbol, info]) => `<option value="${symbol}" ${holding.symbol === symbol ? 'selected' : ''}>${info.name} (${symbol} proxy)</option>`).join('')}</select></label>`}
-      <label class="weight-wrap"><span class="visually-hidden">Tỷ trọng mã ${index + 1}</span><input type="number" data-index="${index}" data-field="weight" min="0" max="100" step="0.1" value="${holding.weight}" aria-label="Tỷ trọng ${escapeHtml(holding.symbol)}" /><span>%</span></label>
+      <div class="holding-value"><label><span class="visually-hidden">Giá trị tài sản ${index + 1}</span><input type="number" data-index="${index}" data-field="value" min="0.01" max="1000000000000000" step="any" value="${holding.value}" aria-label="Giá trị tài sản ${index + 1}" /></label><label><span class="visually-hidden">Currency tài sản ${index + 1}</span><select data-index="${index}" data-field="inputCurrency" aria-label="Currency tài sản ${index + 1}">${['VND','USD'].map(c=>`<option ${holding.inputCurrency===c?'selected':''}>${c}</option>`).join('')}</select></label></div>
       <button type="button" class="remove-row" data-remove="${index}" aria-label="Xóa ${escapeHtml(holding.symbol)}">×</button>
     </div>`).join('');
   updateTotal();
@@ -79,7 +79,7 @@ function selectStock(search, item) {
   drawHoldings();
   showError('');
   invalidateResult();
-  holdingsList.querySelector(`[data-field="weight"][data-index="${search.index}"]`).focus({ preventScroll: true });
+  holdingsList.querySelector(`[data-field="value"][data-index="${search.index}"]`).focus({ preventScroll: true });
 }
 
 function startStockSearch(input) {
@@ -111,10 +111,10 @@ function startStockSearch(input) {
 }
 
 function updateTotal() {
-  const total = holdings.reduce((sum, item) => sum + Number(item.weight || 0), 0);
+  const total = currency => holdings.filter(h=>h.inputCurrency===currency).reduce((sum,h)=>sum+Number(h.value||0),0);
   const totalElement = document.querySelector('#weight-total');
-  totalElement.textContent = `Tổng: ${total.toFixed(1)}%`;
-  totalElement.classList.toggle('invalid', Math.abs(total - 100) > 0.01);
+  totalElement.textContent = `Đầu vào: ${vnd(total('VND'))}${total('USD') ? ' + '+new Intl.NumberFormat('en-US').format(total('USD'))+' USD' : ''}`;
+  totalElement.classList.toggle('invalid', holdings.some(h=>!Number.isFinite(Number(h.value))||Number(h.value)<=0));
 }
 
 function showError(message) {
@@ -125,6 +125,7 @@ function showError(message) {
 function invalidateResult() {
   if (!result) return;
   result = null;
+  sessionStorage.removeItem('finfolio-analysis-v2');
   resultContent.hidden = true;
   emptyState.hidden = false;
   document.querySelector('#results-subtitle').textContent = 'Dữ liệu đầu vào đã thay đổi. Phân tích lại để xem kết quả mới.';
@@ -229,7 +230,8 @@ function renderChart(data) {
   });
 }
 
-function renderResult(data) {
+function renderResult(data, go=true) {
+  navigate('/analysis',go);
   const { current, reference, benchmark, symbols } = data;
   emptyState.hidden = true;
   resultContent.hidden = false;
@@ -248,6 +250,7 @@ function renderResult(data) {
     ['Volatility ước lượng', percent(current.volatility), 'Annualized, covariance lịch sử'],
   ].map(([label, value, description]) => `<div class="metric"><span>${label}</span><strong>${value}</strong><small>${description}</small></div>`).join('');
   document.querySelector('#chart-start-value').textContent = `Đầu kỳ: ${vnd(data.initialCapital)}`;
+  document.querySelector('#weight-total').textContent = `Tổng vốn đầu kỳ: ${vnd(data.initialCapital)}${data.inputFx ? ' · USD/VND: '+new Intl.NumberFormat('vi-VN').format(data.inputFx) : ''} · ${dateLabel(data.dates[0])}`;
   document.querySelector('#benchmark-legend').textContent = benchmark.label;
   document.querySelector('#benchmark-period').textContent = benchmark.available ? `Benchmark so sánh từ ${dateLabel(benchmark.comparisonStart)} đến ${dateLabel(benchmark.comparisonEnd)}, cùng vốn ${vnd(benchmark.anchorValue)} tại ngày bắt đầu so sánh. Đoạn thiếu giá được để trống.` : 'Benchmark không có đủ dữ liệu; kết quả danh mục vẫn được giữ.';
   renderChart(data);
@@ -280,7 +283,7 @@ holdingsList.addEventListener('input', (event) => {
     return;
   }
   if (!target.dataset.field) return;
-  holdings[Number(target.dataset.index)][target.dataset.field] = target.dataset.field === 'weight' ? Number(target.value) : target.value;
+  holdings[Number(target.dataset.index)][target.dataset.field] = target.dataset.field === 'value' ? Number(target.value) : target.value;
   updateTotal();
   showError('');
   invalidateResult();
@@ -341,12 +344,12 @@ holdingsList.addEventListener('click', (event) => {
 document.querySelector('#add-holding').addEventListener('click', () => {
   if (holdings.length >= 30) return showError('Tối đa 30 vị thế mỗi danh mục để giữ thời gian tải và tính toán ổn định.');
   const next = ['FPT.VN', 'HPG.VN', 'VCB.VN', 'VNM.VN'].find((symbol) => !holdings.some((item) => item.symbol === symbol)) || 'VCB.VN';
-  holdings.push({ kind: 'stock', symbol: next, weight: 0 });
+  holdings.push({ kind: 'stock', symbol: next, value: 0, inputCurrency: 'VND' });
   drawHoldings();
   showError('');
   invalidateResult();
 });
-for (const id of ['start-date', 'end-date', 'asset-cap', 'commodity-cap', 'initial-capital', 'custom-benchmark']) {
+for (const id of ['start-date', 'end-date', 'asset-cap', 'commodity-cap', 'custom-benchmark']) {
   document.querySelector(`#${id}`).addEventListener('input', () => {
     showError('');
     invalidateResult();
@@ -369,19 +372,18 @@ form.addEventListener('submit', async (event) => {
     const endDate = document.querySelector('#end-date').value;
     const normalizedHoldings = holdings.map((holding) => ({
       symbol: holding.kind === 'stock' ? normalizeStockSymbol(holding.symbol) : holding.symbol,
-      weight: Number(holding.weight),
+      value: Number(holding.value),
+      inputCurrency: holding.inputCurrency,
     }));
     if (normalizedHoldings.length < 2 || new Set(normalizedHoldings.map((holding) => holding.symbol)).size !== normalizedHoldings.length) throw new Error('Chọn 2-30 mã tài sản không trùng nhau.');
-    const total = normalizedHoldings.reduce((sum, holding) => sum + holding.weight, 0);
-    if (Math.abs(total - 100) > 0.01) throw new Error(`Tổng tỷ trọng phải bằng 100%, hiện là ${total.toFixed(1)}%.`);
+    if (normalizedHoldings.some(h=>!Number.isFinite(h.value)||h.value<=0||h.value>1e15||!['USD','VND'].includes(h.inputCurrency))) throw new Error('Nhập giá trị lớn hơn 0 cho mỗi tài sản, chọn USD hoặc VND.');
     const benchmarkChoice = document.querySelector('#benchmark').value;
     const customText=document.querySelector('#custom-benchmark').value.trim().toUpperCase();
     const benchmarkSymbol = benchmarkChoice === 'custom' ? (customText.startsWith('YF:') ? customText : normalizeStockSymbol(customText)) : benchmarkChoice;
-    const initialCapital = Number(document.querySelector('#initial-capital').value);
-    if (!Number.isFinite(initialCapital) || initialCapital <= 0) throw new Error('Nhập giá trị danh mục đầu kỳ lớn hơn 0 VND.');
     const params = new URLSearchParams({ start: startDate, end: endDate });
     normalizedHoldings.forEach((holding) => params.append('symbol', holding.symbol.endsWith('.VN') ? holding.symbol : `YF:${holding.symbol}`));
     params.set('benchmark', benchmarkSymbol);
+    if (normalizedHoldings.some(h=>h.inputCurrency==='USD')) params.set('input_usd','1');
     const response = await fetch(`/api/market-data?${params}`, { cache: 'no-store' });
     const marketData = await response.json();
     if (!response.ok) throw new Error(marketData.error || 'Không tải được dữ liệu thị trường.');
@@ -391,16 +393,18 @@ form.addEventListener('submit', async (event) => {
       startDate,
       endDate,
       benchmarkSymbol: marketData.benchmark || benchmarkSymbol,
-      initialCapital,
       maxAssetPercent: document.querySelector('#asset-cap').value,
       maxCommodityPercent: document.querySelector('#commodity-cap').value,
     });
     result.fetchedAtUtc = marketData.fetched_at_utc;
     result.vnSources = marketData.vn_sources;
     result.benchmarkNotice = marketData.benchmark_notice;
+    result.inputFx = marketData.rows.find(row=>row.symbol==='USDVND'&&row.session_date===result.dates[0])?.close;
+    try { sessionStorage.setItem('finfolio-analysis-v2',JSON.stringify(result)); } catch { /* Analysis remains available in this tab. */ }
     renderResult(result);
     savePortfolio();
   } catch (error) {
+    navigate('/portfolio');
     showError(error.message || 'Không thể phân tích dữ liệu.');
     document.querySelector('#portfolio-input').scrollIntoView();
   } finally {
@@ -467,25 +471,52 @@ document.querySelector('#export-attribution').addEventListener('click',()=>{
 document.querySelector('#print-report').addEventListener('click',()=>window.print());
 function savePortfolio() {
   try {
-    const inputs=Object.fromEntries(['start-date','end-date','asset-cap','commodity-cap','initial-capital','benchmark','custom-benchmark'].map(id=>[id,document.querySelector(`#${id}`).value]));
-    localStorage.setItem('finfolio-hypothetical-v1',JSON.stringify({holdings,inputs}));
+    const inputs=Object.fromEntries(['start-date','end-date','asset-cap','commodity-cap','benchmark','custom-benchmark'].map(id=>[id,document.querySelector(`#${id}`).value]));
+    localStorage.setItem('finfolio-hypothetical-v2',JSON.stringify({holdings,inputs}));
     document.querySelector('#portfolio-save-status').textContent='Đã lưu input trên trình duyệt này. Không lưu lịch sử giá hoặc đồng bộ tài khoản.';
   } catch { document.querySelector('#portfolio-save-status').textContent='Trình duyệt không cho phép lưu; bạn vẫn có thể phân tích.'; }
 }
 document.querySelector('#save-portfolio').addEventListener('click',savePortfolio);
-document.querySelector('#load-portfolio').addEventListener('click',()=>{
+function loadPortfolio(silent=false) {
   try {
-    const saved=JSON.parse(localStorage.getItem('finfolio-hypothetical-v1'));
-    if(!saved||!Array.isArray(saved.holdings)||saved.holdings.length<2||saved.holdings.length>30||saved.holdings.some(h=>!['stock','global','commodity','bond','crypto'].includes(h.kind)||typeof h.symbol!=='string'||!Number.isFinite(Number(h.weight))||Number(h.weight)<0||Number(h.weight)>100)) throw new Error();
+    const saved=JSON.parse(localStorage.getItem('finfolio-hypothetical-v2')||localStorage.getItem('finfolio-hypothetical-v1'));
+    if (!saved) { if(silent) return; throw new Error(); }
+    if(!Array.isArray(saved.holdings)||saved.holdings.length<2||saved.holdings.length>30) throw new Error();
+    if(saved.holdings.every(h=>h.value===undefined)) saved.holdings=saved.holdings.map(h=>({...h,value:Number(saved.inputs['initial-capital'])*Number(h.weight)/100,inputCurrency:'VND'}));
+    if(saved.holdings.some(h=>!['stock','global','commodity','bond','crypto'].includes(h.kind)||typeof h.symbol!=='string'||!Number.isFinite(Number(h.value))||Number(h.value)<0||Number(h.value)>1e15||!['USD','VND'].includes(h.inputCurrency))) throw new Error();
     holdings=saved.holdings;
     for(const [id,value] of Object.entries(saved.inputs)) {
-      if(['start-date','end-date','asset-cap','commodity-cap','initial-capital','benchmark','custom-benchmark'].includes(id)) document.querySelector(`#${id}`).value=String(value);
+      if(['start-date','end-date','asset-cap','commodity-cap','benchmark','custom-benchmark'].includes(id)) document.querySelector(`#${id}`).value=String(value);
     }
     document.querySelector('#custom-benchmark-wrap').hidden=document.querySelector('#benchmark').value!=='custom';
-    drawHoldings();invalidateResult();showError('');
+    drawHoldings();if(!silent) invalidateResult();showError('');
     document.querySelector('#portfolio-save-status').textContent='Đã mở input. Bấm phân tích để tải giá hiện tại.';
-  } catch { showError('Chưa có bản lưu hợp lệ trên trình duyệt này.'); }
+  } catch { if(!silent) showError('Chưa có bản lưu hợp lệ trên trình duyệt này.'); }
+}
+document.querySelector('#load-portfolio').addEventListener('click',()=>loadPortfolio());
+const routes = {'/':'.hero','/portfolio':'#portfolio-input','/analysis':'#results','/method':'#method'};
+function navigate(path, push=true) {
+  if(!routes[path]) path='/';
+  for(const [route,selector] of Object.entries(routes)) document.querySelector(selector).hidden=route!==path;
+  document.querySelectorAll('.nav-link').forEach(link=>{
+    link.classList.toggle('active',link.getAttribute('href')===path);
+    if(link.getAttribute('href')===path) link.setAttribute('aria-current','page'); else link.removeAttribute('aria-current');
+  });
+  if(push&&location.pathname!==path) history.pushState(null,'',path);
+  document.title=`Finfolio | ${({'/':'Tổng quan','/portfolio':'Danh mục','/analysis':'Phân tích','/method':'Phương pháp'})[path]}`;
+  window.scrollTo(0,0);
+}
+document.addEventListener('click',event=>{
+  const link=event.target.closest('a');
+  if(!link||!routes[link.getAttribute('href')]||event.ctrlKey||event.metaKey||event.shiftKey||event.altKey) return;
+  event.preventDefault();
+  // Keep the current draft across direct reloads and new tabs.
+  savePortfolio();
+  navigate(link.getAttribute('href'));
+  if(result&&location.pathname==='/analysis') renderChart(result);
 });
+window.addEventListener('popstate',()=>{navigate(location.pathname,false);if(result&&location.pathname==='/analysis') renderChart(result);});
+window.addEventListener('resize',()=>{if(result&&location.pathname==='/analysis') renderChart(result);});
 drawHoldings();
 const now = new Date();
 const endDate = new Date(now);
@@ -494,4 +525,17 @@ startDate.setFullYear(startDate.getFullYear() - 5);
 const localDate = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 document.querySelector('#start-date').value = localDate(startDate);
 document.querySelector('#end-date').value = localDate(endDate);
+loadPortfolio(true);
+navigate(location.pathname,false);
+try {
+  const cached=JSON.parse(sessionStorage.getItem('finfolio-analysis-v2'));
+  if(cached?.dates?.length && cached.current?.valuePath && cached.instruments) {
+    registerInstruments(cached.instruments);
+    result=cached;
+    const path=location.pathname;
+    renderResult(result,false);
+    navigate(path,false);
+    history.replaceState(null,'',path);
+  }
+} catch { sessionStorage.removeItem('finfolio-analysis-v2'); }
 if (new URLSearchParams(location.search).has('sample')) form.requestSubmit();

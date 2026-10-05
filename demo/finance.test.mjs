@@ -18,6 +18,24 @@ const baseInput = {
 
 const near = (actual, expected, tolerance = 1e-10) => assert.ok(Math.abs(actual - expected) < tolerance, `${actual} ≠ ${expected}`);
 
+test('Holding amounts in VND reproduce the original capital and weights', () => {
+  const input={...baseInput,holdings:baseInput.holdings.map(h=>({symbol:h.symbol,value:h.weight*1000000,inputCurrency:'VND'}))};
+  const result=analyzePortfolio(rows,input);
+  near(result.initialCapital,100000000);
+  result.current.weights.forEach((w,i)=>near(w,baseInput.holdings[i].weight/100));
+});
+test('USD input for a VN stock uses first common session FX, not last FX', () => {
+  const result=analyzePortfolio(rows,{...baseInput,benchmarkSymbol:'FPT.VN',holdings:[{symbol:'FPT.VN',value:1000,inputCurrency:'USD'},{symbol:'HPG.VN',value:30000000,inputCurrency:'VND'}]});
+  const fx=Number(rows.find(r=>r.symbol==='USDVND'&&r.session_date===result.dates[0]).close);
+  near(result.initialCapital,1000*fx+30000000);
+  near(result.current.weights[0],1000*fx/result.initialCapital);
+  near(result.current.valuePath[0],result.initialCapital,1e-6);
+  assert.throws(()=>analyzePortfolio(rows.filter(r=>r.symbol!=='USDVND'),{...baseInput,benchmarkSymbol:'FPT.VN',holdings:[{symbol:'FPT.VN',value:1000,inputCurrency:'USD'},{symbol:'HPG.VN',value:30000000,inputCurrency:'VND'}]}),/5 ngày/);
+});
+test('Amount inputs reject zero, negative, mixed modes and unknown currencies', () => {
+  for(const item of [{value:0,inputCurrency:'VND'},{value:-1,inputCurrency:'USD'},{value:10,inputCurrency:'EUR'},{weight:50}]) assert.throws(()=>analyzePortfolio(rows,{...baseInput,holdings:[{symbol:'FPT.VN',value:10,inputCurrency:'VND'},{symbol:'HPG.VN',...item}]}),/giá trị/);
+});
+
 test('T01 normal: stocks and gold proxy produce the full brief', () => {
   const result = analyzePortfolio(rows, baseInput);
   assert.equal(result.observations, 10);

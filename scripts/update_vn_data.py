@@ -28,6 +28,19 @@ def main():
             except Exception as exc:
                 errors[symbol] = str(exc)
                 print(f"{symbol}: refresh failed; dated previous entry retained", file=sys.stderr)
+    # Retry transient websocket/provider failures sequentially, avoiding another
+    # parallel burst. Never relabel a retained entry with today's timestamp.
+    for symbol in list(errors):
+        for attempt in range(2):
+            try:
+                series[symbol] = fetch_vn_series(symbol)
+                del errors[symbol]
+                print(f"{symbol}: retry {attempt + 1} succeeded through {series[symbol]['prices'][-1][0]}")
+                break
+            except Exception as exc:
+                errors[symbol] = str(exc)
+    if errors:
+        print(f"::warning::Retained older dated entries for: {', '.join(sorted(errors))}")
     if any(symbol in errors for symbol in ("VN30.VN", "VNINDEX.VN", "VIC.VN", "FRT.VN")):
         raise RuntimeError("Core VN refresh failed. Previous published snapshot remains unchanged.")
     payload = {"schema_version": 1, "updated_at_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"), "source": "TradingView via tvdatafeed", "series": series, "refresh_errors": errors}

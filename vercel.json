@@ -13,6 +13,9 @@
   },
   "rewrites": [
     { "source": "/", "destination": "/demo/index.html" },
+    { "source": "/portfolio", "destination": "/demo/index.html" },
+    { "source": "/analysis", "destination": "/demo/index.html" },
+    { "source": "/method", "destination": "/demo/index.html" },
     { "source": "/demo", "destination": "/demo/index.html" },
     { "source": "/demo/", "destination": "/demo/index.html" }
   ]

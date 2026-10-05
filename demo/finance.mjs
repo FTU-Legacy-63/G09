@@ -68,9 +68,12 @@ export function analyzePortfolio(rows, input) {
   }
   const selectedBenchmark = benchmarkFor(String(benchmarkSymbol || '').trim().toUpperCase());
   if (!selectedBenchmark) throw new Error('Benchmark không thuộc danh sách hỗ trợ.');
-  const capital = Number(initialCapital);
+  let capital = Number(initialCapital);
   if (!Number.isFinite(capital) || capital <= 0 || capital > 1e15) throw new Error('Giá trị danh mục đầu kỳ phải lớn hơn 0 VND.');
-  const weightNumbers = holdings.map((item) => Number(item.weight));
+  const amountMode = holdings.some(item => item.value !== undefined);
+  const inputNeedsFx = amountMode && holdings.some(item => item.inputCurrency === 'USD');
+  let weightNumbers = amountMode ? holdings.map(() => 100 / holdings.length) : holdings.map((item) => Number(item.weight));
+  if (amountMode && holdings.some(item => !Number.isFinite(Number(item.value)) || Number(item.value) <= 0 || Number(item.value) > 1e15 || !['USD','VND'].includes(item.inputCurrency))) throw new Error('Mỗi tài sản cần giá trị lớn hơn 0 và currency USD hoặc VND.');
   if (weightNumbers.some((weight) => !Number.isFinite(weight) || weight < 0 || weight > 100)) {
     throw new Error('Mỗi tỷ trọng phải là số từ 0% đến 100%.');
   }
@@ -90,9 +93,9 @@ export function analyzePortfolio(rows, input) {
 
   const instruments = Object.fromEntries([...new Set([...symbols, selectedBenchmark.symbol])].map((symbol) => [symbol, instrumentFor(symbol)]));
   if (symbols.some(symbol=>instruments[symbol].className==='Benchmark index')) throw new Error('Chỉ số chỉ dùng làm benchmark, không phải vị thế đầu tư.');
-  const needsFx = Object.values(instruments).some((instrument) => instrument.currency === 'USD');
+  const needsFx = inputNeedsFx || Object.values(instruments).some((instrument) => instrument.currency === 'USD');
   const required = [...new Set([...symbols, selectedBenchmark.symbol, ...(needsFx ? ['USDVND'] : [])])];
-  const portfolioRequired = [...symbols, ...(symbols.some((symbol) => instruments[symbol].currency === 'USD') ? ['USDVND'] : [])];
+  const portfolioRequired = [...symbols, ...(inputNeedsFx || symbols.some((symbol) => instruments[symbol].currency === 'USD') ? ['USDVND'] : [])];
   const observations = new Map();
   for (const row of rows) {
     if (row.session_date < startDate || row.session_date > endDate || !required.includes(row.symbol)) continue;
@@ -105,6 +108,12 @@ export function analyzePortfolio(rows, input) {
   }
   const dates = [...observations.keys()].sort().filter((date) => portfolioRequired.every((symbol) => observations.get(date)[symbol] !== undefined));
   if (dates.length < 5) throw new Error('Cần ít nhất 5 ngày giá chung để chạy bản demo. Hãy chọn khoảng dài hơn.');
+  if (amountMode) {
+    const values = holdings.map(item => Number(item.value) * (item.inputCurrency === 'USD' ? observations.get(dates[0]).USDVND : 1));
+    capital = values.reduce((sum, value) => sum + value, 0);
+    if (!Number.isFinite(capital) || capital > 1e15) throw new Error('Tổng giá trị quy đổi vượt giới hạn 1 triệu tỷ VND.');
+    weightNumbers = values.map(value => value / capital * 100);
+  }
 
   const prices = {};
   for (const symbol of [...new Set([...symbols, selectedBenchmark.symbol])]) {

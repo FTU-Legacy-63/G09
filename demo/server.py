@@ -140,7 +140,7 @@ def fetch_yahoo_market_data(start_text: str, end_text: str, selected: list[str],
     }
 
 
-def fetch_market_data(start_text: str, end_text: str, selected: list[str], benchmark: str = "VN30.VN") -> dict:
+def fetch_market_data(start_text: str, end_text: str, selected: list[str], benchmark: str = "VN30.VN", input_usd: bool = False) -> dict:
     try:
         start, end = date.fromisoformat(start_text), date.fromisoformat(end_text)
     except ValueError as exc:
@@ -192,12 +192,12 @@ def fetch_market_data(start_text: str, end_text: str, selected: list[str], bench
             except RuntimeError:
                 continue
     foreign = global_symbols
-    if foreign:
-        yahoo_symbols = foreign + [YAHOO_FX]
+    if foreign or input_usd:
+        yahoo_symbols = sorted(set(foreign + [YAHOO_FX]))
         try:
             frame = yf.download(yahoo_symbols, start=start_text, end=(end + timedelta(days=1)).isoformat(), interval="1d", auto_adjust=False, progress=False, threads=False, timeout=12)
         except Exception as exc:
-            if any(not symbol.endswith(".VN") for symbol in holdings):
+            if input_usd or any(not symbol.endswith(".VN") for symbol in holdings):
                 raise RuntimeError("Không tải được giá commodity/tỷ giá từ Yahoo Finance. Hãy thử lại sau.") from exc
             frame = pd.DataFrame()
             benchmark_notice = "Không tải được benchmark commodity; giữ nguyên kết quả danh mục VN."
@@ -212,7 +212,7 @@ def fetch_market_data(start_text: str, end_text: str, selected: list[str], bench
                     if value is not None and math.isfinite(float(value)) and float(value) > 0:
                         rows.append({"session_date": stamp.date().isoformat(), "symbol": "USDVND" if symbol == YAHOO_FX else symbol, "close": float(value)})
         available = {row["symbol"] for row in rows}
-        essential = {symbol for symbol in holdings if not symbol.endswith(".VN")} | ({"USDVND"} if any(not symbol.endswith(".VN") for symbol in holdings) else set())
+        essential = {symbol for symbol in holdings if not symbol.endswith(".VN")} | ({"USDVND"} if input_usd or any(not symbol.endswith(".VN") for symbol in holdings) else set())
         if not essential.issubset(available):
             missing = ", ".join(sorted(essential - available))
             raise RuntimeError(f"Yahoo Finance chưa trả đủ giá cho {missing}. Hãy thử lại sau hoặc bỏ mã thiếu dữ liệu.")
@@ -234,6 +234,8 @@ class Handler(SimpleHTTPRequestHandler):
                 self.send_json(502, {"error": str(exc)})
             return
         if url.path != "/api/market-data":
+            if url.path in {"/", "/portfolio", "/analysis", "/method"}:
+                self.path = "/demo/index.html"
             return super().do_GET()
         query = parse_qs(url.query)
         try:
@@ -242,6 +244,7 @@ class Handler(SimpleHTTPRequestHandler):
                 query.get("end", [""])[0],
                 query.get("symbol", []),
                 query.get("benchmark", ["VN30.VN"])[0],
+                input_usd=query.get("input_usd", ["0"])[0] == "1",
             )
             self.send_json(200, result)
         except ValueError as exc:
