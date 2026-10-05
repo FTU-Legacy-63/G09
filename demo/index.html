@@ -32,7 +32,7 @@
           <a href="/portfolio" class="topbar-action">Nhập danh mục <span aria-hidden="true">↗</span></a>
         </header>
 
-        <section class="hero" aria-labelledby="hero-title">
+        <section class="hero" aria-labelledby="hero-title" hidden>
           <div class="hero-copy">
             <span class="hero-label">Finfolio · Portfolio analytics</span>
             <h1 id="hero-title">Hiểu danh mục trước khi điều chỉnh.</h1>
@@ -48,7 +48,7 @@
           </div>
         </section>
 
-        <section id="portfolio-input" class="work-section" aria-labelledby="input-title">
+        <section id="portfolio-input" class="work-section" aria-labelledby="input-title" hidden>
           <div class="section-heading">
             <h2 id="input-title">Danh mục cần phân tích</h2>
             <p>Nhập giá trị đầu kỳ của từng tài sản bằng USD hoặc VND. Finfolio tự quy đổi về VND và tính tỷ trọng trên cùng ngày bắt đầu phân tích.</p>
@@ -83,7 +83,7 @@
           </form>
         </section>
 
-        <section id="results" class="results-section" aria-labelledby="results-title">
+        <section id="results" class="results-section" aria-labelledby="results-title" hidden>
           <div class="section-heading">
             <h2 id="results-title">Risk and Return Allocation Brief</h2>
             <p id="results-subtitle">Nhập danh mục rồi chọn “Phân tích danh mục” để xem kết quả.</p>
@@ -115,7 +115,7 @@
           </div>
         </section>
 
-        <section id="method" class="method-section" aria-labelledby="method-title">
+        <section id="method" class="method-section" aria-labelledby="method-title" hidden>
           <div class="section-heading"><h2 id="method-title">Phương pháp và nguồn dữ liệu</h2><p>Những thông tin cần có để kiểm tra và giải thích kết quả.</p></div>
           <div class="method-grid">
             <div><h3>Phép tính chính</h3><p>Mỗi vị thế nhận giá trị đầu kỳ bằng USD hoặc VND. Khoản USD quy đổi theo VND=X tại phiên đầu tiên có đủ giá chung; cộng thành tổng vốn VND và chia để ra tỷ trọng. Mua tại giá phiên này rồi giữ nguyên số lượng. PnL bằng giá trị ngày xem trừ vốn đầu kỳ; benchmark so sánh cùng kỳ có giá.</p></div>
