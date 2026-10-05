@@ -31,10 +31,11 @@ export function groupAttribution(positions, mode='symbol') {
   for(const p of positions) {
     const classificationMode = mode==='sector'||mode==='industry';
     const key=classificationMode ? (p[mode] || (p.className==='Equity' ? 'Chưa có phân loại' : `Không áp dụng · ${p.className}`)) : mode==='class'?p.className:mode==='currency'?p.currency:p.group;
-    const g=grouped.get(key)||{symbol:key,name:key,weight:0,pnl:0,contribution:0};
+    const g=grouped.get(key)||{symbol:key,name:key,members:[],weight:0,pnl:0,contribution:0};
+    g.members.push(p.symbol);
     g.weight+=p.weight; g.pnl+=p.pnl; g.contribution+=p.contribution; grouped.set(key,g);
   }
-  return [...grouped.values()].map(g=>({...g,assetReturn:g.weight>0?g.contribution/g.weight:0}));
+  return [...grouped.values()].map(g=>({...g,name:['sector','industry'].includes(mode)?g.members.join(', '):g.name,assetReturn:g.weight>0?g.contribution/g.weight:0}));
 }
 export function csvCell(value) {
   const text=String(value??'');
