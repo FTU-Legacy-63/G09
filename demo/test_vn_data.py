@@ -12,6 +12,11 @@ def entry():
 
 
 class HybridTests(unittest.TestCase):
+    def setUp(self):
+        classification_patch=patch('server.company_classifications',return_value={})
+        classification_patch.start()
+        self.addCleanup(classification_patch.stop)
+
     def test_vn_only_never_downloads_yahoo(self):
         with patch("server.get_vn_series", side_effect=lambda symbol: (entry(), "daily_snapshot")), patch("server.yf.download") as yahoo:
             result = server.fetch_market_data("2026-09-21", "2026-09-25", ["VIC", "FRT"])

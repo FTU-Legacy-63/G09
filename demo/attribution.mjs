@@ -29,7 +29,8 @@ export function groupAttribution(positions, mode='symbol') {
   if(mode==='symbol') return positions;
   const grouped=new Map();
   for(const p of positions) {
-    const key=mode==='class'?p.className:mode==='currency'?p.currency:p.group;
+    const classificationMode = mode==='sector'||mode==='industry';
+    const key=classificationMode ? (p[mode] || (p.className==='Equity' ? 'Chưa có phân loại' : `Không áp dụng · ${p.className}`)) : mode==='class'?p.className:mode==='currency'?p.currency:p.group;
     const g=grouped.get(key)||{symbol:key,name:key,weight:0,pnl:0,contribution:0};
     g.weight+=p.weight; g.pnl+=p.pnl; g.contribution+=p.contribution; grouped.set(key,g);
   }

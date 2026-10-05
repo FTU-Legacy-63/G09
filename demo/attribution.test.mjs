@@ -3,6 +3,19 @@ import assert from 'node:assert/strict';
 import {attributionWindow,groupAttribution,periodStart,csvCell} from './attribution.mjs';
 import {minimumVariance} from './optimizer.mjs';
 const data={dates:['2026-01-01','2026-08-31','2026-09-01','2026-09-30'],initialCapital:100,current:{weights:[.5,.5],valuePath:[100,150,155,200]},symbols:['A','B'],prices:{A:[1,2,2.1,3],B:[1,1,1,1]},instruments:{A:{name:'A',className:'Equity',group:'US equity',currency:'USD'},B:{name:'B',className:'Equity',group:'US equity',currency:'USD'}}};
+test('Sector and industry group independently and preserve all contributions including unclassified/non-equities',()=>{
+ const positions=[{symbol:'A',className:'Equity',sector:'Technology',industry:'Software',weight:.3,pnl:3,contribution:.03},{symbol:'B',className:'Equity',sector:'Technology',industry:'Hardware',weight:.3,pnl:-1,contribution:-.01},{symbol:'C',className:'Equity',weight:.2,pnl:1,contribution:.01},{symbol:'GLD',className:'Commodity proxy',weight:.2,pnl:2,contribution:.02}];
+ for(const mode of ['sector','industry']) {
+  const rows=groupAttribution(positions,mode);
+  assert.ok(Math.abs(rows.reduce((s,r)=>s+r.weight,0)-1)<1e-12);
+  assert.ok(Math.abs(rows.reduce((s,r)=>s+r.contribution,0)-.05)<1e-12);
+  assert.equal(rows.reduce((s,r)=>s+r.pnl,0),5);
+  assert.ok(rows.some(r=>r.symbol==='Chưa có phân loại'));
+  assert.ok(rows.some(r=>r.symbol==='Không áp dụng · Commodity proxy'));
+ }
+ assert.equal(groupAttribution(positions,'sector').length,3);
+ assert.equal(groupAttribution(positions,'industry').length,4);
+});
 test('lookback rebases holdings weight, money and contributions to window start',()=>{
  const w=attributionWindow(data,'1M');
  assert.equal(w.startDate,'2026-08-31');assert.ok(Math.abs(w.positions[0].weight-2/3)<1e-12);

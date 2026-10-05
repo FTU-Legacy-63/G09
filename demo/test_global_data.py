@@ -9,7 +9,7 @@ class GlobalTests(unittest.TestCase):
     def test_usd_amount_requires_fx_even_when_all_holdings_and_benchmark_are_vn(self):
         close=pd.DataFrame({'VND=X':[26000,26010]},index=pd.to_datetime(['2026-09-24','2026-09-25']))
         vn={'prices':[['2026-09-24',10],['2026-09-25',11]], 'source':'TradingView', 'exchange':'HOSE','fetched_at_utc':'2026-09-25T10:00:00Z'}
-        with patch('server.get_vn_series',return_value=(vn,'daily_snapshot')),patch('server.yf.download',return_value=pd.concat({'Close':close},axis=1)) as download:
+        with patch('server.company_classifications',return_value={}),patch('server.get_vn_series',return_value=(vn,'daily_snapshot')),patch('server.yf.download',return_value=pd.concat({'Close':close},axis=1)) as download:
             result=fetch_market_data('2026-09-24','2026-09-25',['FPT.VN','HPG.VN'],'VN30.VN',input_usd=True)
         self.assertEqual(download.call_args.args[0],['VND=X'])
         self.assertTrue(any(row['symbol']=='USDVND' for row in result['rows']))
@@ -47,7 +47,7 @@ class GlobalTests(unittest.TestCase):
 
     def test_multi_asset_prices_all_have_metadata_and_fx(self):
         close=pd.DataFrame({s:[10,11] for s in ['AAPL','TLT','BTC-USD','SPY','VND=X']},index=pd.to_datetime(['2026-09-24','2026-09-25']))
-        with patch('server.yf.download',return_value=pd.concat({'Close':close},axis=1)) as download:
+        with patch('server.company_classifications',return_value={}),patch('server.yf.download',return_value=pd.concat({'Close':close},axis=1)) as download:
             result=fetch_market_data('2026-09-24','2026-09-25',['YF:AAPL','YF:TLT','YF:BTC-USD'],'SPY')
         self.assertEqual(result['instruments']['BTC-USD']['className'],'Crypto')
         self.assertEqual(result['instruments']['TLT']['className'],'Bond ETF')

@@ -19,11 +19,13 @@ if __package__:
     from .vn_data import get_vn_series
     from .global_data import CATALOG, resolve_global
     from .symbol_search import search_instruments
+    from .classification import company_classifications
 else:
     from symbol_search import search_stocks
     from vn_data import get_vn_series
     from global_data import CATALOG, resolve_global
     from symbol_search import search_instruments
+    from classification import company_classifications
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -218,6 +220,27 @@ def fetch_market_data(start_text: str, end_text: str, selected: list[str], bench
             raise RuntimeError(f"Yahoo Finance chưa trả đủ giá cho {missing}. Hãy thử lại sau hoặc bỏ mã thiếu dữ liệu.")
     if any(not any(row["symbol"] == symbol for row in rows) for symbol in holdings):
         raise RuntimeError("Tài sản chưa có giá trong khoảng ngày đã chọn.")
+    classifications = company_classifications(
+        {symbol: metadata[symbol]["exchange"] for symbol in holdings if symbol in metadata},
+        [symbol for symbol in holdings if instrument_metadata.get(symbol, {}).get("className") == "Equity"],
+    )
+    for symbol in holdings:
+        if symbol.endswith('.VN'):
+            instrument_metadata[symbol] = {
+                'name':symbol.removesuffix('.VN'), 'currency':'VND',
+                'className':'Equity ETF' if symbol in BENCHMARK_PRESETS else 'Equity',
+                'group':'Vietnam equity ETF' if symbol in BENCHMARK_PRESETS else 'Vietnam stock',
+            }
+    for symbol, info in classifications.items():
+        if info.get("classification_ambiguous"):
+            continue
+        base = instrument_metadata.get(symbol) or {
+            "name": symbol.removesuffix(".VN"), "currency": "VND",
+            "className": "Equity", "group": "Vietnam stock",
+        }
+        instrument_metadata[symbol] = {**base, **info}
+        if info.get('className') == 'Equity ETF':
+            instrument_metadata[symbol]['group'] = 'Vietnam equity ETF'
     return {"rows": rows, "instruments": instrument_metadata, "source": "TradingView via tvdatafeed (VN); Yahoo Finance via yfinance (international/FX)", "fetched_at_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"), "vn_sources": metadata, "requested_symbols": sorted({row["symbol"] for row in rows}), "benchmark": actual_benchmark, "benchmark_requested": requested, "benchmark_notice": benchmark_notice}
 
 
