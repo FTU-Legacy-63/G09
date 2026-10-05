@@ -41,6 +41,10 @@ Input lưu trong localStorage khi người dùng lưu/phân tích/chuyển trang
 
 ## Verification
 
+05/10/2026: sửa cú pháp checkout nhánh `market-data` trong workflow; thêm hai lượt retry tuần tự cho các mã lỗi tạm thời, giữ nguyên timestamp của entry cũ nếu vẫn lỗi. Lượt chạy [37258292956](https://github.com/FTU-Legacy-63/G09/actions/runs/37258292956) xuất bản thành công, 26/26 mã tải được đến phiên 02/10/2026. Cron vẫn là 17:30 giờ Việt Nam các ngày thứ Hai–thứ Sáu; GitHub có thể chạy trễ, nghỉ lễ không tạo nến mới.
+
+Browser verification: input 1.000 USD FPT + 35 triệu VND HPG + 25 triệu VND GLD, kỳ bắt đầu 01/09/2026, phiên chung đầu tiên 03/09/2026, FX 26.070, tổng vốn 86.070.000 VND. Chart bắt đầu đúng tổng vốn. Đã kiểm tra chuyển trang, reload kết quả, Back/Forward, giá trị 0 báo lỗi, bản lưu cũ vốn 200 triệu với 60/40 chuyển thành 120/80 triệu VND, và mobile 390px không tràn ngang.
+
 27 Python tests: provider routing, search, currency/type validation, index-only benchmark, unverified VN ticker lookup, FX cho input USD dù holdings đều VN và error handling. 25 JavaScript tests: tài chính, quy đổi giá trị đầu kỳ/weights, validation amounts, risk identities, dữ liệu khuyết, chart, lookback, grouping, export escaping và optimizer 30 assets.
 
 Real-data integration: VIC/AAPL/TLT/BTC-USD/CORN, mỗi mã 20%, vốn 100 triệu, 01/10/2021–01/10/2026, SPY benchmark: 1.201 ngày chung; return contribution và Euler risk contribution reconcile trong sai số float, optimizer hội tụ trong ca kiểm tra. Các số là kết quả kiểm tra lịch sử, không dự báo hiệu suất.
