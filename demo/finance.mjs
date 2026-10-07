@@ -131,6 +131,23 @@ export function analyzePortfolio(rows, input) {
   const covariance = symbols.map((left) => symbols.map((right) => sampleCovariance(returns[left], returns[right])));
   const currentWeights = weightNumbers.map((weight) => weight / 100);
   const current = portfolioResult(symbols, currentWeights, prices, covariance, capital);
+  const localPrices = Object.fromEntries(symbols.map(symbol => [symbol, dates.map(date => observations.get(date)[symbol])]));
+  const fxRates = dates.map(date => observations.get(date).USDVND ?? null);
+  // Exact domestic-return identity, with the interaction reported separately.
+  const componentNames = ['local', 'fx', 'interaction'];
+  const componentSeries = Object.fromEntries(componentNames.map(name => [name, riskIndices.map(() => 0)]));
+  for (const [i, symbol] of symbols.entries()) {
+    for (const [j, index] of riskIndices.entries()) {
+      const local = localPrices[symbol][index] / localPrices[symbol][index - 1] - 1;
+      const fx = instruments[symbol].currency === 'USD' ? fxRates[index] / fxRates[index - 1] - 1 : 0;
+      componentSeries.local[j] += currentWeights[i] * local;
+      componentSeries.fx[j] += currentWeights[i] * fx;
+      componentSeries.interaction[j] += currentWeights[i] * local * fx;
+    }
+  }
+  const dailyPortfolio = riskIndices.map((_, j) => componentNames.reduce((sum, name) => sum + componentSeries[name][j], 0));
+  const dailySigma = Math.sqrt(current.dailyVariance);
+  const fxRisk = Object.fromEntries(componentNames.map(name => [name, dailySigma === 0 ? 0 : sampleCovariance(componentSeries[name], dailyPortfolio) / dailySigma * Math.sqrt(252)]));
   const optimization = minimumVariance(covariance, symbols.map(s=>instruments[s].className==='Commodity proxy'), assetCap, commodityCap, currentWeights);
   const referenceWeights = optimization.weights;
   const reference = portfolioResult(symbols, referenceWeights, prices, covariance, capital);
@@ -161,6 +178,9 @@ export function analyzePortfolio(rows, input) {
     instruments,
     initialCapital: capital,
     prices,
+    localPrices,
+    fxRates,
+    fxRisk,
     current: { ...current, weights: currentWeights },
     reference: { ...reference, weights: referenceWeights },
     benchmark: { ...selectedBenchmark, path: benchmarkPath, valuePath: benchmarkPath.map((ratio) => ratio === null ? null : ratio * current.valuePath[benchmarkStart]), periodReturn: benchmarkReturn, available: benchmarkAvailable, comparisonStart: benchmarkAvailable ? dates[benchmarkStart] : null, comparisonEnd: benchmarkAvailable ? dates[benchmarkEnd] : null, anchorValue: benchmarkAvailable ? current.valuePath[benchmarkStart] : null, comparisonPortfolioReturn, comparisonReferenceReturn, coverage: benchmarkIndices.length },

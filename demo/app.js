@@ -2,6 +2,7 @@ import { analyzePortfolio } from './finance.mjs';
 import { COMMODITIES, normalizeStockSymbol, registerInstruments } from './instruments.mjs';
 import { PERIODS, attributionWindow, groupAttribution, csvCell } from './attribution.mjs';
 import { chartSegments, dateTime, nearestDateIndex, tooltipPosition } from './chart-utils.mjs';
+import { accounts } from './accounts.mjs';
 
 const form = document.querySelector('#portfolio-form');
 const holdingsList = document.querySelector('#holdings-list');
@@ -23,7 +24,10 @@ try {
 } catch { showError('Chưa tải được catalog mở rộng; hãy tải lại trang trước khi chọn instrument quốc tế.'); }
 
 const percent = (value, digits = 2) => `${(value * 100).toFixed(digits)}%`;
-const points = (value) => `${value >= 0 ? '+' : ''}${(value * 100).toFixed(2)} đ.%`;
+const points = (value) => {
+  const rounded=Number((value*100).toFixed(2));
+  return `${rounded>=0?'+':''}${rounded.toFixed(2)} đ.%`;
+};
 const signedPercent = (value) => `${value >= 0 ? '+' : ''}${percent(value)}`;
 const vnd = (value) => `${new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 0 }).format(Math.round(value))} ₫`;
 const signedVnd = (value) => `${value >= 0 ? '+' : '-'}${vnd(Math.abs(value))}`;
@@ -412,14 +416,6 @@ form.addEventListener('submit', async (event) => {
     button.firstChild.textContent = 'Phân tích danh mục ';
   }
 });
-document.querySelector('#decision-form').addEventListener('submit', (event) => {
-  event.preventDefault();
-  if (!result) return;
-  const decision = new FormData(event.currentTarget).get('decision');
-  const reason = document.querySelector('#decision-reason').value.trim();
-  if (!decision || reason.length < 8) return;
-  document.querySelector('#decision-feedback').textContent = `Đã ghi nhận trong phiên này: ${decision}. Lý do: ${reason}`;
-});
 function attributionRows() {
   const window=attributionWindow(result,attributionState.period);
   const rows=groupAttribution(window.positions,attributionState.group);
@@ -433,6 +429,7 @@ function attributionRows() {
 function renderAttribution() {
   if(!result) return;
   const {window,rows}=attributionRows(), money=attributionState.unit==='vnd';
+  renderFx(window);
   const classificationMode=['sector','industry'].includes(attributionState.group);
   const classificationNote=document.querySelector('#classification-note');
   classificationNote.hidden=!classificationMode;
@@ -454,6 +451,16 @@ function renderAttribution() {
   document.querySelector('#attribution-total').innerHTML=`<tr><th scope="row">Tổng danh mục</th><td>100%</td><td>${signedPercent(window.periodReturn)}</td><td>${money?signedVnd(window.pnl):points(window.periodReturn)}</td>${windows.map(({w})=>`<td>${w.observations<2||!w.complete?'N/A':money?signedVnd(w.pnl):points(w.periodReturn)}</td>`).join('')}</tr>`;
   for(const button of document.querySelectorAll('[data-attr-sort]')) button.closest('th').setAttribute('aria-sort',button.dataset.attrSort===attributionState.sort?(attributionState.descending?'descending':'ascending'):'none');
 }
+function renderFx(window) {
+  const available=window.positions.every(p=>p.fxContribution!==null) && result.fxRisk;
+  document.querySelector('#fx-period').textContent=available
+    ? `Return: ${dateLabel(window.startDate)} đến ${dateLabel(window.endDate)} · cùng kỳ chọn ở bảng đóng góp. Risk: toàn kỳ ${dateLabel(result.dates[0])} đến ${dateLabel(result.dates.at(-1))}.`
+    : 'Kết quả cũ chưa có dữ liệu phân rã tỷ giá. Hãy phân tích lại để tải dữ liệu; không thay phần thiếu bằng 0.';
+  document.querySelector('#fx-rows').innerHTML=available?window.positions.map(p=>`<tr><th scope="row">${escapeHtml(p.symbol)} · ${escapeHtml(p.currency)}</th><td>${points(p.localContribution)}</td><td>${points(p.fxContribution)}</td><td>${points(p.interactionContribution)}</td><td>${points(p.contribution)}</td></tr>`).join(''):'';
+  const sum=field=>window.positions.reduce((total,p)=>total+p[field],0);
+  document.querySelector('#fx-total').innerHTML=available?`<tr><th scope="row">Tổng danh mục</th><td>${points(sum('localContribution'))}</td><td>${points(sum('fxContribution'))}</td><td>${points(sum('interactionContribution'))}</td><td>${points(window.periodReturn)}</td></tr>`:'';
+  document.querySelector('#fx-risk').innerHTML=available?[['Giá tài sản',result.fxRisk.local],['Tỷ giá USD/VND',result.fxRisk.fx],['Tương tác',result.fxRisk.interaction],['Tổng volatility',result.current.volatility]].map(([label,value])=>`<div><span>${label}</span><strong>${points(value)}</strong></div>`).join(''):'';
+}
 document.querySelector('#attribution-periods').addEventListener('click',event=>{
   const button=event.target.closest('[data-attr-period]'); if(!button) return;
   attributionState.period=button.dataset.attrPeriod; renderAttribution();
@@ -471,6 +478,9 @@ document.querySelector('#export-attribution').addEventListener('click',()=>{
   const multi=periods.map(p=>{const w=attributionWindow(result,p); return {w,map:new Map(groupAttribution(w.positions,attributionState.group).map(r=>[r.symbol,r]))};});
   const metric=r=>attributionState.unit==='vnd'?r.pnl:r.contribution*100;
   const table=[['Finfolio hypothetical buy-and-hold; price return, no dividends'],['Period',window.startDate,window.endDate],['Source', 'TradingView/tvdatafeed VN; Yahoo Finance international/FX'],['Grouping',attributionState.group],...(['sector','industry'].includes(attributionState.group)?[['Classification','TradingView Screener current classification; not historical; no ETF look-through'],...window.positions.map(p=>['Classification instrument',p.symbol,p.sector||'',p.industry||'',p.classification_as_of||''])]:[]),['Generated UTC',result.fetchedAtUtc],['Unit',attributionState.unit==='vnd'?'VND':'percentage points'],...multi.map(({w},i)=>[periods[i]+' actual period',w.startDate,w.endDate,w.complete?'available':'insufficient history']),['Instrument / Group','Name','Start weight %','Price return %','Selected contribution',...periods],...rows.map(r=>[r.symbol,r.name,r.weight*100,r.assetReturn*100,metric(r),...multi.map(({w,map})=>w.observations<2||!w.complete?'N/A':metric(map.get(r.symbol)||{pnl:0,contribution:0}))]),['Total','',100,window.periodReturn*100,attributionState.unit==='vnd'?window.pnl:window.periodReturn*100,...multi.map(({w})=>w.observations<2||!w.complete?'N/A':attributionState.unit==='vnd'?w.pnl:w.periodReturn*100)]];
+  if(result.fxRisk && window.positions.every(p=>p.fxContribution!==null)) {
+    table.push([],['FX return attribution','Unit: percentage points',window.startDate,window.endDate],['Instrument','Quote currency','Local price','USD/VND','Interaction','Total'],...window.positions.map(p=>[p.symbol,p.currency,p.localContribution*100,p.fxContribution*100,p.interactionContribution*100,p.contribution*100]),[],['FX risk attribution','Unit: annualized volatility percentage points','Fixed initial weights',result.dates[0],result.dates.at(-1)],['Local price','USD/VND','Interaction','Total volatility'],[result.fxRisk.local*100,result.fxRisk.fx*100,result.fxRisk.interaction*100,result.current.volatility*100]);
+  }
   const blob=new Blob(['\ufeff'+table.map(row=>row.map(csvCell).join(',')).join('\r\n')],{type:'text/csv;charset=utf-8'});
   const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`Finfolio-attribution-${window.endDate}.csv`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
 });
@@ -500,7 +510,7 @@ function loadPortfolio(silent=false) {
   } catch { if(!silent) showError('Chưa có bản lưu hợp lệ trên trình duyệt này.'); }
 }
 document.querySelector('#load-portfolio').addEventListener('click',()=>loadPortfolio());
-const routes = {'/':'.hero','/portfolio':'#portfolio-input','/analysis':'#results','/method':'#method'};
+const routes = {'/':'.hero','/portfolio':'#portfolio-input','/analysis':'#results','/method':'#method','/account':'#account-page'};
 function navigate(path, push=true) {
   if(!routes[path]) path='/';
   for(const [route,selector] of Object.entries(routes)) document.querySelector(selector).hidden=route!==path;
@@ -509,7 +519,7 @@ function navigate(path, push=true) {
     if(link.getAttribute('href')===path) link.setAttribute('aria-current','page'); else link.removeAttribute('aria-current');
   });
   if(push&&location.pathname!==path) history.pushState(null,'',path);
-  document.title=`Finfolio | ${({'/':'Tổng quan','/portfolio':'Danh mục','/analysis':'Phân tích','/method':'Phương pháp'})[path]}`;
+  document.title=`Finfolio | ${({'/':'Tổng quan','/portfolio':'Danh mục','/analysis':'Phân tích','/method':'Phương pháp','/account':'Tài khoản & quyết định'})[path]}`;
   window.scrollTo(0,0);
 }
 document.addEventListener('click',event=>{
@@ -541,7 +551,15 @@ try {
     const path=location.pathname;
     renderResult(result,false);
     navigate(path,false);
-    history.replaceState(null,'',path);
   }
 } catch { sessionStorage.removeItem('finfolio-analysis-v2'); }
 if (new URLSearchParams(location.search).has('sample')) form.requestSubmit();
+void accounts(()=>result,()=>{
+  localStorage.removeItem('finfolio-hypothetical-v1');
+  localStorage.removeItem('finfolio-hypothetical-v2');
+  sessionStorage.removeItem('finfolio-analysis-v2');
+  sessionStorage.removeItem('finfolio-auth');
+  result=null;resultContent.hidden=true;emptyState.hidden=false;
+  holdings=[{kind:'stock',symbol:'FPT.VN',value:40000000,inputCurrency:'VND'},{kind:'stock',symbol:'HPG.VN',value:35000000,inputCurrency:'VND'},{kind:'commodity',symbol:'GLD',value:25000000,inputCurrency:'VND'}];
+  drawHoldings();
+}).start();

@@ -23,6 +23,15 @@ test('lookback rebases holdings weight, money and contributions to window start'
  assert.equal(w.positions.reduce((s,p)=>s+p.pnl,0),w.pnl);
  assert.notEqual(w.positions[0].weight,.5);
 });
+test('FX split uses lookback-start weights and reconciles, legacy results remain unknown',()=>{
+ const enriched={...data,localPrices:{A:[1,1.5,1.6,2],B:[1,1,1,1]},fxRates:[1,4/3,2.1/1.6,1.5]};
+ // Both USD instruments must have consistent translated price paths.
+ enriched.prices={A:data.prices.A,B:enriched.fxRates};
+ enriched.current={weights:[.5,.5],valuePath:enriched.dates.map((_,i)=>50*enriched.prices.A[i]+50*enriched.prices.B[i])};
+ for(const period of ['ALL','1M']) for(const p of attributionWindow(enriched,period).positions)
+  assert.ok(Math.abs(p.localContribution+p.fxContribution+p.interactionContribution-p.contribution)<1e-12);
+ assert.equal(attributionWindow(data).positions[0].fxContribution,null);
+});
 test('group contribution reconciles and zero-weight holdings stay finite',()=>{
  const w=attributionWindow(data,'ALL'), groups=groupAttribution(w.positions,'class');
  assert.equal(groups.length,1);assert.equal(groups[0].weight,1);assert.equal(groups[0].contribution,w.periodReturn);

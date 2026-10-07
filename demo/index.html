@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#21563f" />
+    <meta name="referrer" content="no-referrer" />
     <meta name="description" content="Finfolio: phân tích danh mục VN bằng TradingView/tvdatafeed; commodity và tỷ giá bằng yfinance." />
     <title>Finfolio | Portfolio attribution</title>
     <link rel="stylesheet" href="/demo/styles.css" />
@@ -21,6 +22,7 @@
             <a href="/portfolio" class="nav-link">Danh mục</a>
             <a href="/analysis" class="nav-link">Phân tích</a>
             <a href="/method" class="nav-link">Phương pháp</a>
+            <a href="/account" class="nav-link">Tài khoản & quyết định</a>
           </nav>
         </div>
         <div class="sidebar-footer"><span>G09 · FTU</span><span>Danh mục giả định</span></div>
@@ -112,8 +114,17 @@
             </div>
             <section class="table-panel" aria-labelledby="contribution-title"><div class="panel-heading"><h3 id="contribution-title">Đóng góp theo từng mã</h3><span>Đơn vị: điểm %</span></div><div class="table-scroll"><table><thead><tr><th>Mã</th><th>Nhóm</th><th>Tỷ trọng</th><th>Return contribution</th><th>Risk contribution</th></tr></thead><tbody id="contribution-rows"></tbody><tfoot id="contribution-total"></tfoot></table></div><p class="table-footnote">Return contribution cộng lại bằng return của danh mục. Risk contribution cộng lại bằng volatility ước lượng.</p></section>
             <section class="comparison-panel" aria-labelledby="comparison-title"><div class="panel-heading"><h3 id="comparison-title">Hiện tại và phương án tham khảo</h3><span id="solver-method"></span></div><div class="comparison-layout"><div id="comparison-metrics"></div><div id="comparison-weights"></div></div><p class="table-footnote">Cùng chuỗi giá, ngày phân tích và covariance. Phương án tham khảo không tự thay đổi danh mục của bạn.</p></section>
-            <section class="decision-panel" aria-labelledby="decision-title"><div><h3 id="decision-title">Bạn sẽ làm gì tiếp?</h3><p>Ghi lại lựa chọn và lý do sau khi xem số liệu, giả định và giới hạn.</p></div><form id="decision-form"><fieldset><legend>Lựa chọn</legend><label><input type="radio" name="decision" value="Giữ nguyên" required /> Giữ nguyên</label><label><input type="radio" name="decision" value="Cân nhắc tái phân bổ" /> Cân nhắc tái phân bổ</label></fieldset><label for="decision-reason">Lý do ngắn gọn</label><textarea id="decision-reason" required minlength="8" placeholder="Ví dụ: Tôi muốn xem thêm dữ liệu dài hạn trước khi cân nhắc điều chỉnh."></textarea><button class="secondary-button" type="submit">Ghi nhận quyết định</button><p id="decision-feedback" role="status"></p></form></section>
+            <section id="fx-panel" class="table-panel" aria-labelledby="fx-title"><h3 id="fx-title">Giá tài sản và tỷ giá đóng góp thế nào?</h3><p id="fx-period" class="table-footnote"></p><div class="table-scroll"><table><thead><tr><th>Mã / đồng niêm yết</th><th>Giá tài sản</th><th>Tỷ giá USD/VND</th><th>Tương tác giá × tỷ giá</th><th>Tổng đóng góp</th></tr></thead><tbody id="fx-rows"></tbody><tfoot id="fx-total"></tfoot></table></div><p class="table-footnote">Đơn vị: điểm phần trăm của return danh mục. Return quy đổi = return giá + return tỷ giá + tích của hai return. Phân rã theo đồng niêm yết, không theo đồng bạn nhập vốn; cổ phiếu niêm yết VND không có phần quy đổi USD/VND. ETF USD không được phân rã tỷ giá của các tài sản bên trong quỹ.</p><h4>Phân rã rủi ro toàn kỳ</h4><div id="fx-risk" class="fx-risk-grid"></div><p class="table-footnote">Đóng góp vào volatility năm hóa, tính bằng covariance của từng thành phần với return danh mục, với tỷ trọng đầu kỳ cố định và 252 phiên/năm như chỉ số risk hiện có. Các phần cộng lại bằng volatility danh mục; giá trị âm biểu thị hiệu ứng giảm rủi ro. Không cộng các volatility riêng lẻ.</p></section>
+            <section class="decision-panel" aria-labelledby="decision-title"><div><h3 id="decision-title">Ghi lại quyết định của bạn</h3><p>Chọn giữ nguyên hoặc cân nhắc tái phân bổ và ghi lý do. Đây là nhật ký quyết định, không phải lệnh giao dịch hay nút tối ưu danh mục.</p><p id="decision-account-note" class="table-footnote">Đang kiểm tra kết nối tài khoản…</p><a class="text-button" href="/account">Mở tài khoản & nhật ký →</a></div><form id="decision-form"><fieldset><legend>Lựa chọn</legend><label><input type="radio" name="decision" value="Giữ nguyên" required /> Giữ nguyên</label><label><input type="radio" name="decision" value="Cân nhắc tái phân bổ" /> Cân nhắc tái phân bổ</label></fieldset><label for="decision-reason">Lý do ngắn gọn</label><textarea id="decision-reason" required minlength="8" maxlength="2000" placeholder="Ví dụ: Tôi muốn xem thêm dữ liệu dài hạn trước khi cân nhắc điều chỉnh."></textarea><button class="secondary-button" type="submit" disabled>Lưu quyết định vào tài khoản</button><p id="decision-feedback" role="status" aria-live="polite"></p></form></section>
           </div>
+        </section>
+
+        <section id="account-page" class="work-section" aria-labelledby="account-title" hidden>
+          <div class="section-heading"><h2 id="account-title">Nhật ký quyết định của bạn</h2><p>Đăng nhập để lưu lựa chọn, lý do và bản tóm tắt danh mục tại thời điểm ra quyết định.</p></div>
+          <div class="account-bar"><p id="account-status" role="status" aria-live="polite">Đang kiểm tra kết nối tài khoản…</p><button id="account-login" class="primary-button" type="button" disabled>Đăng nhập với Google</button><button id="account-logout" class="text-button" type="button" hidden>Đăng xuất & xóa dữ liệu trên trình duyệt</button></div>
+          <p class="table-footnote">Không yêu cầu quyền Gmail hoặc Drive. Phiên chỉ lưu trong tab hiện tại; mỗi thiết bị đăng nhập riêng. Người dùng khác không được đọc nhật ký của bạn. Quản trị viên database vẫn có quyền quản trị dữ liệu.</p>
+          <div class="panel-heading"><h3>Các quyết định đã lưu</h3><button id="refresh-decisions" class="text-button" type="button" disabled>Tải lại</button></div>
+          <p id="decision-history-status" role="status" aria-live="polite">Đăng nhập để xem lịch sử.</p><div id="decision-history" class="decision-history"></div>
         </section>
 
         <section id="method" class="method-section" aria-labelledby="method-title" hidden>

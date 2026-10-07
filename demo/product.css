@@ -2,4 +2,23 @@
 #solver-method{white-space:normal;overflow-wrap:anywhere;max-width:100%}.comparison-panel .panel-heading{flex-wrap:wrap;gap:12px}
 .form-tools{gap:18px}.holding-value select,.asset-kind-wrap select,.asset-symbol-wrap select{height:46px}
 .main-content>section{min-width:0;width:100%}.heat-tile{min-width:0;overflow-wrap:anywhere}
+/* Audit: readable Vietnamese text, uncompressed accents and aligned native selects. */
+.table-panel h3,.chart-panel h3,.comparison-panel h3,.decision-panel h3,.attribution-section h3{font-family:Arial,Helvetica,sans-serif;letter-spacing:normal;font-size:22px;line-height:1.4}
+.section-heading h2,.hero h1{letter-spacing:normal;line-height:1.25}
+.attribution-controls label,.decision-panel label,.decision-panel legend,.form-grid label{font-size:14px;line-height:1.5}
+.attribution-controls select{height:44px;min-height:44px;font-size:14px;line-height:1.4}
+.period-buttons button{min-height:44px;font-size:14px}
+.table-footnote,.instrument-name,.heat-tile>small{font-size:13px;line-height:1.65}
+.heat-tile>span{font-size:14px}.heat-grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,210px),280px))}
+.table-panel table{width:100%;border-collapse:collapse;font-size:14px}.table-panel th,.table-panel td{padding:14px 12px;line-height:1.5}
+.table-panel thead th,#attribution-table th button{font-size:12px;line-height:1.5}
+.decision-panel{grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);align-items:start;gap:32px}
+.decision-panel p{font-size:14px;line-height:1.7}.decision-panel textarea{font-size:16px;line-height:1.5;min-height:110px}
+.decision-panel fieldset label{display:inline-flex;align-items:center;gap:7px;min-height:40px;margin-right:16px}
+#decision-feedback:not(:empty){padding:12px;border-left:3px solid #26724d;background:#fff;border-radius:4px;overflow-wrap:anywhere}
+#fx-panel table{min-width:720px}#fx-panel td{text-align:right;font-variant-numeric:tabular-nums}#fx-panel th:first-child{text-align:left}#fx-panel tfoot{font-weight:700}
+.fx-risk-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}.fx-risk-grid>div{display:grid;gap:8px;padding:16px 0}.fx-risk-grid span{font-size:14px}.fx-risk-grid strong{font-size:20px}
+.account-bar{display:flex;align-items:center;gap:18px;flex-wrap:wrap;padding:22px 0;border-block:1px solid #c7d7c9}.account-bar p{flex:1;min-width:min(100%,240px);line-height:1.6}.account-bar button:disabled,.decision-panel button:disabled{opacity:.6;cursor:not-allowed}.decision-history{display:grid;gap:16px;margin-top:20px}.saved-decision{padding:22px 0;border-bottom:1px solid #c7d7c9;overflow-wrap:anywhere}.saved-decision h4{margin:0;font-size:18px}.saved-decision p{font-size:14px;line-height:1.7}.saved-decision time{font-size:13px;color:#4b6b56}.saved-decision .panel-heading{flex-wrap:wrap;gap:12px}.decision-reason-text{white-space:pre-wrap}#account-page .panel-heading{margin-top:24px}#account-page h3{font-size:22px}#account-page>p{line-height:1.7}
+@media(max-width:760px){.decision-panel{grid-template-columns:1fr;gap:16px}.heat-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.fx-risk-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.attribution-controls label{min-width:0}}
+@media print{.table-panel table{font-size:10px}.table-panel th,.table-panel td{padding:6px}#fx-panel table{min-width:0}.table-footnote,.instrument-name{font-size:9px}.heat-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
 #portfolio-input .form-topline,#portfolio-input .holding-row{grid-template-columns:150px minmax(0,1fr) minmax(210px,260px) 34px}.holding-value{display:grid;grid-template-columns:minmax(0,1fr) 76px;gap:7px;min-width:0}.holding-value input,.holding-value select{width:100%;min-width:0;min-height:46px;border:1px solid #c7d7c9;border-radius:9px;background:#fbfdfb;color:#244d37;padding:0 10px}.holding-value input:focus,.holding-value select:focus{outline:2px solid #5daa7a;outline-offset:1px}.total-weight{overflow-wrap:anywhere}.main-content{min-height:100dvh;display:flex;flex-direction:column}.footer{margin-top:auto}@media(max-width:1000px){#portfolio-input .holding-row{grid-template-columns:130px minmax(0,1fr) 210px 26px}}@media(max-width:760px){.sidebar-middle{display:block;margin-top:12px}.sidebar-caption{display:none}.sidebar-nav{display:flex;gap:4px;overflow-x:auto}.nav-link{padding:10px;font-size:12px;white-space:nowrap}#portfolio-input .holding-row{grid-template-columns:minmax(0,1fr) 26px}.asset-kind-wrap{grid-column:1}.asset-symbol-wrap{grid-column:1}.holding-value{grid-column:1}.remove-row{grid-column:2;grid-row:1}.form-tools{flex-wrap:wrap;gap:12px}.total-weight{width:100%}}

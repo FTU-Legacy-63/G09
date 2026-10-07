@@ -1,0 +1,11 @@
+.env*
+.git/
+.codex/
+.mcp.json
+.playwright-cli/
+output/
+node_modules/
+supabase/
+**/*.har
+**/*.trace
+**/Icon*

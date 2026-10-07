@@ -71,6 +71,23 @@ test('T04 financial: contribution identities and FX conversion reconcile', () =>
   near(result.activeReturn, result.current.periodReturn - result.benchmark.periodReturn);
 });
 
+test('FX decomposition reconciles both return and covariance risk', () => {
+  const result=analyzePortfolio(rows,baseInput);
+  near(Object.values(result.fxRisk).reduce((s,v)=>s+v,0),result.current.volatility);
+  result.symbols.forEach((symbol,i)=>{
+    const local=result.localPrices[symbol].at(-1)/result.localPrices[symbol][0]-1;
+    const fx=result.instruments[symbol].currency==='USD'?result.fxRates.at(-1)/result.fxRates[0]-1:0;
+    near(result.current.weights[i]*(local+fx+local*fx),result.current.contribution[i]);
+  });
+});
+test('VN-only portfolio has zero FX risk even when input amount is USD', () => {
+  const result=analyzePortfolio(rows,{...baseInput,benchmarkSymbol:'FPT.VN',holdings:[{symbol:'FPT.VN',value:1000,inputCurrency:'USD'},{symbol:'HPG.VN',value:30000000,inputCurrency:'VND'}]});
+  near(result.fxRisk.fx,0);near(result.fxRisk.interaction,0);near(result.fxRisk.local,result.current.volatility);
+});
+test('Flat prices and flat FX produce finite zero risk components',()=>{
+  const result=analyzePortfolio(rows.map(row=>({...row,close:100})),baseInput);
+  Object.values(result.fxRisk).forEach(v=>near(v,0));
+});
 test('T05 financial: minimum variance reference obeys caps and improves estimated risk', () => {
   const result = analyzePortfolio(rows, baseInput);
   near(result.reference.weights.reduce((sum, weight) => sum + weight, 0), 1);

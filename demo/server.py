@@ -10,7 +10,7 @@ from functools import partial
 from concurrent.futures import ThreadPoolExecutor
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from urllib.parse import parse_qs, urlparse
+from urllib.parse import parse_qs, urlparse, unquote
 
 import pandas as pd
 import yfinance as yf
@@ -20,12 +20,14 @@ if __package__:
     from .global_data import CATALOG, resolve_global
     from .symbol_search import search_instruments
     from .classification import company_classifications
+    from .account_config import account_config
 else:
     from symbol_search import search_stocks
     from vn_data import get_vn_series
     from global_data import CATALOG, resolve_global
     from symbol_search import search_instruments
     from classification import company_classifications
+    from account_config import account_config
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -245,8 +247,33 @@ def fetch_market_data(start_text: str, end_text: str, selected: list[str], bench
 
 
 class Handler(SimpleHTTPRequestHandler):
+    def list_directory(self, path):
+        self.send_error(404)
+        return None
+
+    def do_HEAD(self):
+        if any(part.startswith(".") for part in unquote(urlparse(self.path).path).split("/") if part):
+            self.send_error(404)
+            return
+        super().do_HEAD()
+
+    def end_headers(self):
+        self.send_header("Referrer-Policy", "no-referrer")
+        self.send_header("X-Content-Type-Options", "nosniff")
+        super().end_headers()
+
+    def log_request(self, code="-", size="-"):
+        # OAuth callback codes must not be written to the local access log.
+        self.log_message("%s %s %s", self.command, urlparse(self.path).path, code)
+
     def do_GET(self):
         url = urlparse(self.path)
+        if any(part.startswith(".") for part in unquote(url.path).split("/") if part):
+            self.send_error(404)
+            return
+        if url.path == "/api/account-config":
+            self.send_json(200, account_config())
+            return
         if url.path == "/api/search-symbols":
             try:
                 params = parse_qs(url.query)
@@ -257,7 +284,7 @@ class Handler(SimpleHTTPRequestHandler):
                 self.send_json(502, {"error": str(exc)})
             return
         if url.path != "/api/market-data":
-            if url.path in {"/", "/portfolio", "/analysis", "/method"}:
+            if url.path in {"/", "/portfolio", "/analysis", "/method", "/account"}:
                 self.path = "/demo/index.html"
             return super().do_GET()
         query = parse_qs(url.query)

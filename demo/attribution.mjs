@@ -19,7 +19,12 @@ export function attributionWindow(data, period='ALL') {
   const positions=data.symbols.map((symbol,i)=>{
     const quantity=data.initialCapital*data.current.weights[i]/data.prices[symbol][0];
     const startValue=quantity*data.prices[symbol][start], endValue=quantity*data.prices[symbol][end];
-    return {symbol,...data.instruments[symbol],weight:startValue/startCapital,assetReturn:data.prices[symbol][end]/data.prices[symbol][start]-1,pnl:endValue-startValue,contribution:(endValue-startValue)/startCapital};
+    const weight=startValue/startCapital;
+    const localPath=data.localPrices?.[symbol];
+    const fxAvailable=localPath && (data.instruments[symbol].currency!=='USD' || (data.fxRates?.[start]>0 && data.fxRates?.[end]>0));
+    const localReturn=fxAvailable ? localPath[end]/localPath[start]-1 : null;
+    const fxReturn=fxAvailable ? (data.instruments[symbol].currency==='USD' ? data.fxRates[end]/data.fxRates[start]-1 : 0) : null;
+    return {symbol,...data.instruments[symbol],weight,assetReturn:data.prices[symbol][end]/data.prices[symbol][start]-1,pnl:endValue-startValue,contribution:(endValue-startValue)/startCapital,localContribution:fxAvailable?weight*localReturn:null,fxContribution:fxAvailable?weight*fxReturn:null,interactionContribution:fxAvailable?weight*localReturn*fxReturn:null};
   });
   const requestedStart=periodBoundary(data.dates,period);
   const complete=period==='ALL'||(Date.parse(data.dates[0])-Date.parse(requestedStart))/86400000<=7;

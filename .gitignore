@@ -1,4 +1,13 @@
 .vercel
 .env*
+!.env.example
 __pycache__/
 .playwright-cli/
+node_modules/
+demo/vendor/
+output/playwright/
+supabase/.temp/
+supabase/.branches/
+.mcp.json
+*.har
+*.trace
