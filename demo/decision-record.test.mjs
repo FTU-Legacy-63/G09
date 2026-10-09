@@ -2,6 +2,11 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {decisionRecord,decisionSnapshot,tabAuthStorage} from './decision-record.mjs';
 const result={dates:['2026-01-01','2026-10-01'],symbols:['FPT.VN','GLD'],initialCapital:100,current:{weights:[.5,.5],valuePath:[100,110],periodReturn:.1,volatility:.2},benchmark:{symbol:'VN30.VN'},localPrices:{secret:'not persisted'},userEmail:'not persisted'};
+test('Vietnamese decision text is canonically composed without changing meaning',()=>{
+ const reason='Giữ nguyên vì tỷ giá ổn định';
+ const row=decisionRecord(result,'Giữ nguyên',reason.normalize('NFD'),'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa','id');
+ assert.equal(row.reason,reason);
+});
 test('Decision snapshot stores only compact whitelisted analysis, no identity or full prices',()=>{
  const snapshot=decisionSnapshot(result);
  assert.equal(snapshot.reportingCurrency,'VND');assert.equal(snapshot.finalValue,110);

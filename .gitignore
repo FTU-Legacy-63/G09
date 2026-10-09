@@ -5,6 +5,7 @@ __pycache__/
 .playwright-cli/
 node_modules/
 demo/vendor/
+demo/fonts/
 output/playwright/
 supabase/.temp/
 supabase/.branches/

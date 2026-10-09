@@ -1,0 +1,32 @@
+/* Shared local fonts include precomposed Vietnamese and combining diacritics. */
+:root {
+  --font-ui: "Noto Sans Variable", "Noto Sans", Arial, sans-serif;
+  --font-display: "Noto Serif Variable", "Noto Serif", Georgia, serif;
+  font-family: var(--font-ui);
+}
+body, button, input, select, textarea, option, optgroup, table, svg text,
+.brand-mark, .chart-axis-label {
+  font-family: var(--font-ui);
+}
+body { line-height: 1.6; }
+button, input, select, textarea { line-height: 1.5; }
+input, select { padding-block: 8px; }
+textarea { padding-block: 12px; }
+.brand, .hero h1, .hero-visual > p, .section-heading h2, .lead-result h3 {
+  font-family: var(--font-display);
+  letter-spacing: normal;
+  line-height: 1.4;
+}
+h1, h2, h3, h4, h5, h6 { line-height: 1.4; }
+.panel-heading h3, .decision-panel h3, .attribution-section h3,
+.table-panel h3, .chart-panel h3, .comparison-panel h3 {
+  font-family: var(--font-ui);
+  letter-spacing: normal;
+  line-height: 1.5;
+}
+.hero h1 { font-size: clamp(36px, 3.5vw, 58px); }
+.chart-axis-label { font-size: 11px; }
+svg text { font-variant-numeric: tabular-nums; }
+.metric strong { letter-spacing: normal; }
+.sidebar-nav .nav-link { line-height: 1.5; }
+@media print { body { font-family: var(--font-ui); } }

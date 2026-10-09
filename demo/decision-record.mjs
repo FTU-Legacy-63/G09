@@ -14,7 +14,7 @@ export function decisionSnapshot(result) {
 }
 
 export function decisionRecord(result,decision,reason,userId,id) {
-  const text=String(reason||'').trim();
+  const text=String(reason||'').normalize('NFC').trim();
   if(!DECISIONS.includes(decision)) throw new Error('Chọn một quyết định.');
   if(text.length<8 || text.length>2000) throw new Error('Lý do cần từ 8 đến 2.000 ký tự.');
   if(!/^[a-f0-9-]{36}$/i.test(userId||'')) throw new Error('Hãy đăng nhập trước khi lưu.');
