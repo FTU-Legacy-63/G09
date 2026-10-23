@@ -82,20 +82,127 @@ export function initResearch(getResult) {
     finally { if (request === optimizationRequest) button.disabled = false; }
   });
   function renderSimulation(output) {
-    const host = el('simulation-chart'), width = Math.max(340, host.clientWidth), height = 320, margin = { l: 72, r: 14, t: 20, b: 42 };
-    const lo = Math.min(output.capital, ...output.fan.map(p => p.p05)), hi = Math.max(output.capital, ...output.fan.map(p => p.p95)), spread = Math.max(output.capital * .01, hi - lo);
-    const floor = Math.max(0, lo - spread * .1), ceiling = hi + spread * .1;
-    const x = day => margin.l + day / output.horizon * (width - margin.l - margin.r), y = value => height - margin.b - (value - floor) / (ceiling - floor) * (height - margin.t - margin.b);
-    const band = (low, high) => output.fan.map(p => `${x(p.day)},${y(p[high])}`).concat([...output.fan].reverse().map(p => `${x(p.day)},${y(p[low])}`)).join(' ');
-    host.innerHTML = `<svg role="img" aria-label="Dải phân vị 5 đến 95 phần trăm và trung vị mô phỏng, đơn vị VND; đây không phải khoảng giá được bảo đảm" viewBox="0 0 ${width} ${height}">${[0, .25, .5, .75, 1].map(f => { const value = floor + f * (ceiling - floor); return `<line x1="${margin.l}" x2="${width - margin.r}" y1="${y(value)}" y2="${y(value)}" class="chart-grid"/><text x="${margin.l - 8}" y="${y(value) + 4}" text-anchor="end">${compactVnd(value)}</text>`; }).join('')}<polygon class="fan-outer" points="${band('p05', 'p95')}"/><polygon class="fan-inner" points="${band('p25', 'p75')}"/><polyline class="chart-line line-current" points="${output.fan.map(p => `${x(p.day)},${y(p.p50)}`).join(' ')}"/>${[0, .25, .5, .75, 1].map(f => `<text x="${x(output.horizon * f)}" y="${height - 10}" text-anchor="middle">${Math.round(output.horizon * f)} phiên</text>`).join('')}</svg>`;
-    const maxCount = Math.max(...output.histogram.map(b => b.count));
-    el('simulation-histogram').innerHTML = `<svg role="img" aria-label="Tần suất giá trị cuối kỳ trong ${output.paths} mô phỏng, trục dọc là số đường mô phỏng" viewBox="0 0 600 200"><text x="10" y="16">${maxCount} đường (đỉnh cột)</text>${output.histogram.map((b, i) => `<rect class="histogram-bar" x="${i * 27 + 24}" width="23" y="${175 - b.count / maxCount * 145}" height="${b.count / maxCount * 145}"><title>${vnd(b.from)} đến ${vnd(b.to)}: ${b.count} đường</title></rect>`).join('')}<text x="24" y="196">${compactVnd(output.histogram[0].from)}</text><text x="564" y="196" text-anchor="end">${compactVnd(output.histogram.at(-1).to)}</text></svg>`;
-    el('simulation-brief').textContent = `Trong ${output.paths} đường mô phỏng, ${percent(output.lossProbability)} kết thúc thấp hơn ${vnd(output.capital)}. Trung vị cuối kỳ ${vnd(output.percentiles[2].value)}. Đây là tỷ lệ trong mô hình, không phải xác suất tương lai đã được kiểm chứng.`;
-    el('simulation-percentiles').innerHTML = output.percentiles.map(p => row(`Phân vị ${number(p.percentile * 100, 0)}%`, vnd(p.value), p.percentile === .5 ? 'Một nửa đường mô phỏng ở dưới giá trị này; không phải lợi nhuận cam kết.' : `${number(p.percentile * 100, 0)}% đường mô phỏng có giá trị cuối kỳ không lớn hơn mốc này.`)).join('');
-    el('simulation-tail').textContent = `VaR 95% mô phỏng (${output.horizon} phiên): ${percent(output.tail.varLoss)}; CVaR: ${percent(output.tail.expectedShortfall)}. Có thể âm nếu mẫu mô phỏng cho ngưỡng lãi. Đây không phải VaR lịch sử 1 phiên ở báo cáo. Phụ thuộc giai đoạn giá đầu vào và giả định lấy mẫu.`;
-    el('simulation-meta').textContent = `${dateLabel(output.historyStart)} – ${dateLabel(output.historyEnd)}; ${output.observations} return chung; block ${output.blockLength} phiên; seed ${output.seed}; ${output.paths} đường × ${output.horizon} phiên. Vốn mô phỏng là giá trị cuối kỳ; giữ quantity theo tỷ trọng cuối kỳ, không tái cân bằng hằng ngày.`;
-    el('simulation-allocation').textContent = output.symbols.map((s, i) => `${s}: ${percent(output.weights[i])}`).join(' · ');
     el('simulation-result').hidden = false;
+    const host = el('simulation-chart');
+    const width = Math.max(760, host.clientWidth || 800);
+    const height = 360;
+    const margin = { l: 80, r: 30, t: 25, b: 45 };
+
+    const lo = Math.min(output.capital, ...output.fan.map(p => p.p05));
+    const hi = Math.max(output.capital, ...output.fan.map(p => p.p95));
+    const spread = Math.max(output.capital * 0.01, hi - lo);
+    const floor = Math.max(0, lo - spread * 0.1);
+    const ceiling = hi + spread * 0.1;
+
+    const x = day => margin.l + day / output.horizon * (width - margin.l - margin.r);
+    const y = value => height - margin.b - (value - floor) / (ceiling - floor) * (height - margin.t - margin.b);
+    const band = (low, high) => output.fan.map(p => `${x(p.day).toFixed(1)},${y(p[low]).toFixed(1)}`).concat([...output.fan].reverse().map(p => `${x(p.day).toFixed(1)},${y(p[high]).toFixed(1)}`)).join(' ');
+
+    const capY = y(output.capital);
+    const capLine = (capY >= margin.t && capY <= height - margin.b)
+      ? `<line x1="${margin.l}" x2="${width - margin.r}" y1="${capY.toFixed(1)}" y2="${capY.toFixed(1)}" class="chart-capital-line"/><text x="${width - margin.r - 6}" y="${(capY - 6).toFixed(1)}" text-anchor="end" class="chart-capital-label">Vốn ban đầu (${compactVnd(output.capital)})</text>`
+      : '';
+
+    const yTicks = [0, 0.25, 0.5, 0.75, 1].map(f => {
+      const value = floor + f * (ceiling - floor);
+      const yPos = y(value);
+      return `<line x1="${margin.l}" x2="${width - margin.r}" y1="${yPos.toFixed(1)}" y2="${yPos.toFixed(1)}" class="chart-grid"/><text x="${margin.l - 10}" y="${(yPos + 4).toFixed(1)}" text-anchor="end" class="chart-axis-label">${compactVnd(value)}</text>`;
+    }).join('');
+
+    const xTicks = [0, 0.25, 0.5, 0.75, 1].map(f => {
+      const day = Math.round(output.horizon * f);
+      const xPos = f === 0 ? margin.l : f === 1 ? width - margin.r : x(output.horizon * f);
+      const anchor = f === 0 ? 'start' : f === 1 ? 'end' : 'middle';
+      return `<text x="${xPos.toFixed(1)}" y="${height - 12}" text-anchor="${anchor}" class="chart-axis-label">${day} phiên</text>`;
+    }).join('');
+
+    host.innerHTML = `<svg role="img" aria-label="Dải phân vị 5 đến 95 phần trăm và trung vị mô phỏng, đơn vị VND; đây không phải khoảng giá được bảo đảm" viewBox="0 0 ${width} ${height}">${yTicks}${capLine}<polygon class="fan-outer" points="${band('p05', 'p95')}"><title>Dải phân vị 5% - 95%</title></polygon><polygon class="fan-inner" points="${band('p25', 'p75')}"><title>Dải phân vị 25% - 75%</title></polygon><polyline class="chart-line line-current" points="${output.fan.map(p => `${x(p.day).toFixed(1)},${y(p.p50).toFixed(1)}`).join(' ')}"/>${xTicks}</svg>`;
+
+    const histHost = el('simulation-histogram');
+    const histWidth = Math.max(520, histHost.clientWidth || 540);
+    const histHeight = 220;
+    const hMargin = { l: 45, r: 25, t: 28, b: 38 };
+    const maxCount = Math.max(...output.histogram.map(b => b.count), 1);
+    const plotW = histWidth - hMargin.l - hMargin.r;
+    const barStep = plotW / output.histogram.length;
+    const barW = Math.max(4, barStep - 3);
+
+    const bars = output.histogram.map((b, i) => {
+      const bx = hMargin.l + i * barStep + 1.5;
+      const bH = (b.count / maxCount) * (histHeight - hMargin.t - hMargin.b);
+      const by = histHeight - hMargin.b - bH;
+      const isLoss = (b.from + b.to) / 2 < output.capital;
+      const barClass = isLoss ? 'histogram-bar bar-loss' : 'histogram-bar bar-profit';
+      return `<rect class="${barClass}" x="${bx.toFixed(1)}" width="${barW.toFixed(1)}" y="${by.toFixed(1)}" height="${bH.toFixed(1)}"><title>${vnd(b.from)} đến ${vnd(b.to)}: ${b.count.toLocaleString('vi-VN')} đường</title></rect>`;
+    }).join('');
+
+    const minVal = output.histogram[0].from;
+    const maxVal = output.histogram.at(-1).to;
+    let capHistLine = '';
+    if (output.capital >= minVal && output.capital <= maxVal && maxVal > minVal) {
+      const capX = hMargin.l + ((output.capital - minVal) / (maxVal - minVal)) * plotW;
+      capHistLine = `<line x1="${capX.toFixed(1)}" x2="${capX.toFixed(1)}" y1="${hMargin.t}" y2="${histHeight - hMargin.b}" class="chart-capital-line"/><text x="${capX.toFixed(1)}" y="${hMargin.t - 8}" text-anchor="middle" class="chart-capital-label">Vốn</text>`;
+    }
+
+    histHost.innerHTML = `<svg role="img" aria-label="Tần suất giá trị cuối kỳ trong ${output.paths} mô phỏng" viewBox="0 0 ${histWidth} ${histHeight}"><text x="${hMargin.l}" y="${hMargin.t - 8}" class="chart-axis-label" style="font-weight:600">Đỉnh: ${maxCount.toLocaleString('vi-VN')} đường</text>${capHistLine}${bars}<line x1="${hMargin.l}" x2="${histWidth - hMargin.r}" y1="${histHeight - hMargin.b}" y2="${histHeight - hMargin.b}" class="chart-grid"/><text x="${hMargin.l}" y="${histHeight - 12}" text-anchor="start" class="chart-axis-label">${compactVnd(output.histogram[0].from)}</text><text x="${histWidth - hMargin.r}" y="${histHeight - 12}" text-anchor="end" class="chart-axis-label">${compactVnd(output.histogram.at(-1).to)}</text></svg>`;
+
+    const p50 = output.percentiles.find(p => p.percentile === 0.5) || output.percentiles[2];
+    const medianDiff = (p50.value - output.capital) / output.capital;
+    const lossPaths = Math.round(output.lossProbability * output.paths);
+
+    if (el('simulation-kpis')) {
+      el('simulation-kpis').innerHTML = `
+        <div class="simulation-kpi-card">
+          <span class="simulation-kpi-label">Vốn khởi điểm</span>
+          <strong class="simulation-kpi-value">${compactVnd(output.capital)}</strong>
+          <span class="simulation-kpi-sub">Mốc vốn phân tích ban đầu</span>
+        </div>
+        <div class="simulation-kpi-card">
+          <span class="simulation-kpi-label">Trung vị kỳ vọng (P50)</span>
+          <strong class="simulation-kpi-value">${compactVnd(p50.value)}</strong>
+          <span class="simulation-kpi-sub"><span class="${medianDiff >= 0 ? 'positive' : 'negative'}">${signedPercent(medianDiff)}</span> so với vốn ban đầu</span>
+        </div>
+        <div class="simulation-kpi-card">
+          <span class="simulation-kpi-label">Xác suất kết thúc dưới vốn</span>
+          <strong class="simulation-kpi-value">${percent(output.lossProbability)}</strong>
+          <span class="simulation-kpi-sub">${lossPaths.toLocaleString('vi-VN')} / ${output.paths.toLocaleString('vi-VN')} đường mô phỏng</span>
+        </div>
+        <div class="simulation-kpi-card">
+          <span class="simulation-kpi-label">Rủi ro đuôi (${output.horizon} phiên)</span>
+          <strong class="simulation-kpi-value">VaR: ${percent(output.tail.varLoss)}</strong>
+          <span class="simulation-kpi-sub">CVaR 95%: <strong>${percent(output.tail.expectedShortfall)}</strong></span>
+        </div>
+      `;
+    }
+
+    el('simulation-brief').textContent = `Trong ${output.paths.toLocaleString('vi-VN')} đường mô phỏng, ${percent(output.lossProbability)} kết thúc thấp hơn ${vnd(output.capital)}. Trung vị cuối kỳ ${vnd(p50.value)}. Đây là kết quả lấy mẫu mô hình, không phải cam kết xác suất thị trường trong tương lai.`;
+
+    const percentileMeta = {
+      0.05: { label: 'Phân vị 5% (Kịch bản xấu)', note: '95% số đường mô phỏng đạt kết quả cao hơn mốc này. Mức kiểm thử sức chịu đựng.' },
+      0.25: { label: 'Phân vị 25% (Thận trọng)', note: '75% số đường mô phỏng đạt kết quả cao hơn mốc này.' },
+      0.50: { label: 'Phân vị 50% (Trung vị)', note: 'Kịch bản cơ sở: một nửa số đường mô phỏng ở trên và một nửa ở dưới.' },
+      0.75: { label: 'Phân vị 75% (Thuận lợi)', note: '25% kịch bản tốt nhất đạt từ mốc này trở lên.' },
+      0.95: { label: 'Phân vị 95% (Rất thuận lợi)', note: 'Chỉ 5% kịch bản hưng phấn nhất đạt tới mốc này.' },
+    };
+
+    el('simulation-percentiles').innerHTML = output.percentiles.map(p => {
+      const meta = percentileMeta[p.percentile] || { label: `Phân vị ${number(p.percentile * 100, 0)}%`, note: '' };
+      const diff = (p.value - output.capital) / output.capital;
+      const isMedian = p.percentile === 0.5;
+      return `<tr class="${isMedian ? 'row-median' : ''}">
+        <th scope="row">${meta.label}${isMedian ? '<span class="badge-median">Chuẩn</span>' : ''}</th>
+        <td><strong>${vnd(p.value)}</strong></td>
+        <td class="${diff >= 0 ? 'kpi-positive' : 'kpi-negative'}">${signedPercent(diff)}</td>
+        <td>${meta.note}</td>
+      </tr>`;
+    }).join('');
+
+    if (el('chip-var')) el('chip-var').textContent = percent(output.tail.varLoss);
+    if (el('chip-cvar')) el('chip-cvar').textContent = percent(output.tail.expectedShortfall);
+
+    el('simulation-tail').textContent = `VaR 95% mô phỏng (${output.horizon} phiên): ${percent(output.tail.varLoss)}; CVaR: ${percent(output.tail.expectedShortfall)}. Có thể âm nếu toàn bộ phân vị đuôi vẫn đạt mức sinh lời dương. Đây không phải VaR lịch sử 1 phiên ở báo cáo. Phụ thuộc vào dữ liệu đầu vào và phương pháp lấy mẫu block.`;
+    el('simulation-meta').textContent = `${dateLabel(output.historyStart)} – ${dateLabel(output.historyEnd)}; ${output.observations} return chung; block ${output.blockLength} phiên; seed ${output.seed}; ${output.paths} đường × ${output.horizon} phiên. Vốn mô phỏng là giá trị cuối kỳ; giữ nguyên tỷ trọng cuối kỳ theo chiến lược mua và giữ.`;
+    el('simulation-allocation').textContent = output.symbols.map((s, i) => `${s}: ${percent(output.weights[i])}`).join(' · ');
   }
   el('simulation-form').addEventListener('submit', async event => {
     event.preventDefault(); el('simulation-error').textContent = ''; el('simulation-result').hidden = true;

@@ -132,7 +132,63 @@
           <div class="section-heading"><h1 id="simulation-title">Mô phỏng Monte Carlo</h1><p>Nếu các mẫu biến động cũ lặp lại theo nhiều thứ tự khác nhau, giá trị danh mục có thể trải qua những kịch bản nào?</p><a href="/analysis" class="text-button">Xem lại dữ liệu đầu vào</a></div>
           <p id="simulation-empty" class="empty-state">Phân tích danh mục trước. Mô phỏng dùng dữ liệu thực vừa tải, không dùng một bộ giá có sẵn. <a href="/portfolio">Nhập danh mục</a>.</p>
           <form id="simulation-form" class="table-panel"><div class="form-grid"><label>Số phiên tương lai<select id="simulation-horizon"><option value="21">21 phiên · khoảng 1 tháng</option><option value="63">63 phiên · khoảng 3 tháng</option><option value="126">126 phiên · khoảng 6 tháng</option><option value="252" selected>252 phiên · khoảng 1 năm</option><option value="504">504 phiên · khoảng 2 năm</option></select></label><label>Số đường mô phỏng<select id="simulation-paths"><option value="1000">1.000</option><option value="2000" selected>2.000</option><option value="5000">5.000</option></select></label><label>Seed · để tái lập kết quả<input id="simulation-seed" type="number" min="0" max="4294967295" step="1" value="42" required /></label></div><p>Lấy mẫu chung từng block 5 phiên cho mọi tài sản để giữ tương quan và một phần phụ thuộc ngắn hạn. Return đã quy đổi VND, gồm tác động FX. Không phải mô hình phân phối chuẩn hay dự báo giá.</p><div class="form-tools"><button id="simulate-button" class="primary-button" type="submit">Chạy mô phỏng</button><button id="cancel-simulation" class="text-button" type="button" hidden>Hủy mô phỏng</button></div><p id="simulation-error" class="form-error" role="alert"></p></form>
-          <div id="simulation-result" hidden><div class="lead-result"><h2 id="simulation-brief"></h2></div><section class="chart-panel"><h2>Cách đọc các kịch bản</h2><p>Đường giữa: trung vị. Dải đậm: phân vị 25–75%; dải nhạt: 5–95% của mô hình. Không phải khoảng giá trị được bảo đảm hay khoảng tin cậy của dự báo.</p><div id="simulation-chart" class="research-chart"></div><p id="simulation-meta" class="table-footnote"></p><p id="simulation-allocation" class="table-footnote"></p></section><div class="result-grid"><section class="table-panel"><h2>Các mốc cuối kỳ</h2><div class="table-scroll"><table class="explain-table"><thead><tr><th>Mốc</th><th>Giá trị VND</th><th>Cách hiểu</th></tr></thead><tbody id="simulation-percentiles"></tbody></table></div></section><section class="chart-panel"><h2>Giá trị nào xuất hiện nhiều hơn?</h2><p>Mỗi cột là một khoảng giá trị cuối kỳ; cột cao hơn có nhiều đường mô phỏng hơn. Không phải xác suất thị trường đã được kiểm chứng.</p><div id="simulation-histogram" class="research-chart"></div></section></div><section class="table-panel"><h2>Giới hạn quan trọng</h2><p id="simulation-tail"></p><p>Mô hình không tạo được cú sốc chưa có trong lịch sử, không biết thay đổi chính sách hoặc cấu trúc thị trường. Mẫu quá ngắn, mã mới niêm yết và proxy dùng futures có thể làm kết quả thiếu đại diện. 252 phiên/năm chỉ là xấp xỉ cho danh mục nhiều thị trường và crypto. Không gồm phí, thuế, cổ tức hoặc cash flow mới.</p></section></div>
+          <div id="simulation-result" hidden>
+            <div id="simulation-kpis" class="simulation-kpi-grid"></div>
+            <div class="lead-result"><h2 id="simulation-brief"></h2></div>
+            <section class="chart-panel">
+              <div class="panel-heading">
+                <h2>Phân phối quỹ đạo kịch bản (Fan Chart)</h2>
+                <div class="simulation-legend">
+                  <span class="legend-item"><span class="legend-swatch swatch-fan-outer"></span> Dải 5% – 95%</span>
+                  <span class="legend-item"><span class="legend-swatch swatch-fan-inner"></span> Dải 25% – 75%</span>
+                  <span class="legend-item"><span class="legend-swatch swatch-median"></span> Trung vị (P50)</span>
+                  <span class="legend-item"><span class="legend-swatch swatch-capital"></span> Vốn ban đầu</span>
+                </div>
+              </div>
+              <p>Đường giữa: trung vị. Dải đậm: 50% kịch bản phổ biến nhất (phân vị 25–75%); dải nhạt: 90% kịch bản (5–95%). Không phải khoảng giá trị được cam kết hay dự báo giá tương lai.</p>
+              <div id="simulation-chart" class="research-chart"></div>
+              <p id="simulation-meta" class="table-footnote"></p>
+              <p id="simulation-allocation" class="table-footnote"></p>
+            </section>
+            <div class="result-grid">
+              <section class="table-panel">
+                <h2>Các mốc phân vị cuối kỳ</h2>
+                <div class="table-scroll">
+                  <table class="explain-table">
+                    <thead>
+                      <tr>
+                        <th>Mốc phân vị</th>
+                        <th>Giá trị VND</th>
+                        <th>Tăng / Giảm</th>
+                        <th>Ý nghĩa xác suất</th>
+                      </tr>
+                    </thead>
+                    <tbody id="simulation-percentiles"></tbody>
+                  </table>
+                </div>
+              </section>
+              <section class="chart-panel">
+                <div class="panel-heading">
+                  <h2>Phân bố tần suất giá trị (Histogram)</h2>
+                  <div class="simulation-legend">
+                    <span class="legend-item"><span class="legend-swatch swatch-bar-loss"></span> Vùng lỗ</span>
+                    <span class="legend-item"><span class="legend-swatch swatch-bar-profit"></span> Vùng lãi</span>
+                  </div>
+                </div>
+                <p>Mỗi cột là một khoảng giá trị cuối kỳ; cột cao hơn có nhiều đường mô phỏng hơn. Màu sắc phân biệt giữa vùng kết thúc dưới vốn (lỗ) và trên vốn (lãi).</p>
+                <div id="simulation-histogram" class="research-chart"></div>
+              </section>
+            </div>
+            <section class="table-panel">
+              <h2>Giới hạn và giả định phương pháp luận</h2>
+              <div class="simulation-limitation-chips">
+                <div class="stat-chip"><strong>VaR 95%:</strong> <span id="chip-var">—</span></div>
+                <div class="stat-chip"><strong>CVaR / Expected Shortfall:</strong> <span id="chip-cvar">—</span></div>
+              </div>
+              <p id="simulation-tail"></p>
+              <p>Mô hình dùng Block Bootstrap lịch sử (block 5 phiên) để giữ nguyên tương quan thực tế giữa các tài sản. Không tạo được cú sốc chưa từng có trong lịch sử, không biết thay đổi chính sách hoặc cấu trúc thị trường. 252 phiên/năm chỉ là xấp xỉ cho danh mục nhiều thị trường và crypto. Giả định mua và giữ với số lượng cổ phiếu trôi theo giá cuối kỳ, không tính phí giao dịch, thuế, cổ tức phát sinh hoặc dòng tiền nạp/rút mới.</p>
+            </section>
+          </div>
         </section>
 
         <section id="account-page" class="work-section" aria-labelledby="account-title" hidden>
