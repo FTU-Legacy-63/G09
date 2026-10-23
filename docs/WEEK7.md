@@ -13,7 +13,7 @@ Target user: nhà đầu tư cá nhân có kiến thức tài chính, muốn hi�
 | Tối ưu hóa riêng | [method](OPTIMIZATION.md), `/optimize` | Có min volatility + max Sharpe; không tự áp dụng |
 | Monte Carlo | [simulation](../demo/simulation.mjs), `/simulation` | Có seeded joint block bootstrap; không phải dự báo |
 | Account/decision | [setup](ACCOUNT_SETUP.md), [decision snapshot](../demo/decision-record.mjs) | Giữ integration hiện tại; lần audit này chưa đăng nhập Google bằng tài khoản người dùng |
-| Test | `npm test`; `python3 -m unittest discover -s demo -p 'test_*.py'` | 46 JS + 35 Python pass tại 23/10/2026; không coi là user acceptance của nhóm |
+| Test | `npm test`; `python3 -m unittest discover -s demo -p 'test_*.py'` | 50 JS + 35 Python pass tại 23/10/2026; không coi là user acceptance của nhóm |
 | Contribution / footprint | [bản đồ và hướng dẫn](individual/README.md) | Phân công đã xác nhận; từng người phải tự xác nhận outputs/hiểu biết |
 | Release/backup | [Final version / source backup](https://github.com/FTU-Legacy-63/G09/releases/tag/v2.0.0-final-20261023) | Tag dùng để checkout bản đánh giá; lần triển khai và verification được ghi trong release |
 
@@ -29,7 +29,7 @@ Revision: thêm endpoint metadata `/api/data-status` không chứa holdings; ki�
 | --- | --- | --- |
 | Hai tài sản độc lập variance 0,04 / 0,09 | Min-vol 69,23% / 30,77% | Pass analytic tolerance |
 | Mean excess 0,08 / 0,18 cùng covariance | Max-Sharpe khoảng 50% / 50% | Pass; khác min-vol |
-| Lãi suất bỏ trống / nhập rõ 0% | Chặn Sharpe / cho phép | Pass |
+| Không nhập lãi suất / tùy chỉnh 0% | Tự dùng default 3% như 1.0 / giữ 0% nếu người dùng chọn | Pass; default là giả định, không market quote |
 | Cap không khả thi / cap khả thi | Báo lỗi / tổng 100%, tuân thủ cap | Pass |
 | Analysis chưa yêu cầu tối ưu | Không chạy optimizer | Pass, input `optimize:false` |
 | VaR ties, flat data, sample ngắn | ES đúng tail mass; null khi không xác định | Pass unit tests |
@@ -42,7 +42,7 @@ Bug/giới hạn còn mở: cron best-effort; nghỉ lễ chưa có calendar; đ
 
 ### Verification 23/10/2026
 
-- Build local thành công với 30 font faces tự host và bundle browser hiện hữu; 46 JS + 35 Python tests pass.
+- Build local thành công với 30 font faces tự host và bundle browser hiện hữu; 50 JS + 35 Python tests pass sau revision RF mặc định.
 - Browser dùng giá provider thật: FPT/HPG/GLD, 40/35/25 triệu VND, VN30, RF 4% ghi là giả định; phân tích từ 25/10/2021 đến phiên chung 21/10/2026. Không cố định số return để làm acceptance khi giá còn cập nhật.
 - Min-vol và Max-Sharpe chạy riêng; bảng trước/sau và tổng tỷ trọng 100%. Có trường hợp min-vol đạt giới hạn vòng lặp, UI công bố chưa hội tụ thay vì gọi là nghiệm chính xác.
 - Monte Carlo 2.000 đường × 252 phiên, seed 42 chạy trên worker; fan chart, histogram, percentiles và giải thích tail hiển thị. Kiểm tra 375/768/1440 px; sửa nav flex min-width để trang không tràn ngang, bảng dài cuộn trong wrapper. Sau reload: console 0 errors/0 warnings; lỗi favicon cũ đã sửa bằng SVG cục bộ.
@@ -52,6 +52,8 @@ Bug/giới hạn còn mở: cron best-effort; nghỉ lễ chưa có calendar; đ
 ## Revision và thiết kế
 
 Giữ lịch sử Git; patch final tách analysis/optimization/simulation, thêm metrics và giải thích, freshness status, self-host Be Vietnam Pro/Fraunces theo ZIP/PDF của nhóm, top navigation và tone forest/paper. Giữ chart **giá trị VND**, không quay về base 100 dù reference có gợi ý phần trăm. Không thực thi phần mô tả “không optimizer” trong design guide vì yêu cầu mới của nhóm đã bổ sung optimizer riêng.
+
+Theo phản hồi tiếp ngày 23/10: bỏ việc bắt nhập RF để chạy Sharpe. Đối chiếu 1.0 cho thấy request tự gửi 3%; final dùng cùng giả định mặc định, công bố rõ và để tùy chỉnh trong phần nâng cao. Không tự nhận đã có nguồn lãi suất thị trường. Người dùng không phải nhập gì thêm trong flow mặc định.
 
 ## Checklist trước buổi đánh giá
 

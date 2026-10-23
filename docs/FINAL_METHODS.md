@@ -9,7 +9,7 @@ Các chỉ số cùng dựa trên giá lịch sử đã quy về VND, chưa gồ
 | CAGR | Tốc độ tăng đều hằng năm tương đương từ vốn đầu kỳ đến cuối kỳ | Ít nhất 365 ngày lịch và 252 return; không phải dự báo |
 | Max drawdown | Đã từng giảm sâu bao nhiêu từ một đỉnh trước đó? | Tệ nhất trong mẫu, không phải giới hạn lỗ tương lai |
 | Realized volatility | Đường giá trị mua và giữ dao động ra sao? | Ít nhất 60 return; độ lệch chuẩn return × √252, khác fixed-weight Euler attribution |
-| Sharpe | Lợi nhuận vượt lãi suất giả định so với dao động tổng thể | Cần lãi suất khai báo, ít nhất 60 return, mẫu có biến động |
+| Sharpe | Lợi nhuận vượt lãi suất giả định so với dao động tổng thể | Mặc định 3%/năm như bản 1.0, có thể tùy chỉnh; ít nhất 60 return, mẫu có biến động |
 | Sortino | Lợi nhuận vượt mục tiêu so với dao động dưới mục tiêu | Downside deviation tính trên toàn bộ mẫu, mục tiêu = lãi suất ngày |
 | Calmar | CAGR so với drawdown | Chỉ có khi CAGR đủ mẫu và drawdown âm |
 | VaR 95% một phiên | Ngưỡng lỗ phân vị 95% của mẫu | Ít nhất 100 return; không phải mức lỗ tối đa |
@@ -21,6 +21,8 @@ Các chỉ số cùng dựa trên giá lịch sử đã quy về VND, chưa gồ
 | Correlation | Tài sản từng cùng chiều đến mức nào? | Không bất biến theo thời gian, không chứng minh quan hệ nhân quả |
 
 Covariance mẫu dùng mẫu số n−1. Sharpe = √252 × mean(return−rf ngày) / sample SD. CAGR dùng số ngày lịch/365,25. Max drawdown lấy minimum(value/running peak−1). VaR dùng empirical nearest rank của loss = −return. ES lấy trung bình đúng phần đuôi 5%, không lấy tất cả quan sát trùng ngưỡng. VaR/ES có thể âm nếu phân vị là lãi, không cắt về 0. Đại lượng không xác định hiển thị “—”, không giả thành 0.
+
+Lãi suất mặc định **3%/năm là giả định tương thích Finfolio 1.0**, không phải lợi suất trái phiếu VND hay lãi suất thị trường được tải tự động. Dùng một giá trị cùng cơ sở VND cho Sharpe/Sortino/alpha và optimizer; không ngầm thay bằng một lợi suất USD lấy từ Yahoo. Chỉ kế thừa giá trị mặc định của 1.0, không đổi công thức Sharpe daily-mean đang công bố thành CAGR/volatility của bản cũ. Giả định có thể chỉnh và được lưu cùng analysis; thiếu giá trị trong bản cache cũ được nâng cấp sang default có gắn nhãn, còn mức người dùng đã nhập (kể cả 0%) được giữ.
 
 Risk attribution/optimizer chỉ mở ở UI với ít nhất `max(120, 10N)` return chung theo policy Week 4; annualized metrics mua và giữ cần 60 return. Core arithmetic functions vẫn cho phép fixture ngắn để kiểm thử reconciliation, không coi fixture là kết quả đủ tin cậy cho người dùng. Dùng cùng sample covariance cho fixed-weight risk và optimizer; **chưa triển khai Ledoit–Wolf, frontier đầy đủ, estimator return thứ hai hoặc turnover constraint**. Đây là khác biệt so với bản draft tham vọng, không được mô tả là đã hoàn tất. Historical mean có estimation error cao; chưa có sensitivity report hai estimator.
 

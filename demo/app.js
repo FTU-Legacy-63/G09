@@ -8,6 +8,7 @@ import { NAVIGATION } from './navigation.mjs';
 import { initResearch } from './research-ui.mjs';
 import { vnToday, rollingRange, shouldRefresh } from './freshness.mjs';
 import { riskReadiness } from './quality.mjs';
+import { resolveRiskFree } from './risk-free.mjs';
 
 const form = document.querySelector('#portfolio-form');
 const holdingsList = document.querySelector('#holdings-list');
@@ -369,11 +370,7 @@ form.addEventListener('submit', async (event) => {
   button.firstChild.textContent = 'Đang phân tích ';
   showError('');
   try {
-    const rateText = document.querySelector('#risk-free-rate').value.trim();
-    const rate = rateText === '' ? null : Number(rateText) / 100;
-    const riskFreeSource = document.querySelector('#risk-free-source').value.trim();
-    if (rate !== null && (!Number.isFinite(rate) || rate <= -1 || rate > 1)) throw new Error('Lãi suất phi rủi ro giả định phải lớn hơn −100% và không quá 100%/năm.');
-    if (rate !== null && riskFreeSource.length < 4) throw new Error('Nêu nguồn hoặc ghi rõ đây là giả định cá nhân cho lãi suất phi rủi ro.');
+    const riskFree = resolveRiskFree({mode:document.querySelector('#risk-free-mode').value,percent:document.querySelector('#risk-free-rate').value,source:document.querySelector('#risk-free-source').value});
     if (holdings.some((holding) => !holding.symbol)) throw new Error('Chọn instrument từ danh sách gợi ý trước khi phân tích.');
     if (document.querySelector('#follow-latest').checked) {
       const range = rollingRange(document.querySelector('#start-date').value,vnToday());
@@ -410,8 +407,9 @@ form.addEventListener('submit', async (event) => {
       maxCommodityPercent: document.querySelector('#commodity-cap').value,
       optimize: false,
     });
-    result.riskFreeAnnual = rate;
-    result.riskFreeSource = riskFreeSource;
+    result.riskFreeAnnual = riskFree.annual;
+    result.riskFreeSource = riskFree.source;
+    result.riskFreeMode = riskFree.mode;
     result.inputEndDate = endDate;
     result.schemaVersion = 3;
     result.fetchedAtUtc = marketData.fetched_at_utc;
@@ -508,6 +506,7 @@ function savePortfolio() {
     const inputs=Object.fromEntries(['start-date','end-date','asset-cap','commodity-cap','benchmark','custom-benchmark'].map(id=>[id,document.querySelector(`#${id}`).value]));
     inputs['risk-free-rate'] = document.querySelector('#risk-free-rate').value;
     inputs['risk-free-source'] = document.querySelector('#risk-free-source').value;
+    inputs['risk-free-mode'] = document.querySelector('#risk-free-mode').value;
     localStorage.setItem('finfolio-hypothetical-v2',JSON.stringify({holdings,inputs,followLatest:document.querySelector('#follow-latest').checked}));
     document.querySelector('#portfolio-save-status').textContent='Đã lưu input trên trình duyệt này. Không lưu lịch sử giá hoặc đồng bộ tài khoản.';
   } catch { document.querySelector('#portfolio-save-status').textContent='Trình duyệt không cho phép lưu; bạn vẫn có thể phân tích.'; }
@@ -522,8 +521,10 @@ function loadPortfolio(silent=false) {
     if(saved.holdings.some(h=>!['stock','global','commodity','bond','crypto'].includes(h.kind)||typeof h.symbol!=='string'||!Number.isFinite(Number(h.value))||Number(h.value)<0||Number(h.value)>1e15||!['USD','VND'].includes(h.inputCurrency))) throw new Error();
     holdings=saved.holdings;
     for(const [id,value] of Object.entries(saved.inputs)) {
-      if(['start-date','end-date','asset-cap','commodity-cap','benchmark','custom-benchmark','risk-free-rate','risk-free-source'].includes(id)) document.querySelector(`#${id}`).value=String(value);
+      if(['start-date','end-date','asset-cap','commodity-cap','benchmark','custom-benchmark','risk-free-rate','risk-free-source','risk-free-mode'].includes(id)) document.querySelector(`#${id}`).value=String(value);
     }
+    if (!['default','custom'].includes(saved.inputs['risk-free-mode'])) document.querySelector('#risk-free-mode').value=String(saved.inputs['risk-free-rate']||'').trim() ? 'custom' : 'default';
+    syncRiskFreeControls();
     document.querySelector('#follow-latest').checked = saved.followLatest === true;
     document.querySelector('#custom-benchmark-wrap').hidden=document.querySelector('#benchmark').value!=='custom';
     drawHoldings();if(!silent) invalidateResult();showError('');
@@ -531,6 +532,16 @@ function loadPortfolio(silent=false) {
   } catch { if(!silent) showError('Chưa có bản lưu hợp lệ trên trình duyệt này.'); }
 }
 document.querySelector('#load-portfolio').addEventListener('click',()=>loadPortfolio());
+function syncRiskFreeControls() {
+  const isDefault=document.querySelector('#risk-free-mode').value==='default';
+  for (const id of ['risk-free-rate','risk-free-source']) document.querySelector(`#${id}`).disabled=isDefault;
+  if(isDefault) {
+    const config=resolveRiskFree();
+    document.querySelector('#risk-free-rate').value=String(config.annual*100);
+    document.querySelector('#risk-free-source').value=config.source;
+  } else if (document.querySelector('#risk-free-source').value===resolveRiskFree().source) document.querySelector('#risk-free-source').value='';
+}
+document.querySelector('#risk-free-mode').addEventListener('change',()=>{syncRiskFreeControls();invalidateResult();savePortfolio();});
 const routes = Object.fromEntries(NAVIGATION.map(item => [item.path,item.selector]));
 function navigate(path, push=true) {
   if(!routes[path]) path='/';
@@ -564,6 +575,7 @@ const localDate = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1)
 document.querySelector('#start-date').value = localDate(startDate);
 document.querySelector('#end-date').value = localDate(endDate);
 loadPortfolio(true);
+syncRiskFreeControls();
 navigate(location.pathname,false);
 try {
   const cached=JSON.parse(sessionStorage.getItem('finfolio-analysis-v2'));

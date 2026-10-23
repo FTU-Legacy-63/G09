@@ -1,6 +1,7 @@
 import { COMMODITIES, benchmarkFor, instrumentFor, normalizeInstrumentSymbol } from './instruments.mjs';
 import { minimumVariance, maximumSharpe } from './optimizer.mjs';
 import { riskReadiness } from './quality.mjs';
+import { DEFAULT_RISK_FREE_ANNUAL } from './risk-free.mjs';
 
 export const BENCHMARK = { symbol: 'GLD', label: 'Vàng (GLD ETF proxy, VND)' };
 
@@ -211,8 +212,9 @@ export function analyzePortfolio(rows, input) {
   };
 }
 
-export function allocationScenario(data, { maxAssetPercent = 80, maxCommodityPercent = 60, objective = 'minimum-variance', riskFreeAnnual = null, manualWeights = null } = {}) {
+export function allocationScenario(data, { maxAssetPercent = 80, maxCommodityPercent = 60, objective = 'minimum-variance', riskFreeAnnual = DEFAULT_RISK_FREE_ANNUAL, manualWeights = null } = {}) {
   if (!data.covariance || !data.returns) throw Error('Hãy phân tích lại để tải dữ liệu cho tab tối ưu hóa.');
+  riskFreeAnnual ??= DEFAULT_RISK_FREE_ANNUAL;
   if (objective === 'maximum-sharpe' && (riskFreeAnnual === null || !Number.isFinite(riskFreeAnnual) || riskFreeAnnual <= -1 || riskFreeAnnual > 1)) throw Error('Nhập giả định lãi suất phi rủi ro hợp lệ trước khi chạy Max-Sharpe.');
   const quality = riskReadiness(data);
   if (!quality.ready) throw Error(quality.reason);

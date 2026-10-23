@@ -63,6 +63,6 @@ Annualized volatility mua và giữ cần 60 return; Euler risk attribution và 
 
 [Contribution map và Individual Footprint](docs/individual/README.md): phân công đã xác nhận; từng thành viên phải tự xác nhận việc đã làm và khả năng trình bày, không suy tác giả từ tài khoản upload. [Final readiness, bug status và backup](docs/WEEK7.md).
 
-[Final release / source backup](https://github.com/FTU-Legacy-63/G09/releases/tag/v2.0.0-final-20261023): 81 tests pass. Code final đã deploy lên website hiện hữu; trạng thái verification, deployment và các phần chưa nghiệm thu được ghi ở Week 7/release.
+[Final release / source backup](https://github.com/FTU-Legacy-63/G09/releases/tag/v2.0.0-final-20261023): 85 tests pass. Sharpe tự dùng giả định mặc định **3%/năm như Finfolio 1.0**, không yêu cầu nhập tay; có thể đổi trong Cài đặt nâng cao. Đây không phải lãi suất thị trường được tự tải. Trạng thái deployment/verification và các phần chưa nghiệm thu ghi ở Week 7/release.
 
 Production: <https://g09-finfolio.vercel.app/>. Ngày 23/10 nhóm đã kết nối `FTU-Legacy-63/G09` vào project Vercel hiện hữu, để push `main` tạo deployment; luôn kiểm tra trạng thái READY, không coi push là deploy thành công. Manual fallback: `vercel deploy --prod --scope an-4f7e`. Nhánh `market-data` được tắt deployment riêng vì chỉ lưu snapshot; workflow sao chép cấu hình không deploy sang nhánh này cùng snapshot, không đổi dữ liệu giá.

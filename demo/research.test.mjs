@@ -26,16 +26,19 @@ test('Both objectives respect asset and commodity caps and reject infeasible cap
   assert.throws(()=>minimumVariance(covariance,mask,.4,.4),/khả thi/);
   assert.throws(()=>maximumSharpe(covariance,[.08,.18],mask,.4,.4),/khả thi/);
 });
-test('Analysis does not optimize; separate Sharpe requires explicit risk-free rate; 0 is valid',()=>{
+test('Analysis does not optimize; separate Sharpe defaults to 3%, permits 0%, and rejects short samples',()=>{
   const rows=parseMarketCsv(readFileSync(new URL('../data/sample_market_data.csv',import.meta.url),'utf8'));
   const result=analyzePortfolio(rows,{holdings:[{symbol:'FPT.VN',weight:40},{symbol:'HPG.VN',weight:35},{symbol:'GLD',weight:25}],startDate:'2026-07-01',endDate:'2026-07-15',optimize:false,maxAssetPercent:1,maxCommodityPercent:1});
   const original=structuredClone(result.current);
   assert.equal(result.optimization.skipped,true);
-  assert.throws(()=>allocationScenario(result,{objective:'maximum-sharpe'}),/phi rủi ro/);
+  assert.throws(()=>allocationScenario(result,{objective:'maximum-sharpe'}),/120/);
   assert.throws(()=>allocationScenario(result,{objective:'minimum-variance'}),/120/);
   const synthetic = Array.from({length:160},(_,day)=>['FPT.VN','HPG.VN','GLD','USDVND'].map((symbol,i)=>({symbol,session_date:new Date(Date.UTC(2025,0,1+day)).toISOString().slice(0,10),close:i===3?26000:100*Math.exp(.001*day+.02*Math.sin(day*(i+1)))}))).flat();
   const ready=analyzePortfolio(synthetic,{holdings:[{symbol:'FPT.VN',weight:40},{symbol:'HPG.VN',weight:35},{symbol:'GLD',weight:25}],startDate:'2025-01-01',endDate:'2025-12-31',optimize:false});
   const readyOriginal=structuredClone(ready.current);
+  const automatic=allocationScenario(ready,{objective:'maximum-sharpe'});
+  near(automatic.riskFreeAnnual,.03);
+  assert.throws(()=>allocationScenario(ready,{objective:'maximum-sharpe',riskFreeAnnual:NaN}),/phi rủi ro/);
   for(const objective of ['minimum-variance','maximum-sharpe']){
     const out=allocationScenario(ready,{objective,riskFreeAnnual:0});
     near(out.weights.reduce((a,b)=>a+b),1);assert.ok(Number.isFinite(out.volatility));

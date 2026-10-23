@@ -13,7 +13,7 @@ Artifact thuộc phạm vi: công thức và expected results Week 4; phương p
 Logic chuyển giá và tỷ trọng thành kết quả người dùng hiểu được; ngăn nhầm benchmark comparison thành Brinson, ETF proxy thành spot, historical risk thành dự báo chắc chắn. Ví dụ: 40% vốn ở một mã tăng 10% đóng góp 4 điểm phần trăm, không phải 4% của tổng lợi nhuận.
 
 ## 5. Integration/testing/revision
-Đọc và tái lập test identity return/risk trong finance tests; giải thích tại sao min-vol 69,23/30,77 khác Max-Sharpe 50/50 ở ví dụ độc lập trong method. Kiểm tra RF bỏ trống không ngầm bằng 0. Các test đã do Codex chạy; phần cá nhân tự tái lập/duyệt: **chờ xác nhận**.
+Đọc và tái lập test identity return/risk; giải thích vì sao min-vol 69,23/30,77 khác Max-Sharpe 50/50 ở ví dụ độc lập. RF mặc định 3% kế thừa hằng số 1.0, không phải lãi suất thị trường; tùy chỉnh 0% phải được giữ. Các test đã do Codex chạy; phần cá nhân tự tái lập/duyệt: **chờ xác nhận**.
 
 ## 6. Remaining limitation
 Chưa xác nhận personal review bản final. Chưa out-of-sample validation, cổ tức/phí/thuế, historical constituents. Khi hỏi VaR: trả lời “ngưỡng phân vị mẫu”, không “mức lỗ tối đa”; khi hỏi Monte Carlo: mô hình lấy lại lịch sử, không dự báo được mọi khủng hoảng.

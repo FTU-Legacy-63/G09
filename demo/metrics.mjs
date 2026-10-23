@@ -1,4 +1,5 @@
 // Historical price-return diagnostics. Missing/undefined statistics stay null.
+import { DEFAULT_RISK_FREE_ANNUAL } from './risk-free.mjs';
 export const TRADING_DAYS = 252;
 export const mean = xs => xs.reduce((s, x) => s + x, 0) / xs.length;
 export function covariance(xs, ys) {
@@ -33,7 +34,8 @@ export function moments(returns) {
     excessKurtosis: n * (n + 1) / ((n - 1) * (n - 2) * (n - 3)) * z.reduce((s, x) => s + x ** 4, 0) - 3 * (n - 1) ** 2 / ((n - 2) * (n - 3)),
   };
 }
-export function historicalMetrics(data, riskFreeAnnual = null) {
+export function historicalMetrics(data, riskFreeAnnual = DEFAULT_RISK_FREE_ANNUAL) {
+  riskFreeAnnual ??= DEFAULT_RISK_FREE_ANNUAL;
   const { dates, current, benchmark } = data;
   const indices = dates.slice(1).map((_, i) => i + 1).filter(i => (Date.parse(dates[i]) - Date.parse(dates[i - 1])) / 86400000 <= 7);
   const returns = indices.map(i => current.path[i] / current.path[i - 1] - 1);

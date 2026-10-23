@@ -1,5 +1,6 @@
 import { historicalMetrics } from './metrics.mjs';
 import { simulationInput } from './simulation.mjs';
+import { riskFreeForResult } from './risk-free.mjs';
 import { number, percent, signedPercent, vnd, compactVnd, dateLabel } from './format.mjs';
 const escape = value => String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const el = id => document.getElementById(id);
@@ -25,14 +26,16 @@ export function initResearch(getResult) {
     });
   }
   function renderMetrics(data) {
-    const rf = data.riskFreeAnnual ?? null, m = historicalMetrics(data, rf), exposure = data.current.valuePath.at(-1);
+    const config=riskFreeForResult(data);
+    data.riskFreeAnnual=config.annual;data.riskFreeSource=config.source;data.riskFreeMode=config.mode;
+    const rf = config.annual, m = historicalMetrics(data, rf), exposure = data.current.valuePath.at(-1);
     data.metrics = m;
-    el('metrics-period').textContent = `${dateLabel(data.dates[0])} – ${dateLabel(data.dates.at(-1))}; ${m.observations} return mua và giữ bằng VND. Lãi suất phi rủi ro: ${rf === null ? 'chưa nhập, không tự giả định 0%' : percent(rf) + '/năm (' + (data.riskFreeSource || 'giả định người dùng') + ')'}.`;
+    el('metrics-period').textContent = `${dateLabel(data.dates[0])} – ${dateLabel(data.dates.at(-1))}; ${m.observations} return mua và giữ bằng VND. Lãi suất phi rủi ro: ${percent(rf)}/năm (${config.source}).`;
     el('performance-metrics').innerHTML = [
       row('CAGR · tăng trưởng bình quân năm', signedPercent(m.cagr), m.cagr === null ? 'Chỉ hiện khi có ít nhất 1 năm lịch và 252 return chung; không ngoại suy vài ngày thành một năm.' : 'Nếu tăng đều mỗi năm, mức tăng nào đưa vốn đầu kỳ đến giá trị cuối kỳ? Không cộng CAGR từng mã.'),
       row('Max Drawdown · mức giảm sâu nhất', percent(m.maxDrawdown), 'Mức giảm từ một đỉnh trước đó đến đáy sau nó trong kỳ. Không phải mức lỗ tối đa có thể xảy ra trong tương lai.'),
       row('Biến động mua và giữ', percent(m.realizedVolatility), 'Độ dao động năm hóa của return thực trên đường giá trị có tỷ trọng trôi. Khác biến động phân bổ cố định dùng cho Euler attribution.'),
-      row('Sharpe · lợi nhuận vượt lãi suất / rủi ro', number(m.sharpe), rf === null ? 'Cần nhập lãi suất phi rủi ro và nguồn/giả định ở trang Danh mục.' : 'Trung bình return ngày trừ lãi suất ngày, chia độ lệch chuẩn và nhân √252. Không dùng làm cam kết hiệu quả tương lai.'),
+      row('Sharpe · lợi nhuận vượt lãi suất / rủi ro', number(m.sharpe), 'Trung bình return ngày trừ lãi suất ngày, chia độ lệch chuẩn và nhân √252. Mặc định 3%/năm hoặc giả định tùy chỉnh đang hiển thị. Không cam kết hiệu quả tương lai.'),
       row('Sortino · so với dao động dưới mục tiêu', number(m.sortino), 'Dùng phần return dưới lãi suất mục tiêu để đo downside deviation trên toàn bộ mẫu. Không có downside hoặc thiếu lãi suất: không xác định.'),
       row('Calmar · CAGR / mức giảm sâu nhất', number(m.calmar), 'Chỉ xác định khi CAGR đủ dữ liệu và có drawdown âm. Cùng giá trị có thể đến từ nhiều đường đi khác nhau.'),
     ].join('');
@@ -54,6 +57,7 @@ export function initResearch(getResult) {
     el('advanced-cagr').textContent = signedPercent(m.cagr);
     el('advanced-dd').textContent = percent(m.maxDrawdown);
     el('advanced-sharpe').textContent = number(m.sharpe);
+    el('sharpe-rf-note').textContent = `Rf ${percent(rf)}/năm · ${config.mode==='default'?'giả định mặc định':'tùy chỉnh'}`;
     for (const id of ['optimize-empty', 'simulation-empty']) el(id).hidden = false;
     el('optimize-empty').textContent = 'Dữ liệu đã sẵn sàng. Chọn mục tiêu rồi bấm tính phương án; phân tích không tự chạy tối ưu hóa.';
     el('simulation-empty').textContent = `Mô phỏng từ giá trị cuối kỳ ${vnd(exposure)}, dùng tỷ trọng cuối kỳ để tiếp tục mua và giữ. Cần ít nhất 60 return chung.`;
@@ -65,7 +69,7 @@ export function initResearch(getResult) {
     if (!data) { el('optimize-error').textContent = 'Hãy phân tích danh mục trước.'; return; }
     button.disabled = true; el('optimize-empty').textContent = 'Đang tính phương án trên cùng dữ liệu lịch sử…';
     try {
-      const riskFreeAnnual = data.riskFreeAnnual ?? null;
+      const riskFreeAnnual = riskFreeForResult(data).annual;
       const output = await run('optimization', data, { maxAssetPercent: Number(el('asset-cap').value), maxCommodityPercent: Number(el('commodity-cap').value), objective: el('optimization-objective').value, riskFreeAnnual });
       if (request !== optimizationRequest || data !== getResult()) return;
       const projected = { ...data, current: output }, metrics = historicalMetrics(projected, riskFreeAnnual);
