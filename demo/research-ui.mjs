@@ -5,6 +5,94 @@ import { number, percent, signedPercent, vnd, compactVnd, dateLabel } from './fo
 const escape = value => String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const el = id => document.getElementById(id);
 const row = (name, value, description) => `<tr><th scope="row">${name}</th><td>${value}</td><td>${description}</td></tr>`;
+
+// This comparison deliberately reuses the same buy-and-hold paths calculated by
+// allocationScenario.  It is not a separate backtest or a forecast.
+function renderOptimizationPnl(data, optimized) {
+  const host = el('optimization-pnl-chart');
+  const width = Math.max(360, host.clientWidth || 900);
+  const height = 340;
+  const margin = { left: 78, right: 22, top: 22, bottom: 46 };
+  const dates = data.dates;
+  const current = data.current.pnlPath;
+  const proposal = optimized.pnlPath;
+  const values = [...current, ...proposal].filter(Number.isFinite);
+  const minValue = Math.min(0, ...values);
+  const maxValue = Math.max(0, ...values);
+  const spread = Math.max(data.initialCapital * 0.01, maxValue - minValue);
+  const floor = minValue - spread * 0.12;
+  const ceiling = maxValue + spread * 0.12;
+  const timestamps = dates.map(date => Date.parse(`${date}T00:00:00Z`));
+  const duration = Math.max(1, timestamps.at(-1) - timestamps[0]);
+  const plotWidth = width - margin.left - margin.right;
+  const plotHeight = height - margin.top - margin.bottom;
+  const x = index => margin.left + (timestamps[index] - timestamps[0]) / duration * plotWidth;
+  const y = value => height - margin.bottom - (value - floor) / (ceiling - floor) * plotHeight;
+  const nearIndex = time => {
+    let low = 0, high = timestamps.length - 1;
+    while (low < high) {
+      const middle = Math.floor((low + high) / 2);
+      if (timestamps[middle] < time) low = middle + 1; else high = middle;
+    }
+    return low > 0 && Math.abs(timestamps[low - 1] - time) < Math.abs(timestamps[low] - time) ? low - 1 : low;
+  };
+  const ticks = [...new Set([0, .25, .5, .75, 1].map(fraction => nearIndex(timestamps[0] + duration * fraction)))];
+  const grids = [0, .25, .5, .75, 1].map(fraction => {
+    const value = floor + (ceiling - floor) * fraction;
+    const position = y(value);
+    return `<line x1="${margin.left}" x2="${width - margin.right}" y1="${position}" y2="${position}" class="chart-grid"/><text x="${margin.left - 10}" y="${position + 4}" text-anchor="end" class="chart-axis-label">${compactVnd(value)}</text>`;
+  }).join('');
+  const xLabels = ticks.map(index => `<text x="${x(index)}" y="${height - 12}" text-anchor="${index === 0 ? 'start' : index === dates.length - 1 ? 'end' : 'middle'}" class="chart-axis-label">${dateLabel(dates[index])}</text>`).join('');
+  const points = series => series.map((value, index) => `${x(index).toFixed(1)},${y(value).toFixed(1)}`).join(' ');
+  const zeroY = y(0);
+  host.innerHTML = `<div class="chart-frame optimization-pnl-frame" tabindex="0" aria-label="Biểu đồ PnL danh mục hiện tại và phương án tối ưu hóa theo ngày. Dùng phím mũi tên trái hoặc phải để xem từng phiên."><svg role="img" aria-label="So sánh PnL trước và sau tối ưu hóa, đơn vị VND" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none">${grids}<line x1="${margin.left}" x2="${width - margin.right}" y1="${zeroY}" y2="${zeroY}" class="optimization-zero-line"/><text x="${width - margin.right}" y="${zeroY - 6}" text-anchor="end" class="chart-axis-label">0 đ</text>${xLabels}<polyline class="chart-line line-current" points="${points(current)}"/><polyline class="chart-line line-optimized" points="${points(proposal)}"/><line id="optimization-crosshair-x" y1="${margin.top}" y2="${height - margin.bottom}" class="chart-crosshair" hidden/><line id="optimization-crosshair-y" x1="${margin.left}" x2="${width - margin.right}" class="chart-crosshair" hidden/><circle id="optimization-dot-current" r="4.5" class="chart-dot line-current" hidden/><circle id="optimization-dot-proposal" r="4.5" class="chart-dot line-optimized" hidden/></svg><div id="optimization-pnl-tooltip" class="chart-tooltip" role="tooltip" hidden></div></div>`;
+  const frame = host.querySelector('.optimization-pnl-frame');
+  const svg = host.querySelector('svg');
+  const tooltip = host.querySelector('#optimization-pnl-tooltip');
+  let activeIndex = dates.length - 1;
+  function showAt(index, pointer) {
+    activeIndex = Math.max(0, Math.min(dates.length - 1, index));
+    const xx = x(activeIndex);
+    const vertical = host.querySelector('#optimization-crosshair-x');
+    const horizontal = host.querySelector('#optimization-crosshair-y');
+    vertical.setAttribute('x1', xx); vertical.setAttribute('x2', xx); vertical.removeAttribute('hidden');
+    const currentDot = host.querySelector('#optimization-dot-current');
+    const proposalDot = host.querySelector('#optimization-dot-proposal');
+    currentDot.setAttribute('cx', xx); currentDot.setAttribute('cy', y(current[activeIndex])); currentDot.removeAttribute('hidden');
+    proposalDot.setAttribute('cx', xx); proposalDot.setAttribute('cy', y(proposal[activeIndex])); proposalDot.removeAttribute('hidden');
+    const pointerY = pointer?.y ?? y(proposal[activeIndex]) / height * frame.clientHeight;
+    const svgY = Math.max(margin.top, Math.min(height - margin.bottom, pointerY / frame.clientHeight * height));
+    horizontal.setAttribute('y1', svgY); horizontal.setAttribute('y2', svgY); horizontal.removeAttribute('hidden');
+    const difference = proposal[activeIndex] - current[activeIndex];
+    tooltip.innerHTML = `<strong>${dateLabel(dates[activeIndex])}</strong><span>Hiện tại <b>${signedVnd(current[activeIndex])}</b></span><span>Phương án <b>${signedVnd(proposal[activeIndex])}</b></span><span class="tooltip-pnl">Chênh lệch <b>${signedVnd(difference)}</b></span>`;
+    tooltip.hidden = false;
+    const pointerX = pointer?.x ?? xx / width * frame.clientWidth;
+    const left = Math.max(8, Math.min(frame.clientWidth - tooltip.offsetWidth - 8, pointerX + 14));
+    const top = Math.max(8, Math.min(frame.clientHeight - tooltip.offsetHeight - 8, pointerY - tooltip.offsetHeight - 14));
+    tooltip.style.left = `${left}px`; tooltip.style.top = `${top}px`;
+  }
+  function hide() {
+    tooltip.hidden = true;
+    for (const id of ['optimization-crosshair-x', 'optimization-crosshair-y', 'optimization-dot-current', 'optimization-dot-proposal']) host.querySelector(`#${id}`).setAttribute('hidden', '');
+  }
+  const move = event => {
+    const bounds = svg.getBoundingClientRect();
+    const svgX = (event.clientX - bounds.left) / bounds.width * width;
+    const time = timestamps[0] + (svgX - margin.left) / plotWidth * duration;
+    showAt(nearIndex(time), { x: event.clientX - bounds.left, y: event.clientY - bounds.top });
+  };
+  svg.addEventListener('pointermove', move);
+  svg.addEventListener('pointerdown', move);
+  svg.addEventListener('pointerleave', hide);
+  frame.addEventListener('focus', () => showAt(activeIndex));
+  frame.addEventListener('blur', hide);
+  frame.addEventListener('keydown', event => {
+    if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+      event.preventDefault(); showAt(activeIndex + (event.key === 'ArrowRight' ? 1 : -1));
+    }
+  });
+}
+
 export function initResearch(getResult) {
   let worker = null, pendingReject = null, lastSimulation = null;
   let optimizationRequest = 0, simulationRequest = 0;
@@ -77,6 +165,7 @@ export function initResearch(getResult) {
       el('solver-method').textContent = `${output.optimization.method}; ${output.optimization.iterations} vòng; gap ${number(output.optimization.gap, 10)}; ${output.optimization.converged ? 'đạt ngưỡng dừng' : 'chưa đạt ngưỡng hội tụ'}.`;
       el('comparison-metrics').innerHTML = `<table><thead><tr><th>Chỉ số</th><th>Hiện tại</th><th>Phương án</th></tr></thead><tbody>${row('Return lịch sử', signedPercent(data.current.periodReturn), signedPercent(output.periodReturn))}${row('Biến động phân bổ', percent(data.current.volatility), percent(output.volatility))}${row('Sharpe mua và giữ', number(data.metrics?.sharpe), number(metrics.sharpe))}</tbody></table>`;
       el('comparison-weights').innerHTML = `<table><thead><tr><th>Mã</th><th>Đầu kỳ cũ</th><th>Phương án</th></tr></thead><tbody>${data.symbols.map((s, i) => row(escape(s), percent(data.current.weights[i]), percent(output.weights[i]))).join('')}</tbody><tfoot><tr><th>Tổng</th><td>100%</td><td>100%</td></tr></tfoot></table>`;
+      renderOptimizationPnl(data, output);
       el('optimize-note').textContent = `${output.objective === 'maximum-sharpe' ? 'Objective dùng mean/covariance return ngày, giả định tái cân bằng; Sharpe báo cáo mua và giữ có thể khác. Tìm kiếm xấp xỉ không bảo đảm tối ưu toàn cục. Lãi suất ' + percent(riskFreeAnnual) + '/năm, nguồn: ' + data.riskFreeSource + '. ' : 'Mục tiêu là giảm variance ước lượng của allocation cố định, không phải tối đa lợi nhuận. '} Cùng dữ liệu vừa dùng để chọn và đánh giá: có thiên lệch in-sample, không phải backtest ngoài mẫu. Không thay đổi danh mục của bạn.`;
       el('optimize-result').hidden = false; el('optimize-empty').hidden = true;
     } catch (error) { if (request === optimizationRequest && error.name !== 'AbortError') el('optimize-error').textContent = error.message; }
