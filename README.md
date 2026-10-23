@@ -13,6 +13,8 @@ Finfolio 2.0 giúp nhà đầu tư cá nhân đã có kiến thức tài chính 
 | Week 5 | [MVP Feature, Flow & Implementation Readiness](docs/WEEK5.md) |
 | Week 6 | [Working demo, integration and test evidence](docs/WEEK6.md) |
 | Week 7 | [Final audit, evidence và individual footprint](docs/WEEK7.md) |
+| Tổng kết nhóm | [Group Footprint](docs/GROUP_FOOTPRINT.md) · [Slide Deck Report (.docx)](docs/Finfolio_2.0_Group_Presentation_SlideDeck_Report.docx) · [Đề cương thuyết trình](docs/GROUP_PRESENTATION_SLIDEDECK.md) |
+| Đóng góp cá nhân | [Individual Footprint Hub](docs/individual/README.md) ([Linh](docs/individual/linh.md) · [Quỳnh Anh](docs/individual/quynh-anh.md) · [Bảo An](docs/individual/bao-an.md) · [Minh Ngọc](docs/individual/minh-ngoc.md) · [Ngọc Anh](docs/individual/ngoc-anh.md)) |
 
 ## Team members and roles
 
