@@ -8,6 +8,7 @@ const row = (name, value, description) => `<tr><th scope="row">${name}</th><td>$
 export function initResearch(getResult) {
   let worker = null, pendingReject = null, lastSimulation = null;
   let optimizationRequest = 0, simulationRequest = 0;
+  let chartMode = 'connected';
   function cancel() {
     worker?.terminate(); worker = null;
     const reject = pendingReject; pendingReject = null;
@@ -88,15 +89,28 @@ export function initResearch(getResult) {
     const height = 360;
     const margin = { l: 80, r: 30, t: 25, b: 45 };
 
-    const lo = Math.min(output.capital, ...output.fan.map(p => p.p05));
-    const hi = Math.max(output.capital, ...output.fan.map(p => p.p95));
+    // Historical path for connected mode
+    const data = getResult();
+    const histPath = (chartMode === 'connected' && data?.current?.valuePath) ? data.current.valuePath : null;
+    const histLen = histPath ? histPath.length : 0;
+
+    // Compute Y domain including history if in connected mode
+    const lo = Math.min(output.capital, ...output.fan.map(p => p.p05), ...(histPath ? histPath : []));
+    const hi = Math.max(output.capital, ...output.fan.map(p => p.p95), ...(histPath ? histPath : []));
     const spread = Math.max(output.capital * 0.01, hi - lo);
     const floor = Math.max(0, lo - spread * 0.1);
     const ceiling = hi + spread * 0.1;
 
-    const x = day => margin.l + day / output.horizon * (width - margin.l - margin.r);
+    // X: history occupies left portion, future occupies right
+    const histRatio = histLen > 0 && chartMode === 'connected' ? 0.45 : 0; // 45% of width for history
+    const histPlotW = (width - margin.l - margin.r) * histRatio;
+    const futPlotW = (width - margin.l - margin.r) * (1 - histRatio);
+    const futOriginX = margin.l + histPlotW;
+
+    const xFut = day => futOriginX + day / output.horizon * futPlotW;
+    const xHist = idx => margin.l + (histLen > 1 ? idx / (histLen - 1) * histPlotW : 0);
     const y = value => height - margin.b - (value - floor) / (ceiling - floor) * (height - margin.t - margin.b);
-    const band = (low, high) => output.fan.map(p => `${x(p.day).toFixed(1)},${y(p[low]).toFixed(1)}`).concat([...output.fan].reverse().map(p => `${x(p.day).toFixed(1)},${y(p[high]).toFixed(1)}`)).join(' ');
+    const band = (low, high) => output.fan.map(p => `${xFut(p.day).toFixed(1)},${y(p[low]).toFixed(1)}`).concat([...output.fan].reverse().map(p => `${xFut(p.day).toFixed(1)},${y(p[high]).toFixed(1)}`)).join(' ');
 
     const capY = y(output.capital);
     const capLine = (capY >= margin.t && capY <= height - margin.b)
@@ -109,14 +123,45 @@ export function initResearch(getResult) {
       return `<line x1="${margin.l}" x2="${width - margin.r}" y1="${yPos.toFixed(1)}" y2="${yPos.toFixed(1)}" class="chart-grid"/><text x="${margin.l - 10}" y="${(yPos + 4).toFixed(1)}" text-anchor="end" class="chart-axis-label">${compactVnd(value)}</text>`;
     }).join('');
 
-    const xTicks = [0, 0.25, 0.5, 0.75, 1].map(f => {
-      const day = Math.round(output.horizon * f);
-      const xPos = f === 0 ? margin.l : f === 1 ? width - margin.r : x(output.horizon * f);
-      const anchor = f === 0 ? 'start' : f === 1 ? 'end' : 'middle';
-      return `<text x="${xPos.toFixed(1)}" y="${height - 12}" text-anchor="${anchor}" class="chart-axis-label">${day} phiên</text>`;
-    }).join('');
+    // X-axis ticks: history dates on left, future sessions on right
+    let xTicks = '';
+    if (chartMode === 'connected' && histLen > 0 && data?.dates) {
+      const dates = data.dates;
+      const histTickFracs = [0, 0.5, 1];
+      xTicks += histTickFracs.map(f => {
+        const idx = Math.round(f * (histLen - 1));
+        const xPos = xHist(idx);
+        const anchor = f === 0 ? 'start' : f === 1 ? 'end' : 'middle';
+        return `<text x="${xPos.toFixed(1)}" y="${height - 12}" text-anchor="${anchor}" class="chart-axis-label">${dateLabel(dates[idx])}</text>`;
+      }).join('');
+      // Divider line between history and future
+      xTicks += `<line x1="${futOriginX.toFixed(1)}" x2="${futOriginX.toFixed(1)}" y1="${margin.t}" y2="${height - margin.b}" class="chart-grid" stroke-dasharray="4 3" opacity="0.5"/>`;
+      // Future ticks
+      xTicks += [0.5, 1].map(f => {
+        const day = Math.round(output.horizon * f);
+        const xPos = xFut(output.horizon * f);
+        return `<text x="${xPos.toFixed(1)}" y="${height - 12}" text-anchor="${f === 1 ? 'end' : 'middle'}" class="chart-axis-label">${day} phiên</text>`;
+      }).join('');
+    } else {
+      xTicks = [0, 0.25, 0.5, 0.75, 1].map(f => {
+        const day = Math.round(output.horizon * f);
+        const xPos = f === 0 ? margin.l : f === 1 ? width - margin.r : xFut(output.horizon * f);
+        const anchor = f === 0 ? 'start' : f === 1 ? 'end' : 'middle';
+        return `<text x="${xPos.toFixed(1)}" y="${height - 12}" text-anchor="${anchor}" class="chart-axis-label">${day} phiên</text>`;
+      }).join('');
+    }
 
-    host.innerHTML = `<svg role="img" aria-label="Dải phân vị 5 đến 95 phần trăm và trung vị mô phỏng, đơn vị VND; đây không phải khoảng giá được bảo đảm" viewBox="0 0 ${width} ${height}">${yTicks}${capLine}<polygon class="fan-outer" points="${band('p05', 'p95')}"><title>Dải phân vị 5% - 95%</title></polygon><polygon class="fan-inner" points="${band('p25', 'p75')}"><title>Dải phân vị 25% - 75%</title></polygon><polyline class="chart-line line-current" points="${output.fan.map(p => `${x(p.day).toFixed(1)},${y(p.p50).toFixed(1)}`).join(' ')}"/>${xTicks}</svg>`;
+    // History polyline
+    const histLine = (histPath && histLen > 1)
+      ? `<polyline class="chart-line line-history" points="${histPath.map((v, i) => `${xHist(i).toFixed(1)},${y(v).toFixed(1)}`).join(' ')}" opacity="0.75"/>`
+      : '';
+
+    // Labels
+    const histLabel = (chartMode === 'connected' && histLen > 0)
+      ? `<text x="${(margin.l + 4).toFixed(1)}" y="${(margin.t + 2).toFixed(1)}" class="chart-axis-label" style="font-weight:600;fill:#64748b">← Lịch sử</text><text x="${(futOriginX + 4).toFixed(1)}" y="${(margin.t + 2).toFixed(1)}" class="chart-axis-label" style="font-weight:600;fill:#0f766e">Mô phỏng →</text>`
+      : '';
+
+    host.innerHTML = `<svg role="img" aria-label="Dải phân vị 5 đến 95 phần trăm và trung vị mô phỏng, đơn vị VND; đây không phải khoảng giá được bảo đảm" viewBox="0 0 ${width} ${height}">${yTicks}${capLine}${histLine}<polygon class="fan-outer" points="${band('p05', 'p95')}"><title>Dải phân vị 5% - 95%</title></polygon><polygon class="fan-inner" points="${band('p25', 'p75')}"><title>Dải phân vị 25% - 75%</title></polygon><polyline class="chart-line line-current" points="${output.fan.map(p => `${xFut(p.day).toFixed(1)},${y(p.p50).toFixed(1)}`).join(' ')}"/>${xTicks}${histLabel}</svg>`;
 
     const histHost = el('simulation-histogram');
     const histWidth = Math.max(520, histHost.clientWidth || 540);
@@ -204,10 +249,21 @@ export function initResearch(getResult) {
     el('simulation-meta').textContent = `${dateLabel(output.historyStart)} – ${dateLabel(output.historyEnd)}; ${output.observations} return chung; block ${output.blockLength} phiên; seed ${output.seed}; ${output.paths} đường × ${output.horizon} phiên. Vốn mô phỏng là giá trị cuối kỳ; giữ nguyên tỷ trọng cuối kỳ theo chiến lược mua và giữ.`;
     el('simulation-allocation').textContent = output.symbols.map((s, i) => `${s}: ${percent(output.weights[i])}`).join(' · ');
   }
+  // Chart mode toggle
+  function setChartMode(mode) {
+    chartMode = mode;
+    const btnConn = el('btn-chart-connected');
+    const btnFut = el('btn-chart-future');
+    if (btnConn) { btnConn.classList.toggle('active', mode === 'connected'); btnConn.setAttribute('aria-pressed', String(mode === 'connected')); }
+    if (btnFut) { btnFut.classList.toggle('active', mode === 'future'); btnFut.setAttribute('aria-pressed', String(mode === 'future')); }
+    if (lastSimulation) renderSimulation(lastSimulation);
+  }
+  el('btn-chart-connected')?.addEventListener('click', () => setChartMode('connected'));
+  el('btn-chart-future')?.addEventListener('click', () => setChartMode('future'));
+
   el('simulation-form').addEventListener('submit', async event => {
     event.preventDefault(); el('simulation-error').textContent = ''; el('simulation-result').hidden = true;
-    const request = ++simulationRequest;
-    const data = getResult(); if (!data) { el('simulation-error').textContent = 'Hãy phân tích danh mục trước.'; return; }
+    const request = ++simulationRequest;    const data = getResult(); if (!data) { el('simulation-error').textContent = 'Hãy phân tích danh mục trước.'; return; }
     el('simulate-button').disabled = true; el('cancel-simulation').hidden = false; el('simulation-empty').textContent = 'Đang tạo các đường mô phỏng ở nền; có thể hủy mà không mất báo cáo.';
     try {
       const output = await run('simulation', simulationInput(data), { paths: Number(el('simulation-paths').value), horizon: Number(el('simulation-horizon').value), seed: Number(el('simulation-seed').value), blockLength: 5 });
