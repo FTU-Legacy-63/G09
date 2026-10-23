@@ -8,14 +8,14 @@ Target user: nhà đầu tư cá nhân có kiến thức tài chính, muốn hi�
 
 | Hạng mục | Evidence | Trạng thái |
 | --- | --- | --- |
-| Product và hướng dẫn chạy | [README](../README.md), `/portfolio`, `/analysis` | Local đã chạy bằng dữ liệu provider thật; kiểm tra production sau deploy |
+| Product và hướng dẫn chạy | [README](../README.md), `/portfolio`, `/analysis` | Local chạy bằng provider thật; production đã deploy READY, smoke test và deployment theo release |
 | Logic, nguồn, giả định | [scope](PRODUCT_SCOPE.md), [FX](FX_ATTRIBUTION.md), [final methods](FINAL_METHODS.md) | Có; giới hạn được công bố |
 | Tối ưu hóa riêng | [method](OPTIMIZATION.md), `/optimize` | Có min volatility + max Sharpe; không tự áp dụng |
 | Monte Carlo | [simulation](../demo/simulation.mjs), `/simulation` | Có seeded joint block bootstrap; không phải dự báo |
 | Account/decision | [setup](ACCOUNT_SETUP.md), [decision snapshot](../demo/decision-record.mjs) | Giữ integration hiện tại; lần audit này chưa đăng nhập Google bằng tài khoản người dùng |
 | Test | `npm test`; `python3 -m unittest discover -s demo -p 'test_*.py'` | 46 JS + 35 Python pass tại 23/10/2026; không coi là user acceptance của nhóm |
 | Contribution / footprint | [bản đồ và hướng dẫn](individual/README.md) | Phân công đã xác nhận; từng người phải tự xác nhận outputs/hiểu biết |
-| Release/backup | Hướng dẫn cuối trang | Chỉ tag sau khi kiểm tra đúng production commit; chưa tuyên bố đã release |
+| Release/backup | [Final version / source backup](https://github.com/FTU-Legacy-63/G09/releases/tag/v2.0.0-final-20261023) | Tag dùng để checkout bản đánh giá; lần triển khai và verification được ghi trong release |
 
 ## Dữ liệu và refresh
 
@@ -39,6 +39,15 @@ Revision: thêm endpoint metadata `/api/data-status` không chứa holdings; ki�
 | Risk sample quá ngắn | Chặn optimizer ở `max(120,10N)`, không hiển thị annualized metrics dưới 60 return | Pass unit tests; arithmetic fixtures không phải decision-grade |
 
 Bug/giới hạn còn mở: cron best-effort; nghỉ lễ chưa có calendar; đa thị trường không đồng bộ giờ đóng cửa; metadata phân loại hiện tại không point-in-time; không Brinson khi thiếu historical constituents; 252 phiên xấp xỉ; max-Sharpe xấp xỉ/in-sample; chưa phí/thuế/tái đầu tư cổ tức; chưa kiểm định ngoài mẫu Monte Carlo; human account acceptance và personal sign-off phải do người thật thực hiện.
+
+### Verification 23/10/2026
+
+- Build local thành công với 30 font faces tự host và bundle browser hiện hữu; 46 JS + 35 Python tests pass.
+- Browser dùng giá provider thật: FPT/HPG/GLD, 40/35/25 triệu VND, VN30, RF 4% ghi là giả định; phân tích từ 25/10/2021 đến phiên chung 21/10/2026. Không cố định số return để làm acceptance khi giá còn cập nhật.
+- Min-vol và Max-Sharpe chạy riêng; bảng trước/sau và tổng tỷ trọng 100%. Có trường hợp min-vol đạt giới hạn vòng lặp, UI công bố chưa hội tụ thay vì gọi là nghiệm chính xác.
+- Monte Carlo 2.000 đường × 252 phiên, seed 42 chạy trên worker; fan chart, histogram, percentiles và giải thích tail hiển thị. Kiểm tra 375/768/1440 px; sửa nav flex min-width để trang không tràn ngang, bảng dài cuộn trong wrapper. Sau reload: console 0 errors/0 warnings; lỗi favicon cũ đã sửa bằng SVG cục bộ.
+- Mã nguồn đã push `main` ở commit `28a3f0e`; [refresh run 39883471984](https://github.com/FTU-Legacy-63/G09/actions/runs/39883471984) **success**, gồm cả fetch/validate và publish. Production `/api/data-status` đọc snapshot mới lúc 08:21:27 VN, có 26 mã, không lagging symbol; phiên 22/10 là đúng vì sáng 23/10 chưa đóng phiên.
+- Lượt deploy đầu trả `Not authorized`; thử lại chỉ định rõ scope `an-4f7e` đã thành công. Deployment [`dpl_5JwT34XtaUAFEzcttDGBvcKiU1fh`](https://vercel.com/an-4f7e/g09-finfolio/5JwT34XtaUAFEzcttDGBvcKiU1fh) READY, alias website giữ nguyên. Public `/portfolio`, `/optimize` và endpoint metadata mở được; không đổi host hay tạo project khác. Nhóm đã kết nối GitHub–Vercel để những push tiếp theo tự tạo deployment; luôn đối chiếu trạng thái build.
 
 ## Revision và thiết kế
 

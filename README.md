@@ -61,6 +61,8 @@ Trạng thái final mới nhất: bảy trang `/`, `/portfolio`, `/analysis`, `/
 
 Annualized volatility mua và giữ cần 60 return; Euler risk attribution và optimizer cần ít nhất `max(120, 10N)` return chung. Không đủ mẫu thì vẫn xem allocation/period return, phần rủi ro hiển thị “—” và optimizer báo lý do. Giá ngày không đồng bộ giờ đóng giữa thị trường; source có thể lỗi/rate-limit; không bao phủ mọi mã. Không cổ tức/phí/thuế, không Brinson đầy đủ, không dự báo hoặc giao dịch tự động. Max-Sharpe xấp xỉ/in-sample; Monte Carlo không bảo đảm tương lai. [Toàn bộ giả định](docs/FINAL_METHODS.md).
 
-[Contribution map và Individual Footprint](docs/individual/README.md): phân công đã xác nhận; từng thành viên phải tự xác nhận việc đã làm và khả năng trình bày, không suy tác giả từ tài khoản upload. [Final readiness, bug status và backup](docs/WEEK7.md). Release/tag sẽ trỏ đúng commit đã deploy và được ghi ở audit.
+[Contribution map và Individual Footprint](docs/individual/README.md): phân công đã xác nhận; từng thành viên phải tự xác nhận việc đã làm và khả năng trình bày, không suy tác giả từ tài khoản upload. [Final readiness, bug status và backup](docs/WEEK7.md).
 
-Production: <https://g09-finfolio.vercel.app/>. GitHub org chưa tự deploy qua Vercel App; chạy `vercel deploy --prod` bằng quyền Vercel hiện hữu, không coi push GitHub là deploy thành công.
+[Final release / source backup](https://github.com/FTU-Legacy-63/G09/releases/tag/v2.0.0-final-20261023): 81 tests pass. Code final đã deploy lên website hiện hữu; trạng thái verification, deployment và các phần chưa nghiệm thu được ghi ở Week 7/release.
+
+Production: <https://g09-finfolio.vercel.app/>. Ngày 23/10 nhóm đã kết nối `FTU-Legacy-63/G09` vào project Vercel hiện hữu, để push `main` tạo deployment; luôn kiểm tra trạng thái READY, không coi push là deploy thành công. Manual fallback: `vercel deploy --prod --scope an-4f7e`. Nhánh `market-data` được tắt deployment riêng vì chỉ lưu snapshot; workflow sao chép cấu hình không deploy sang nhánh này cùng snapshot, không đổi dữ liệu giá.
