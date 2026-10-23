@@ -19,6 +19,7 @@ Với tư cách là **Chuyên viên Phân tích Nghiệp vụ (Business Analyst)
 1. **Thiết kế Từ điển Dữ liệu và Đặc tả Yêu cầu Dữ liệu (Data Dictionary & Requirements):** Xác định toàn bộ các thực thể, thuộc tính, định dạng, đơn vị đo lường và quy tắc xác thực cho từng trường dữ liệu đầu vào và đầu ra của hệ thống.
 2. **Thẩm định và Quản trị Nguồn dữ liệu Thị trường (Data Provenance & Source Auditing):** Đánh giá tính khả thi, độ ổn định và tính hợp pháp của các nguồn cung cấp dữ liệu thị trường (TradingView, Yahoo Finance, tỷ giá ngân hàng, dữ liệu sở giao dịch HOSE/HNX); giải quyết các điểm nghẽn dữ liệu (data blockers).
 3. **Chuẩn hóa Hệ thống Phân loại Ngành và Universe Tài sản (Classification & Universe Management):** Xây dựng bảng ánh xạ ngành kinh tế (Sector & Industry) cho cổ phiếu Việt Nam và Mỹ dựa trên dữ liệu niêm yết chính thống; quản trị danh mục 26 tài sản hạt nhân và 23 quỹ ETF hàng hóa đại diện (Commodity Proxies); thiết lập cơ chế giám sát tính tươi mới của dữ liệu (Data Freshness Monitoring).
+4. **Thiết kế benchmark và tính tương thích dữ liệu đa thị trường:** Chịu trách nhiệm lựa chọn nguồn VN30/VN-Index và phương án ETF proxy, quy tắc căn ngày chung, chuẩn hóa currency/FX, số quan sát tối thiểu và điều kiện dữ liệu trước khi chuyển cho mô hình tài chính.
 
 ---
 
@@ -32,6 +33,8 @@ Dấu ấn chuyên môn sâu sắc nhất của em trong Finfolio 2.0 thể hi�
    Em là người trực tiếp tuyển chọn và xây dựng file danh mục `demo/vn_universe.json` (gồm 26 mã cổ phiếu vốn hóa lớn và chỉ số đầu ngành tại TTCK Việt Nam) và `demo/instrument_catalog.json` (gồm 45 tài sản quốc tế, trong đó có 23 proxy hàng hóa bao phủ từ vàng GLD, bạc SLV, dầu thô USO, đồng CPER đến nông sản DBA, ngô CORN, lúa mì WEAT). Đảm bảo mọi mã trong danh mục đều được thẩm định chuỗi giá lịch sử đủ 5 năm.
 3. **Thiết kế hệ thống phân loại ngành và siêu dữ liệu (Metadata Architecture):**  
    Em đã trực tiếp viết module phân loại `demo/classification.py`, tích hợp cơ chế tra cứu ngành tự động từ TradingView Screener cho cổ phiếu Việt Nam và phân loại của thị trường Mỹ. Em quy định rõ nguyên tắc: các chứng chỉ quỹ ETF, hàng hóa và tiền mã hóa bắt buộc phải được gắn nhãn ngành là *"Không áp dụng"* (Not Applicable) để tránh việc gán nhầm ngành của doanh nghiệp cho tài sản rổ quỹ.
+4. **Chuẩn hóa benchmark, currency và common-date alignment:**
+   Em đặc tả benchmark là chuỗi so sánh hiệu quả, không phải một vị thế trong danh mục; định nghĩa quy tắc fallback từ VN30/VN-Index sang ETF proxy có gắn nhãn; đồng thời xác định cách quy đổi USD/VND và phép giao các phiên chung để Active Return, Tracking Error và các chỉ số rủi ro dùng cùng một tập quan sát.
 
 ---
 
@@ -74,6 +77,11 @@ Dấu ấn chuyên môn sâu sắc nhất của em trong Finfolio 2.0 thể hi�
   - Thiết lập cơ chế kiểm tra định kỳ mỗi 15 phút hoặc mỗi khi người dùng quay lại tab trình duyệt: nếu phát hiện thị trường đã đóng phiên mới hoặc dữ liệu đã cũ quá 6 giờ, hệ thống sẽ hiển thị biểu tượng thông báo nhắc người dùng tải lại dữ liệu mới.
 - Viết bộ kiểm thử Python `demo/test_classification.py`, `demo/test_vn_data.py`, `demo/test_symbol_search.py` đảm bảo dữ liệu luôn được chuẩn hóa chính xác trước khi đưa vào tính toán.
 
+### 3.5. Đặc tả Benchmark, Currency và Data Compatibility (Week 4–Week 7)
+- Định nghĩa vai trò của VN30/VN-Index hoặc ETF proxy, quy tắc ghi nhãn fallback và yêu cầu không trộn benchmark vào holdings.
+- Quy định phép giao ngày chung giữa HOSE/NYSE và chuỗi tỷ giá; chỉ chuyển dữ liệu sang engine sau khi đủ số phiên, không trùng ngày, giá dương và currency mapping hợp lệ.
+- Phối hợp xác nhận đầu vào cho Active Return, Tracking Error, Beta và Jensen's Alpha; Financial Logic Lead chịu trách nhiệm công thức và ý nghĩa, còn Data Lead chịu trách nhiệm chuỗi dữ liệu dùng để tính.
+
 ---
 
 ## 4. Bảng tổng hợp File, Dữ liệu và Đóng góp nghiệp vụ cụ thể
@@ -86,6 +94,7 @@ Dấu ấn chuyên môn sâu sắc nhất của em trong Finfolio 2.0 thể hi�
 | **Universe 26 mã Việt Nam** | Danh mục 26 cổ phiếu nòng cốt và chỉ số VN30/VNINDEX phục vụ tự động hóa dữ liệu | [vn_universe.json](../../demo/vn_universe.json), [vn_data.py](../../demo/vn_data.py) | `python3 -m unittest demo/test_vn_data.py` |
 | **Catalog 45 tài sản quốc tế** | Danh mục 45 công cụ quốc tế gồm 23 commodity proxies, bond ETFs, crypto | [instrument_catalog.json](../../demo/instrument_catalog.json), [global_data.py](../../demo/global_data.py) | `python3 -m unittest demo/test_global_data.py` |
 | **Giám sát Tính tươi mới Dữ liệu** | API kiểm tra ngày phiên giao dịch mới nhất và thời điểm snapshot thị trường | [data_status.py](../../demo/data_status.py), [freshness.mjs](../../demo/freshness.mjs) | `node --test demo/freshness.test.mjs` |
+| **Benchmark & Data Compatibility** | Nguồn VN30/VN-Index, ETF fallback, căn ngày chung và quy đổi USD/VND | [WEEK3.md](../WEEK3.md), [server.py](../../demo/server.py), [global_data.py](../../demo/global_data.py) | Kiểm tra benchmark và holdings dùng cùng tập ngày hợp lệ |
 
 ---
 
@@ -96,7 +105,7 @@ Dấu ấn chuyên môn sâu sắc nhất của em trong Finfolio 2.0 thể hi�
 | **W1** | Ngọc đưa ra các câu hỏi ban đầu về tính khả dụng của dữ liệu đa tài sản. | [WEEK1.md](../WEEK1.md) (Data Observations) | Nhận diện sớm các thách thức về việc làm sạch dữ liệu giá và tỷ giá. |
 | **W2** | Ngọc xác định các yêu cầu dữ liệu cho danh mục, benchmark và ràng buộc tối ưu. | [WEEK2.md](../WEEK2.md) (Data Requirements) | Đảm bảo mọi tính năng đề xuất đều có nguồn dữ liệu tương ứng hỗ trợ. |
 | **W3** | Ngọc hoàn thành Từ điển Dữ liệu 18 trường và Sổ đăng ký nguồn U01–D01. | [WEEK3.md](../WEEK3.md) (Data Readiness) | Văn kiện quan trọng nhất định nghĩa toàn bộ cấu trúc dữ liệu của dự án. |
-| **W4** | Ngọc thẩm định sự phụ thuộc dữ liệu của các công thức tài chính và rủi ro. | [WEEK4.md](../WEEK4.md) (Data Dependencies) | Xác định các điều kiện biên về số lượng quan sát tối thiểu cho từng chỉ số. |
+| **W4** | Ngọc thẩm định dependency dữ liệu, benchmark, currency và common-date alignment cho các công thức. | [WEEK4.md](../WEEK4.md) (Data Dependencies) | Xác định tập quan sát và điều kiện dữ liệu tối thiểu trước khi tính chỉ số. |
 | **W5** | Ngọc thiết lập nhãn trường (labels), đơn vị hiển thị và danh sách gợi ý tài sản. | [WEEK5.md](../WEEK5.md) (Input Labels & Universe) | Đảm bảo người dùng nhập liệu đúng định dạng và hiểu rõ đơn vị tiền tệ. |
 | **W6** | Ngọc hoàn thiện module tích hợp dữ liệu TradingView cho 26 mã Việt Nam. | `demo/vn_data.py`, `demo/vn_universe.json` | Giải quyết triệt để vấn đề thiếu dữ liệu cổ phiếu và chỉ số Việt Nam. |
 | **W7** | Ngọc hoàn thiện hệ thống phân loại ngành `classification.py` và API `/api/data-status`. | `demo/classification.py`, [WEEK7.md](../WEEK7.md) | Bàn giao hệ thống phân loại ngành và giám sát độ trễ dữ liệu chuẩn mực. |

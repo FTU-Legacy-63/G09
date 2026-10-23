@@ -209,11 +209,25 @@ python3 -m unittest discover -s demo -p 'test_*.py'
 
 | Thành viên | MSSV | Vai trò chính | Trách nhiệm cốt lõi | Output chính đối chiếu |
 | :--- | :---: | :--- | :--- | :--- |
-| **Hoàng Khánh Linh** | 2412380024 | **Product Owner** | Phạm vi sản phẩm, chuẩn hóa công thức tài chính (Return, Euler Risk, FX, Benchmark), giả định tối ưu hóa và phê duyệt tính đúng đắn của phương pháp. | [WEEK4.md](WEEK4.md), [FINAL_METHODS.md](FINAL_METHODS.md), [OPTIMIZATION.md](OPTIMIZATION.md), [linh.md](individual/linh.md) |
+| **Hoàng Khánh Linh** | 2412380024 | **Product Owner** | Phạm vi sản phẩm, phương pháp Return/Euler Risk/FX, giả định tối ưu hóa, claim boundary và phê duyệt ý nghĩa tài chính. | [WEEK4.md](WEEK4.md), [FINAL_METHODS.md](FINAL_METHODS.md), [OPTIMIZATION.md](OPTIMIZATION.md), [linh.md](individual/linh.md) |
 | **Nguyễn Quỳnh Anh** | 2413380010 | **Product Manager** | Quản lý yêu cầu sản phẩm, kịch bản kiểm thử chấp nhận (Acceptance Criteria), ma trận kiểm thử hồi quy W5/W6/W7, theo dõi xử lý lỗi (Bug Log). | [WEEK5.md](WEEK5.md), [WEEK6.md](WEEK6.md), [WEEK7.md](WEEK7.md), [quynh-anh.md](individual/quynh-anh.md) |
-| **Lê Bảo An** | 2412380002 | **Lead Developer** | Đại diện nhóm; thiết kế kiến trúc hệ thống, xây dựng pipeline dữ liệu Python, Web Worker tính toán định lượng, CI/CD GitHub Actions và triển khai Vercel. | [server.py](../demo/server.py), [finance.mjs](../demo/finance.mjs), [optimizer.mjs](../demo/optimizer.mjs), [bao-an.md](individual/bao-an.md) |
-| **Trần Minh Ngọc** | 2412380036 | **Business Analyst**| Thiết kế từ điển dữ liệu (Data Dictionary), thẩm định nguồn dữ liệu thị trường (TradingView vs Yahoo), phân loại ngành kinh tế (Sector/Industry), kiểm soát độ trễ dữ liệu. | [WEEK3.md](WEEK3.md), [classification.py](../demo/classification.py), [vn_data.py](../demo/vn_data.py), [minh-ngoc.md](individual/minh-ngoc.md) |
+| **Lê Bảo An** | 2412380002 | **Lead Developer** | Đại diện nhóm; kiến trúc và core engine, tối ưu hóa, toàn bộ Monte Carlo/Web Worker, CI/CD GitHub Actions và triển khai Vercel. | [server.py](../demo/server.py), [finance.mjs](../demo/finance.mjs), [optimizer.mjs](../demo/optimizer.mjs), [simulation.mjs](../demo/simulation.mjs), [bao-an.md](individual/bao-an.md) |
+| **Trần Minh Ngọc** | 2412380036 | **Business Analyst**| Data Dictionary, nguồn dữ liệu, benchmark/fallback, currency và common-date alignment, Sector/Industry và data freshness. | [WEEK3.md](WEEK3.md), [classification.py](../demo/classification.py), [vn_data.py](../demo/vn_data.py), [global_data.py](../demo/global_data.py), [minh-ngoc.md](individual/minh-ngoc.md) |
 | **Nguyễn Ngọc Anh** | 2413380008 | **UI/UX Designer** | Thiết kế luồng trải nghiệm người dùng, hệ thống Design Tokens (Forest/Paper theme), Typography tự lưu trữ, trực quan hóa biểu đồ SVG và giải thích số liệu lũy tiến. | [tokens.css](../demo/tokens.css), [chart-utils.mjs](../demo/chart-utils.mjs), [redesign.css](../demo/redesign.css), [ngoc-anh.md](individual/ngoc-anh.md) |
+
+### 10.1. Nguyên tắc cân bằng khối lượng
+
+Nhóm cân bằng theo **mảng sở hữu có thể kiểm chứng**, không theo số dòng code hay số trang tài liệu. Mỗi thành viên có: (i) một quyền quyết định cốt lõi; (ii) một nhóm artifact truy vết được; (iii) một phần có thể tự giải thích, kiểm tra hoặc trình diễn.
+
+| Workstream | Owner cuối cùng | Ranh giới bàn giao | Bằng chứng cá nhân tối thiểu |
+| :--- | :--- | :--- | :--- |
+| Product & financial methodology | Hoàng Khánh Linh | Bàn giao công thức, giả định và claim boundary cho Build/QA; không sở hữu data pipeline hay Monte Carlo. | Giải thích Return, Euler Risk, FX và đối soát đẳng thức. |
+| Data & benchmark readiness | Trần Minh Ngọc | Bàn giao chuỗi giá/FX/benchmark đã gắn nguồn, kiểm tra và căn ngày cho Financial Engine. | Truy vết source/fallback, currency, freshness và common-date alignment. |
+| Flow, QA & release acceptance | Nguyễn Quỳnh Anh | Chuyển requirement thành luồng, acceptance criteria và regression evidence; xác nhận bản phát hành. | Chạy happy/error flow, chỉ ra bug log và test tương ứng. |
+| UI/UX & explainability | Nguyễn Ngọc Anh | Nhận output đã được kiểm chứng và chuyển thành giao diện dễ đọc; không nhận quyền sở hữu thuật toán Monte Carlo. | Trình bày design system, chart interaction, responsive/accessibility. |
+| Engineering, optimization & simulation | Lê Bảo An | Hiện thực specification thành engine, optimizer, Monte Carlo/Web Worker và production; không tự thay đổi ý nghĩa tài chính. | Chạy engine/optimizer/simulation, test tái lập và quy trình deploy. |
+
+Phần việc giao nhau được ghi theo cơ chế **owner – reviewer**: owner chịu trách nhiệm đầu ra, reviewer chỉ xác nhận điều kiện bàn giao. Nhờ vậy, nhóm vẫn cross-check được mà không làm phồng đóng góp cá nhân.
 
 ---
 

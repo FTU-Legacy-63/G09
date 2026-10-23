@@ -18,7 +18,7 @@
 Với tư cách là **Thiết kế Giao diện & Trải nghiệm Người dùng (UI/UX Designer)** kiêm **Trưởng nhóm Cấu trúc Thông tin (Information Architecture Lead)** của Finfolio 2.0, em chịu trách nhiệm chính về:
 1. **Thiết kế Cấu trúc Thông tin và Phân cấp Trực quan (Information Architecture & Visual Hierarchy):** Chuyển đổi khối lượng số liệu tài chính định lượng đồ sộ thành một giao diện trực quan, khoa học, dễ tiếp thu theo nguyên lý *Tiết lộ thông tin lũy tiến (Progressive Disclosure)*.
 2. **Xây dựng Hệ thống Thiết kế Chuẩn mực (Design System & Design Tokens):** Xây dựng bảng mã màu, kiểu chữ, khoảng cách, thành phần giao diện (CSS Design Tokens) mang phong cách Forest/Paper đặc trưng, tạo dựng cảm giác tin cậy, chuyên nghiệp cho một sản phẩm công nghệ tài chính.
-3. **Trực quan hóa Dữ liệu Tài chính (Financial Data Visualization):** Thiết kế và hiện thực hóa biểu đồ biến động tài sản Native SVG, bảng nhiệt đóng góp lợi nhuận (Attribution Heatmap), biểu đồ quạt phân vị rủi ro Monte Carlo (Fan Chart), và thiết kế giao diện thích ứng linh hoạt (Responsive Design) trên mọi kích thước màn hình.
+3. **Trực quan hóa Dữ liệu Tài chính (Financial Data Visualization):** Thiết kế và hiện thực hóa biểu đồ biến động tài sản Native SVG, bảng nhiệt đóng góp lợi nhuận (Attribution Heatmap), hệ thống tooltip/crosshair và giao diện thích ứng linh hoạt trên mọi kích thước màn hình. Thuật toán và màn hình Monte Carlo thuộc phạm vi kỹ thuật của Lê Bảo An.
 
 ---
 
@@ -58,7 +58,6 @@ Dấu ấn sáng tạo và chuyên môn rõ nét nhất của em trong Finfolio 
   - Thiết kế đồ họa vector SVG cho biểu đồ đường tăng trưởng danh mục: đường chính màu xanh rừng đậm thể hiện danh mục thực tế, đường nét đứt màu xám thể hiện benchmark VN30, và đường màu hổ phách thể hiện phương án tối ưu hóa tham chiếu.
   - Thiết kế hộp chú giải (Tooltip) thông minh: tự động tính toán vị trí con trỏ chuột, tự động lật hướng (flip left/right/top/bottom) khi con trỏ tiến sát mép màn hình để đảm bảo thông tin không bao giờ bị che khuất.
   - Thiết kế bảng nhiệt đóng góp lợi nhuận (Attribution Heatmap): các ô có mức đóng góp cao được phủ lớp màu nền đậm nhạt theo cường độ tỷ lệ phần trăm, giúp người dùng nhận diện ngay mã cổ phiếu dẫn dắt danh mục chỉ trong 3 giây đầu tiên.
-- Thiết kế biểu đồ quạt Monte Carlo (Fan Chart): thể hiện dải phân vị rủi ro $5\% - 95\%$ bằng dải màu mờ trong suốt, đường trung vị (median) nằm ở trung tâm và biểu đồ tần suất phân phối (histogram) đặt ở cột bên cạnh.
 
 ### 3.5. Tối ưu hóa Giao diện Thích ứng và Khả năng Truy cập (Week 7)
 - Viết file `demo/redesign.css` và `demo/product.css`:
@@ -99,7 +98,7 @@ Dấu ấn sáng tạo và chuyên môn rõ nét nhất của em trong Finfolio 
 
 ### 6.1. Hạn chế về mặt thiết kế giao diện
 - **Bảng dữ liệu nhiều cột vẫn đòi hỏi thao tác cuộn trên màn hình nhỏ:** Khi danh mục có trên 10 tài sản và người dùng bật hiển thị đầy đủ các cột (Vốn, Tỷ trọng, Lợi nhuận, Đóng góp lợi nhuận, Rủi ro Euler, Đóng góp FX), người dùng mobile vẫn phải cuộn ngang để xem hết các số liệu chi tiết.
-- **Biểu đồ Monte Carlo đòi hỏi kiến thức thống kê để hiểu đúng:** Mặc dù đã có chú giải dải phân vị $5\% - 95\%$, một số người dùng phổ thông ban đầu vẫn có thể hiểu lầm dải màu xanh là "khoảng giá chắc chắn xảy ra trong tương lai" nếu không đọc kỹ phần cảnh báo ranh giới mô hình.
+- **Các bảng attribution nhiều chiều vẫn cần kiểm thử khả dụng:** Khi người dùng chuyển giữa instrument, asset class, sector và industry, nhãn dài có thể làm bảng dày hoặc buộc cuộn trên màn hình nhỏ.
 
 ### 6.2. Bài học kinh nghiệm cá nhân
 - **"Form follows function" trong thiết kế sản phẩm tài chính:** Thiết kế giao diện tài chính không phải là vẽ tranh nghệ thuật; vẻ đẹp thực sự của UI/UX Fintech nằm ở sự chính xác của số liệu, tính rõ ràng của đơn vị đo lường và khả năng dẫn dắt người dùng đến quyết định đúng đắn mà không gây hiểu lầm.

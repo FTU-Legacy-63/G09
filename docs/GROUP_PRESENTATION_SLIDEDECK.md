@@ -16,11 +16,13 @@
 
 | STT | Họ và tên | Mã sinh viên | Vai trò dự án | Phần thuyết trình phụ trách | Thời lượng dự kiến |
 | :---: | :--- | :---: | :--- | :--- | :---: |
-| 1 | **Hoàng Khánh Linh** | 2412380024 | Product Owner / Financial Logic | Mở đầu, Bài toán, Mô hình Toán & Rủi ro Euler (Slides 1–5, 8–10) | 3 phút 30 giây |
-| 2 | **Nguyễn Quỳnh Anh** | 2413380010 | Product Manager / Flow & QA | Luồng nghiệp vụ, Kịch bản kiểm thử, Quản lý lỗi (Slides 6, 14–15) | 2 phút 30 giây |
-| 3 | **Lê Bảo An** | 2412380002 | Lead Developer / Build & DevOps | Kiến trúc hệ thống, Live Demo sản phẩm (Slides 12–13, Demo thực tế) | 4 phút 00 giây |
-| 4 | **Trần Minh Ngọc** | 2412380036 | Business Analyst / Data Lead | Nguồn dữ liệu, Căn phiên đa thị trường, Phân loại ngành (Slide 7) | 2 phút 30 giây |
-| 5 | **Nguyễn Ngọc Anh** | 2413380008 | UI/UX Designer / IA Lead | Trực quan hóa dữ liệu, Design System, Tổng kết & Q&A (Slides 11, 16–18) | 2 phút 30 giây |
+| 1 | **Hoàng Khánh Linh** | 2412380024 | Product Owner / Financial Logic | Bài toán, phạm vi, Return/Euler/FX và claim boundary (Slides 2, 8–9) | 3 phút 00 giây |
+| 2 | **Nguyễn Quỳnh Anh** | 2413380010 | Product Manager / Flow & QA | Luồng nghiệp vụ, acceptance tests, bug governance (Slides 3, 6, 15) | 3 phút 00 giây |
+| 3 | **Lê Bảo An** | 2412380002 | Lead Developer / Build & DevOps | Tối ưu hóa, Monte Carlo, kiến trúc và phần tính toán trong demo (Slides 10–11, 13–14) | 3 phút 00 giây |
+| 4 | **Trần Minh Ngọc** | 2412380036 | Business Analyst / Data Lead | Input schema, scope dữ liệu, nguồn, benchmark/currency/alignment (Slides 4–5, 7) | 3 phút 00 giây |
+| 5 | **Nguyễn Ngọc Anh** | 2413380008 | UI/UX Designer / IA Lead | Mở đầu, design system, thao tác giao diện trong demo, footprint và tổng kết (Slides 1, 12, 14, 16–18) | 3 phút 00 giây |
+
+> **Nguyên tắc chia đều:** mỗi thành viên có 3 phút và trả lời câu hỏi trong đúng workstream mình sở hữu. Slide 14 là demo phối hợp: Ngọc Anh điều khiển luồng giao diện; Bảo An giải thích engine, optimizer và Monte Carlo. Phần phối hợp này không làm thay đổi ownership trong Individual Footprint.
 
 ---
 
@@ -57,8 +59,8 @@ Năm ngoái, nhóm G09 khóa K62 đã phát triển phiên bản Finfolio 1.0 ([
   * Nhóm thực hiện: Group 09 (G09) — Lớp K63.
   * Đường dẫn trực tiếp: `https://g09-finfolio.vercel.app/`
   * Bản phát hành nghiệm thu: `v2.0.0-final-20261023` (85 automated tests pass).
-* **Lời thoại thuyết trình (Speaker Script - Hoàng Khánh Linh):**
-  > "Kính thưa Thầy và toàn thể các bạn sinh viên, em là Hoàng Khánh Linh, đại diện nhóm G09 khóa K63. Hôm nay, nhóm chúng em xin được báo cáo và bảo vệ sản phẩm học phần: **Finfolio 2.0 — Portfolio Attribution & Risk Analytics**. Đây là một web platform phân tích danh mục đầu tư đa tài sản theo chuẩn mực định lượng, hiện đã được triển khai hoạt động thực tế trên nền tảng Vercel với 85 kịch bản kiểm thử tự động đã được nghiệm thu. Sau đây, nhóm xin phép được trình bày chi tiết về bài toán, giải pháp và kết quả đạt được của dự án."
+* **Lời thoại thuyết trình (Speaker Script - Nguyễn Ngọc Anh):**
+  > "Kính thưa Thầy và toàn thể các bạn sinh viên, em là Nguyễn Ngọc Anh, thành viên nhóm G09 khóa K63. Hôm nay, nhóm chúng em xin được báo cáo và bảo vệ sản phẩm học phần: **Finfolio 2.0 — Portfolio Attribution & Risk Analytics**. Sản phẩm đã được triển khai trên Vercel và có bộ bằng chứng kiểm thử trong repository. Sau đây, em xin mời bạn Hoàng Khánh Linh trình bày bài toán và định hướng sản phẩm."
 
 ---
 
@@ -86,7 +88,7 @@ Năm ngoái, nhóm G09 khóa K62 đã phát triển phiên bản Finfolio 1.0 ([
     2. *Risk Concentration Blindness:* Cổ phiếu chiếm 20% vốn có thể đóng góp tới 50% tổng độ biến động danh mục do hiệu ứng hiệp phương sai.
     3. *Benchmark Comparison Gap:* Thiếu mốc so sánh đồng bộ trên cùng chuỗi ngày giao dịch với VN30 Index.
     4. *Allocation Dilemma:* Thiếu căn cứ định lượng để quyết định tái phân bổ danh mục nhằm cải thiện tỷ số lợi nhuận/rủi ro.
-* **Lời thoại thuyết trình (Hoàng Khánh Linh):**
+* **Lời thoại thuyết trình (Nguyễn Quỳnh Anh):**
   > "Thưa Thầy, hầu hết các ứng dụng chứng khoán hiện nay tại Việt Nam đều dừng lại ở việc hiển thị bảng giá và lãi/lỗ từng mã riêng rẽ. Khi một nhà đầu tư nắm giữ 40% FPT, 35% HPG và 25% quỹ vàng GLD, họ đối mặt với một khoảng trống nhận thức rất lớn: Liệu HPG có đang tạo ra quá nhiều rủi ro so với lợi nhuận mang lại? Việc nắm giữ vàng GLD định giá bằng USD giúp phòng vệ rủi ro hay làm phát sinh thêm rủi ro tỷ giá? Finfolio 2.0 ra đời chính là để trả lời những câu hỏi này một cách định lượng."
 
 ---
@@ -100,7 +102,7 @@ Năm ngoái, nhóm G09 khóa K62 đã phát triển phiên bản Finfolio 1.0 ([
   * **Engine:** Căn ngày giao dịch chung $\to$ Chuẩn hóa về VND $\to$ Bóc tách đóng góp Euler $\to$ Tối ưu hóa Frank-Wolfe $\to$ Bootstrap Monte Carlo.
   * **Output:** *Risk and Return Allocation Brief* cung cấp góc nhìn đa chiều: Phân bổ hiện tại vs Tham chiếu, Đóng góp lợi nhuận, Ma trận tương quan, Rủi ro đuôi VaR/CVaR.
   * **Action:** Người dùng tự tin đưa ra quyết định: Giữ nguyên danh mục hoặc Tái phân bổ dựa trên bằng chứng toán học, ghi nhận vào Nhật ký Quyết định.
-* **Lời thoại thuyết trình (Hoàng Khánh Linh):**
+* **Lời thoại thuyết trình (Trần Minh Ngọc):**
   > "Tuân thủ chỉ đạo của Thầy trong buổi trao đổi đầu kỳ: 'Một sản phẩm công nghệ tài chính phải có một mạch tư duy hoàn chỉnh từ Input qua Công thức tới Output và Quyết định', slide này thể hiện trọn vẹn chuỗi suy luận của Finfolio 2.0. Hệ thống không tạo ra các dashboard rời rạc, mà xâu chuỗi thông tin để dẫn dắt nhà đầu tư từ việc nhận diện cấu trúc danh mục, thấu hiểu rủi ro tiềm ẩn, xem xét kịch bản tối ưu tham chiếu và cuối cùng là tự mình đưa ra quyết định có trách nhiệm."
 
 ---
@@ -119,7 +121,7 @@ Năm ngoái, nhóm G09 khóa K62 đã phát triển phiên bản Finfolio 1.0 ([
 | **Phân tích rủi ro** | Độ lệch chuẩn lịch sử | Euler Decomposition + Sortino + VaR 95% + Expected Shortfall |
 | **Mô phỏng tương lai**| Không có (Deferred) | Joint Moving-Block Bootstrap Monte Carlo (2.000 paths) |
 | **Nguồn dữ liệu** | Yahoo Finance (bất ổn định) | Pipeline lai: TradingView (VN) + yfinance (Quốc tế/FX) |
-* **Lời thoại thuyết trình (Hoàng Khánh Linh chuyển lời cho Nguyễn Quỳnh Anh):**
+* **Lời thoại thuyết trình (Trần Minh Ngọc chuyển lời cho Nguyễn Quỳnh Anh):**
   > "Ở giai đoạn giữa kỳ, nhóm đã cam kết bảo vệ phạm vi Core MVP ở mức độ khả thi cao nhất. Và đến giai đoạn cuối kỳ này, như Thầy có thể thấy trên bảng so sánh, nhóm đã mở rộng sản phẩm thành một phiên bản Final hoàn chỉnh với 7 không gian làm việc chuyên biệt, thuật toán tối ưu hóa Frank-Wolfe và mô phỏng Bootstrap ngẫu nhiên. Sau đây, em xin mời bạn Nguyễn Quỳnh Anh trình bày chi tiết về luồng nghiệp vụ và quy trình kiểm thử của sản phẩm."
 
 ---
@@ -204,7 +206,7 @@ Năm ngoái, nhóm G09 khóa K62 đã phát triển phiên bản Finfolio 1.0 ([
     $$\max_{\mathbf{w}} \frac{\mathbf{w}^T \boldsymbol{\mu} - r_{f,\text{daily}}}{\sqrt{\mathbf{w}^T \Sigma \mathbf{w}}} \cdot \sqrt{252} \quad \text{với } r_f \text{ mặc định } 3.0\%/\text{năm}$$
   * **Thuật toán Frank-Wolfe (Conditional Gradient):** Giải quyết bài toán lồi có ràng buộc hộp và đơn vị thuần túy bằng JavaScript trên máy khách trong 20ms, loại bỏ sai số heuristic của bản cũ.
   * **Claim Boundary:** Kết quả là *Phương án phân bổ tham chiếu (Reference Allocation)* dựa trên dữ liệu quá khứ, không phải lời khuyên đầu tư.
-* **Lời thoại thuyết trình (Hoàng Khánh Linh):**
+* **Lời thoại thuyết trình (Lê Bảo An):**
   > "Tại tab Tối ưu hóa, nhóm giải quyết bài toán Markowitz kinh điển dưới các ràng buộc thực tế khắt khe: không bán khống, trần tỷ trọng từng mã tối đa 80%, trần nhóm hàng hóa tối đa 60%. Thay vì sử dụng các thuật toán xấp xỉ thô sơ dễ vi phạm điều kiện biên, bạn Lê Bảo An đã lập trình thuật toán dốc có điều kiện Frank-Wolfe chạy trực tiếp trên trình duyệt. Thuật toán đảm bảo nghiệm luôn hội tụ trên tập lồi simplex, cung cấp cho nhà đầu tư một phương án tham chiếu khoa học để thấy rõ: nếu tái cơ cấu tỷ trọng, độ biến động danh mục có thể giảm được bao nhiêu phần trăm."
 
 ---
@@ -220,7 +222,7 @@ Năm ngoái, nhóm G09 khóa K62 đã phát triển phiên bản Finfolio 1.0 ([
     * Bảo toàn trọn vẹn ma trận tương quan và hiện tượng biến động cụm (volatility clustering).
   * **Tham số mô phỏng:** 2.000 đường chạy qua 252 phiên giao dịch (1 năm tài chính tương lai), xuất phát từ giá trị thực tế tại ngày kết thúc phân tích.
   * **Kết quả lượng hóa:** Trích xuất dải phân vị rủi ro $5\%, 25\%, 50\%, 75\%, 95\%$, ước tính xác suất tổn thất vốn $\mathbb{P}(V_{T+252} < V_T)$ và VaR/CVaR mô phỏng.
-* **Lời thoại thuyết trình (Nguyễn Ngọc Anh):**
+* **Lời thoại thuyết trình (Lê Bảo An):**
   > "Để đánh giá sức chịu đựng của danh mục trong tương lai mà không rơi vào cái bẫy của giả định phân phối chuẩn, Finfolio 2.0 tích hợp mô hình Joint Moving-Block Bootstrap Monte Carlo. Bằng cách bốc lại các khối 5 ngày giao dịch lịch sử có thực, mô hình tái hiện lại các cú sốc quá khứ và sự liên đới giữa các tài sản. Trên màn hình mô phỏng, người dùng nhìn thấy dải phân vị 5% đến 95% của 2.000 con đường phát triển vốn khả dĩ, cùng xác suất tổn thất vốn được lượng hóa rõ ràng."
 
 ---
@@ -309,10 +311,10 @@ Năm ngoái, nhóm G09 khóa K62 đã phát triển phiên bản Finfolio 1.0 ([
     * *W5–W6:* Đặc tả 9 acceptance tests, xây dựng bản demo chạy thực tế trên Vercel, kiểm soát Bug Log.
     * *W7:* Nâng cấp kiến trúc 7 trang, bổ sung Monte Carlo & bộ chỉ số nâng cao, hoàn thiện 85 tests.
   * **Bản đồ đóng góp cá nhân (Individual Footprints):**
-    * *Hoàng Khánh Linh:* Phụ trách toàn bộ mô hình toán tài chính ([linh.md](individual/linh.md)).
+    * *Hoàng Khánh Linh:* Product scope, Return/Euler/FX methodology và claim boundary ([linh.md](individual/linh.md)).
     * *Nguyễn Quỳnh Anh:* Quản lý yêu cầu, luồng nghiệp vụ và 85 test cases ([quynh-anh.md](individual/quynh-anh.md)).
-    * *Lê Bảo An:* Kiến trúc hệ thống, lập trình core engine, worker và DevOps ([bao-an.md](individual/bao-an.md)).
-    * *Trần Minh Ngọc:* Phân tích nghiệp vụ dữ liệu, classification và data freshness ([minh-ngoc.md](individual/minh-ngoc.md)).
+    * *Lê Bảo An:* Kiến trúc, core engine, optimization, toàn bộ Monte Carlo/Web Worker và DevOps ([bao-an.md](individual/bao-an.md)).
+    * *Trần Minh Ngọc:* Input/data model, source, benchmark/currency/alignment, classification và freshness ([minh-ngoc.md](individual/minh-ngoc.md)).
     * *Nguyễn Ngọc Anh:* Thiết kế giao diện, Design Tokens, Native SVG và typography ([ngoc-anh.md](individual/ngoc-anh.md)).
 * **Lời thoại thuyết trình (Nguyễn Ngọc Anh):**
   > "Suốt 7 tuần của học kỳ, nhóm G09 đã làm việc với tinh thần kỷ luật và sự phân công trách nhiệm rạch ròi. Mỗi thành viên đều có một tài liệu Dấu ấn cá nhân (Individual Footprint) riêng biệt trong thư mục `docs/individual/`, dài hơn 200 dòng, mô tả chi tiết từ những việc đã thực sự làm, các file code đã đóng góp, các bằng chứng đối soát hàng tuần cho đến kịch bản bảo vệ chuyên sâu. Đây là minh chứng rõ ràng nhất cho sự đóng góp thực chất và đồng đều của cả 5 thành viên trong nhóm."
@@ -360,17 +362,17 @@ Năm ngoái, nhóm G09 khóa K62 đã phát triển phiên bản Finfolio 1.0 ([
 Để buổi thuyết trình nhóm diễn ra trơn tru trong thời lượng chuẩn **15 phút** (gồm 11 phút trình bày slide + 4 phút live demo), nhóm thiết lập kịch bản phối hợp chuyển giao lời thoại (Hand-off script) như sau:
 
 ```
-[Hoàng Khánh Linh] (3.5 phút: Slides 1-5) 
+[Nguyễn Ngọc Anh] (Mở đầu Slide 1)
+  ↳ "Xin mời bạn Hoàng Khánh Linh trình bày bài toán, phạm vi và phương pháp tài chính..."
+[Hoàng Khánh Linh] (3.0 phút: Slides 2, 8-9)
   ↳ "Sau đây, em xin mời bạn Nguyễn Quỳnh Anh trình bày về luồng nghiệp vụ và quy trình kiểm thử..."
-[Nguyễn Quỳnh Anh] (2.5 phút: Slides 6, 15)
+[Nguyễn Quỳnh Anh] (3.0 phút: Slides 3, 6, 15)
   ↳ "Để hiểu rõ hơn về nguồn dữ liệu và cách căn chỉnh thị trường, xin mời bạn Trần Minh Ngọc..."
-[Trần Minh Ngọc] (2.5 phút: Slide 7)
-  ↳ "Tiếp theo, bạn Hoàng Khánh Linh sẽ quay trở lại trình bày nền tảng toán tài chính cốt lõi..."
-[Hoàng Khánh Linh] (Tiếp tục Slides 8-10: Lợi nhuận, Euler Risk, Tối ưu hóa)
-  ↳ "Về khía cạnh trực quan hóa số liệu và mô phỏng tương lai, xin mời bạn Nguyễn Ngọc Anh..."
-[Nguyễn Ngọc Anh] (2.5 phút: Slides 11, 12, 17)
-  ↳ "Sau đây, xin mời Lead Developer Lê Bảo An trình bày về kiến trúc kỹ thuật và thực hiện Live Demo..."
-[Lê Bảo An] (4.0 phút: Slides 13, 14 & Trực tiếp thao tác Live Demo trên trình duyệt)
+[Trần Minh Ngọc] (3.0 phút: Slides 4, 5, 7)
+  ↳ "Tiếp theo, xin mời bạn Lê Bảo An trình bày tối ưu hóa, mô phỏng và kiến trúc triển khai..."
+[Lê Bảo An] (3.5 phút: Slides 10, 11, 13, 14 & Live Demo)
+  ↳ "Xin mời bạn Nguyễn Ngọc Anh trình bày hệ thống thiết kế và tổng kết footprint của nhóm..."
+[Nguyễn Ngọc Anh] (2.5 phút: Slides 12, 16, 17)
   ↳ "Và sau đây, nhóm xin chuyển sang phần tổng kết cùng bạn Nguyễn Ngọc Anh..."
 [Cả nhóm đứng dậy - Linh kết luận Slide 18 & Mở đầu phần Q&A]
 ```

@@ -19,6 +19,7 @@ Với tư cách là **Đại diện nhóm (Team Representative)** kiêm **Trư�
 1. **Kiến trúc hệ thống tổng thể (System Architecture):** Thiết kế mô hình kết hợp giữa Frontend ứng dụng đơn trang thuần (Vanilla JS ES Modules) và Backend tính toán định lượng (Python API Server & Vercel Serverless Functions).
 2. **Xây dựng Pipeline Dữ liệu và Tính toán (Data & Computation Pipeline):** Hiện thực hóa toàn bộ các công thức tài chính từ tài liệu đặc tả thành các module mã nguồn chạy mượt mà, tối ưu hóa thuật toán ma trận trên trình duyệt và xử lý đa luồng qua Web Worker.
 3. **Quản trị CI/CD và Hạ tầng Triển khai (DevOps & Deployment):** Thiết lập GitHub Actions tự động hóa thu thập dữ liệu giá thị trường hàng ngày; cấu hình triển khai Vercel với các quy tắc định tuyến URL độc lập (`vercel.json`); thiết lập và thực thi bộ kiểm thử tự động 85 test cases (50 JS + 35 Python).
+4. **Sở hữu kỹ thuật mô phỏng Monte Carlo:** Thiết kế, hiện thực và kiểm thử toàn bộ Joint Moving-Block Bootstrap, bộ sinh số giả ngẫu nhiên có seed, tính phân vị/VaR/CVaR, Web Worker và phần hiển thị kết quả tại `/simulation`.
 
 ---
 
@@ -59,6 +60,7 @@ Dấu ấn kỹ thuật nổi bật nhất của em trong Finfolio 2.0 thể hi�
 - Viết file `demo/optimizer.mjs`: Hiện thực hóa thuật toán Frank-Wolfe giải bài toán Minimum Volatility và thuật toán tìm kiếm đa điểm khởi tạo giải bài toán Maximum Sharpe với lãi suất phi rủi ro kế thừa từ Finfolio 1.0 ($3.0\%$/năm).
 - Viết file `demo/simulation.mjs`: Hiện thực hóa thuật toán Joint Moving-Block Bootstrap Monte Carlo. Tạo bộ sinh số ngẫu nhiên giả lập có thể tái lập thông qua thuật toán LCG (Linear Congruential Generator) khi người dùng chỉ định random seed.
 - Xây dựng `demo/research-worker.mjs`: Đóng gói thuật toán tối ưu hóa và mô phỏng vào Web Worker, thiết lập cơ chế trao đổi dữ liệu phi đồng bộ (asynchronous non-blocking message passing).
+- Tích hợp fan chart, histogram, dải phân vị $5\%$–$95\%$, xác suất lỗ vốn và các cảnh báo phương pháp vào tab `/simulation`; đây là phần kỹ thuật do em trực tiếp chịu trách nhiệm, không thuộc footprint UI/UX.
 
 ### 3.5. Trực quan hóa Biểu đồ Native SVG và Hệ thống Điều hướng 7 Trang (Week 7)
 - Viết file `demo/chart-utils.mjs`: Xây dựng biểu đồ PnL giá trị thực VND bằng đồ họa vector thuần (Native SVG). Tích hợp crosshair trục kép bám sát cả trục hoành thời gian và trục tung giá trị; xử lý ngắt đoạn biểu đồ thông minh khi có khoảng trống dữ liệu vượt quá 7 ngày.

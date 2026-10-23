@@ -10,10 +10,10 @@ Nhóm G09 xác nhận duy trì ma trận phân công 5 thành viên theo 5 mản
 
 | Thành viên | MSSV | Vai trò chính | Trách nhiệm cốt lõi | Báo cáo chi tiết |
 | :--- | :---: | :--- | :--- | :---: |
-| **Hoàng Khánh Linh** | 2412380024 | **Product Owner** | Định nghĩa phạm vi sản phẩm, mô hình toán tài chính (Return, Euler Risk, FX Attribution), giả định tối ưu hóa và phê duyệt phương pháp luận. | [Xem báo cáo của Linh](linh.md) |
+| **Hoàng Khánh Linh** | 2412380024 | **Product Owner** | Định nghĩa phạm vi sản phẩm, phương pháp Return/Euler Risk/FX Attribution, giả định tối ưu hóa và ranh giới diễn giải. | [Xem báo cáo của Linh](linh.md) |
 | **Nguyễn Quỳnh Anh** | 2413380010 | **Product Manager** | Quản lý yêu cầu, đặc tả luồng người dùng (Happy/Alternative/Error), ma trận kiểm thử nghiệm thu W5/W6/W7, quản trị danh mục lỗi (Bug Log). | [Xem báo cáo của Quỳnh Anh](quynh-anh.md) |
-| **Lê Bảo An** | 2412380002 | **Lead Developer** | Đại diện nhóm; thiết kế kiến trúc hệ thống, xây dựng pipeline dữ liệu Python, Web Worker tính toán đa luồng, tự động hóa CI/CD và triển khai Vercel. | [Xem báo cáo của Bảo An](bao-an.md) |
-| **Trần Minh Ngọc** | 2412380036 | **Business Analyst**| Xây dựng Từ điển Dữ liệu (18+ trường), thẩm định nguồn dữ liệu thị trường (TradingView & Yahoo), phân loại ngành kinh tế, giám sát độ trễ dữ liệu. | [Xem báo cáo của Minh Ngọc](minh-ngoc.md) |
+| **Lê Bảo An** | 2412380002 | **Lead Developer** | Đại diện nhóm; kiến trúc và core engine, tối ưu hóa, toàn bộ Monte Carlo/Web Worker, CI/CD và triển khai Vercel. | [Xem báo cáo của Bảo An](bao-an.md) |
+| **Trần Minh Ngọc** | 2412380036 | **Business Analyst**| Data Dictionary, nguồn dữ liệu, benchmark/fallback, currency và common-date alignment, phân loại ngành, data freshness. | [Xem báo cáo của Minh Ngọc](minh-ngoc.md) |
 | **Nguyễn Ngọc Anh** | 2413380008 | **UI/UX Designer** | Thiết kế cấu trúc thông tin 7 trang, hệ thống Design Tokens (Forest/Paper), Typography tự lưu trữ, trực quan hóa biểu đồ Native SVG và giải thích lũy tiến. | [Xem báo cáo của Ngọc Anh](ngoc-anh.md) |
 
 ---
@@ -24,8 +24,8 @@ Nhóm G09 xác nhận duy trì ma trận phân công 5 thành viên theo 5 mản
 | :--- | :--- | :---: | :--- |
 | **Phương pháp Tài chính** | [WEEK4.md](../WEEK4.md), [OPTIMIZATION.md](../OPTIMIZATION.md), [FINAL_METHODS.md](../FINAL_METHODS.md), [FX_ATTRIBUTION.md](../FX_ATTRIBUTION.md) | Hoàng Khánh Linh | Đối chiếu công thức toán học và các ranh giới giả định |
 | **Luồng & Kiểm thử** | [WEEK5.md](../WEEK5.md), [WEEK6.md](../WEEK6.md), [WEEK7.md](../WEEK7.md), [freshness.test.mjs](../../demo/freshness.test.mjs) | Nguyễn Quỳnh Anh | Chạy `node --test demo/*.test.mjs` và rà soát bug log |
-| **Kiến trúc & Lập trình** | [server.py](../../demo/server.py), [finance.mjs](../../demo/finance.mjs), [optimizer.mjs](../../demo/optimizer.mjs), [simulation.mjs](../../demo/simulation.mjs) | Lê Bảo An | Kiểm tra 85 automated tests và triển khai Vercel production |
-| **Dữ liệu & Xuất xứ** | [WEEK3.md](../WEEK3.md), [vn_data.py](../../demo/vn_data.py), [classification.py](../../demo/classification.py), [data_status.py](../../demo/data_status.py) | Trần Minh Ngọc | Chạy `python3 -m unittest discover -s demo -p 'test_*.py'` |
+| **Kiến trúc, Tối ưu & Mô phỏng** | [server.py](../../demo/server.py), [optimizer.mjs](../../demo/optimizer.mjs), [simulation.mjs](../../demo/simulation.mjs), [research-worker.mjs](../../demo/research-worker.mjs) | Lê Bảo An | Kiểm tra optimizer/Monte Carlo, 85 automated tests và Vercel production |
+| **Dữ liệu, Benchmark & Xuất xứ** | [WEEK3.md](../WEEK3.md), [vn_data.py](../../demo/vn_data.py), [global_data.py](../../demo/global_data.py), [classification.py](../../demo/classification.py), [data_status.py](../../demo/data_status.py) | Trần Minh Ngọc | Kiểm tra source, currency, common dates, fallback và freshness |
 | **UI/UX & Trực quan** | [tokens.css](../../demo/tokens.css), [typography.css](../../demo/typography.css), [chart-utils.mjs](../../demo/chart-utils.mjs), [redesign.css](../../demo/redesign.css) | Nguyễn Ngọc Anh | Mở website [g09-finfolio.vercel.app](https://g09-finfolio.vercel.app/) trên các viewport |
 
 ---
