@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import math
 import os
-from datetime import date, datetime, time, timezone
+from datetime import date, datetime, time, timezone, timedelta
 from functools import lru_cache
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -54,12 +54,23 @@ def fetch_vn_series(symbol: str) -> dict:
 @lru_cache(maxsize=1)
 def _snapshot(bucket: int) -> dict:
     try:
-        response = requests.get(SNAPSHOT_URL, timeout=8)
+        response = requests.get(SNAPSHOT_URL, params={"v": bucket}, headers={"Cache-Control": "no-cache"}, timeout=8)
         response.raise_for_status()
         payload = response.json()
         return payload if payload.get("schema_version") == 1 else {}
     except (requests.RequestException, ValueError):
         return {}
+
+
+def expected_daily_session(now_vn=None) -> str:
+    """Weekday candidate, NOT an exchange holiday calendar; verify at provider."""
+    now_vn = now_vn or datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))
+    day = now_vn.date()
+    if now_vn.time() < time(15, 15):
+        day -= timedelta(days=1)
+    while day.weekday() >= 5:
+        day -= timedelta(days=1)
+    return day.isoformat()
 
 
 def get_vn_series(symbol: str) -> tuple[dict, str]:
@@ -72,7 +83,9 @@ def get_vn_series(symbol: str) -> tuple[dict, str]:
             prices = cached["prices"]
             dates = [date.fromisoformat(pair[0]) for pair in prices]
             valid_metadata = cached.get("source") == "TradingView via tvdatafeed" and cached.get("exchange") in ("HOSE", "HNX", "UPCOM") and cached.get("adjustment") == "splits"
-            if valid_metadata and dates == sorted(set(dates)) and 0 <= age <= limit and len(prices) >= 5 and all(isinstance(pair, list) and len(pair) == 2 and math.isfinite(float(pair[1])) and float(pair[1]) > 0 for pair in prices):
+            # A recent download timestamp does not make yesterday's prices today's
+            # prices. After close, a delayed cron must not hide an available session.
+            if valid_metadata and dates == sorted(set(dates)) and 0 <= age <= limit and len(prices) >= 5 and dates[-1].isoformat() >= expected_daily_session() and all(isinstance(pair, list) and len(pair) == 2 and math.isfinite(float(pair[1])) and float(pair[1]) > 0 for pair in prices):
                 return cached, "daily_snapshot"
         except (ValueError, TypeError, KeyError, IndexError):
             pass

@@ -1,7 +1,9 @@
 name: Refresh VN daily prices
 on:
   schedule:
-    - cron: '30 10 * * 1-5'
+    # VN 16:17 plus a 20:47 retry window; GitHub schedules are best effort.
+    - cron: '17 9 * * 1-5'
+    - cron: '47 13 * * 1-5'
   workflow_dispatch:
 permissions:
   contents: write

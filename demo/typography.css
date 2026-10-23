@@ -1,7 +1,7 @@
 /* Shared local fonts include precomposed Vietnamese and combining diacritics. */
 :root {
-  --font-ui: "Noto Sans Variable", "Noto Sans", Arial, sans-serif;
-  --font-display: "Noto Serif Variable", "Noto Serif", Georgia, serif;
+  --font-ui: var(--ff-font-ui, "Noto Sans Variable"), sans-serif;
+  --font-display: var(--ff-font-display, "Noto Serif Variable"), serif;
   font-family: var(--font-ui);
 }
 body, button, input, select, textarea, option, optgroup, table, svg text,

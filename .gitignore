@@ -7,6 +7,8 @@ node_modules/
 demo/vendor/
 demo/fonts/
 output/playwright/
+output/final-refresh/
+Icon*
 supabase/.temp/
 supabase/.branches/
 .mcp.json

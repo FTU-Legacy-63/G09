@@ -3,50 +3,44 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/demo/favicon.svg" />
     <meta name="theme-color" content="#21563f" />
     <meta name="referrer" content="no-referrer" />
     <meta name="description" content="Finfolio: phân tích danh mục VN bằng TradingView/tvdatafeed; commodity và tỷ giá bằng yfinance." />
     <title>Finfolio | Portfolio attribution</title>
-    <link rel="preload" href="/demo/fonts/noto-sans-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
-    <link rel="preload" href="/demo/fonts/noto-sans-vietnamese-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/demo/fonts/be-vietnam-pro-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/demo/fonts/be-vietnam-pro-vietnamese-400-normal.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="stylesheet" href="/demo/fonts/fonts.css" />
+    <link rel="stylesheet" href="/demo/tokens.css" />
     <link rel="stylesheet" href="/demo/styles.css" />
     <link rel="stylesheet" href="/demo/product.css" />
     <link rel="stylesheet" href="/demo/typography.css" />
+    <link rel="stylesheet" href="/demo/redesign.css?v=20261023" />
     <script type="module" src="/demo/app.js"></script>
   </head>
   <body>
     <div class="app-shell">
-      <aside class="sidebar" aria-label="Điều hướng">
+      <header class="sidebar" aria-label="Điều hướng">
         <a class="brand" href="/" aria-label="Finfolio - tổng quan"><span class="brand-mark" aria-hidden="true">⌁</span><span>Finfolio</span></a>
         <div class="sidebar-middle">
           <p class="sidebar-caption">Workspace</p>
-          <nav class="sidebar-nav">
-            <a href="/" class="nav-link active">Tổng quan</a>
-            <a href="/portfolio" class="nav-link">Danh mục</a>
-            <a href="/analysis" class="nav-link">Phân tích</a>
-            <a href="/method" class="nav-link">Phương pháp</a>
-            <a href="/account" class="nav-link">Tài khoản & quyết định</a>
-          </nav>
+          <nav class="sidebar-nav" aria-label="Các trang Finfolio"></nav>
         </div>
-        <div class="sidebar-footer"><span>G09 · FTU</span><span>Danh mục giả định</span></div>
-      </aside>
+        <div class="sidebar-footer"><span>G09 · FTU</span><a href="/account">Đăng nhập</a></div>
+      </header>
 
       <main id="home" class="main-content">
-        <header class="topbar">
-          <span class="topbar-name">Portfolio Analysis Dashboard</span>
-          <a href="/portfolio" class="topbar-action">Nhập danh mục <span aria-hidden="true">↗</span></a>
-        </header>
+        <div class="data-status" role="status" aria-live="polite" id="data-freshness">Đang kiểm tra mốc cập nhật dữ liệu ngày…</div>
 
         <section class="hero" aria-labelledby="hero-title" hidden>
           <div class="hero-copy">
-            <span class="hero-label">Finfolio · Portfolio analytics</span>
+            <span class="hero-label">Phân tích danh mục cho nhà đầu tư Việt Nam</span>
             <h1 id="hero-title">Hiểu danh mục trước khi điều chỉnh.</h1>
             <p>Cùng một dữ liệu, xem lợi nhuận và rủi ro đến từ đâu, rồi so sánh với một phân bổ tham khảo.</p>
             <a class="primary-button" href="/portfolio">Bắt đầu phân tích <span aria-hidden="true">→</span></a>
           </div>
           <div class="hero-visual" aria-label="Danh mục minh họa có cổ phiếu và gold ETF proxy">
-            <p>Danh mục mẫu</p>
+            <p>Số liệu minh hoạ · phân bổ đầu kỳ</p>
             <div class="hero-asset"><span>FPT.VN</span><span>Cổ phiếu</span></div>
             <div class="hero-asset"><span>HPG.VN</span><span>Cổ phiếu</span></div>
             <div class="hero-asset"><span>GLD</span><span>Gold ETF proxy</span></div>
@@ -56,7 +50,7 @@
 
         <section id="portfolio-input" class="work-section" aria-labelledby="input-title" hidden>
           <div class="section-heading">
-            <h2 id="input-title">Danh mục cần phân tích</h2>
+            <h1 id="input-title">Danh mục cần phân tích</h1>
             <p>Nhập giá trị đầu kỳ của từng tài sản bằng USD hoặc VND. Finfolio tự quy đổi về VND và tính tỷ trọng trên cùng ngày bắt đầu phân tích.</p>
           </div>
           <form id="portfolio-form" novalidate>
@@ -76,9 +70,10 @@
                 <select id="benchmark" required><option value="VN30.VN">VN30 Index</option><option value="VNINDEX.VN">VN-Index</option><option value="SPY">S&P 500 ETF (SPY)</option><option value="QQQ">Nasdaq-100 ETF (QQQ)</option><option value="VT">Global equity ETF (VT)</option><option value="BND">US bond ETF (BND)</option><option value="FUESSV30.VN">SSIAM VN30 ETF (FUESSV30.VN)</option><option value="E1VFVN30.VN">DCVFM VN30 ETF (E1VFVN30.VN)</option><option value="FUEVN100.VN">VinaCapital VN100 ETF (FUEVN100.VN)</option><option value="FUEVFVND.VN">VN Diamond ETF (FUEVFVND.VN)</option><option value="GLD">Vàng (GLD ETF proxy)</option><option value="SLV">Bạc (SLV ETF proxy)</option><option value="custom">Mã tự chọn (VN hoặc YF:SPY)</option></select>
               </label>
               <label id="custom-benchmark-wrap" hidden>Mã benchmark<input id="custom-benchmark" type="text" placeholder="VD: VCB.VN, YF:^GSPC" spellcheck="false" autocomplete="off" /></label>
-              <label>Giới hạn mỗi mã (%)<input id="asset-cap" type="number" min="0" max="100" step="1" value="80" required /></label>
-              <label>Giới hạn commodity (%)<input id="commodity-cap" type="number" min="0" max="100" step="1" value="60" required /></label>
+              <label>Lãi suất phi rủi ro giả định (%/năm, tùy chọn)<input id="risk-free-rate" type="number" min="-99" max="100" step="any" placeholder="Để trống nếu chưa có giả định" /></label>
+              <label>Nguồn / cách chọn lãi suất<input id="risk-free-source" type="text" maxlength="200" value="Giả định cá nhân, không phải lãi suất thị trường" /></label>
             </div>
+            <label class="follow-latest"><input id="follow-latest" type="checkbox" checked /> Theo dõi đến ngày mới nhất; tự làm mới báo cáo khi có phiên mới trong lúc mở trang.</label>
             <p class="form-help">2–30 vị thế, mỗi giá trị lớn hơn 0. USD được quy đổi theo VND=X tại phiên đầu tiên có đủ giá chung; tổng vốn và tỷ trọng chính xác hiển thị sau phân tích. Đây là giá trị giả định đầu kỳ, không phải giá trị hiện tại hay lịch sử giao dịch. Currency nhập tiền độc lập với currency niêm yết. Commodity và trái phiếu dùng quỹ/ETF proxy. Return tính từ giá, không tái đầu tư cổ tức.</p>
             <p id="portfolio-save-status" role="status" class="table-footnote"></p>
             <div id="form-error" class="form-error" role="alert" hidden></div>
@@ -91,8 +86,10 @@
 
         <section id="results" class="results-section" aria-labelledby="results-title" hidden>
           <div class="section-heading">
-            <h2 id="results-title">Risk and Return Allocation Brief</h2>
+            <h1 id="results-title">Báo cáo lợi nhuận & rủi ro</h1>
             <p id="results-subtitle">Nhập danh mục rồi chọn “Phân tích danh mục” để xem kết quả.</p>
+            <div class="form-tools"><a href="/portfolio" class="text-button">Sửa danh mục</a><button id="refresh-data" class="text-button" type="button">Tải lại dữ liệu</button></div>
+            <p id="session-notice" class="table-footnote" role="status"></p>
             <details class="source-details"><summary>Nguồn và thời điểm cập nhật</summary><p id="data-sources" class="table-footnote">Chưa tải dữ liệu.</p></details>
           </div>
           <div id="empty-state" class="empty-state">
@@ -104,6 +101,7 @@
             <div id="data-warning" class="notice" role="note" hidden></div>
             <div class="lead-result"><div><span>Kết quả chính</span><h3 id="lead-headline"></h3><p id="lead-explanation"></p></div><div class="lead-icon" aria-hidden="true">↗</div></div>
             <div id="metric-strip" class="metric-strip"></div>
+            <div class="metric-strip extra-kpis"><div class="metric"><span>CAGR</span><strong id="advanced-cagr">—</strong><small>Chỉ năm hóa khi đủ lịch sử</small></div><div class="metric"><span>Mức giảm sâu nhất</span><strong id="advanced-dd">—</strong><small>Max Drawdown trong kỳ</small></div><div class="metric"><span>Sharpe</span><strong id="advanced-sharpe">—</strong><small>Cần giả định lãi suất phi rủi ro</small></div></div>
             <section id="attribution-panel" class="attribution-section" aria-labelledby="attribution-title">
               <div class="panel-heading"><h3 id="attribution-title">Đóng góp lợi nhuận</h3><div class="export-tools"><button id="export-attribution" class="text-button" type="button">Xuất CSV / Excel</button><button id="print-report" class="text-button" type="button">In / lưu PDF</button></div></div>
               <div class="attribution-controls"><div id="attribution-periods" class="period-buttons" role="group" aria-label="Kỳ attribution"></div><label>Nhóm theo<select id="attribution-group"><option value="symbol">Từng instrument</option><option value="class">Asset class</option><option value="sector">Sector · lĩnh vực</option><option value="industry">Industry · ngành</option><option value="group">Thị trường / commodity type</option><option value="currency">Currency niêm yết</option></select></label><label>Đơn vị contribution<select id="attribution-unit"><option value="points">Điểm phần trăm</option><option value="vnd">VND</option></select></label></div>
@@ -117,14 +115,29 @@
               <section class="allocation-panel" aria-labelledby="allocation-title"><div class="panel-heading"><h3 id="allocation-title">Phân bổ hiện tại</h3><span>100%</span></div><div id="allocation-visual"></div><div id="allocation-groups"></div></section>
             </div>
             <section class="table-panel" aria-labelledby="contribution-title"><div class="panel-heading"><h3 id="contribution-title">Đóng góp theo từng mã</h3><span>Đơn vị: điểm %</span></div><div class="table-scroll"><table><thead><tr><th>Mã</th><th>Nhóm</th><th>Tỷ trọng</th><th>Return contribution</th><th>Risk contribution</th></tr></thead><tbody id="contribution-rows"></tbody><tfoot id="contribution-total"></tfoot></table></div><p class="table-footnote">Return contribution cộng lại bằng return của danh mục. Risk contribution cộng lại bằng volatility ước lượng.</p></section>
-            <section class="comparison-panel" aria-labelledby="comparison-title"><div class="panel-heading"><h3 id="comparison-title">Hiện tại và phương án tham khảo</h3><span id="solver-method"></span></div><div class="comparison-layout"><div id="comparison-metrics"></div><div id="comparison-weights"></div></div><p class="table-footnote">Cùng chuỗi giá, ngày phân tích và covariance. Phương án tham khảo không tự thay đổi danh mục của bạn.</p></section>
+            <section class="table-panel"><h3>Muốn thử một cách phân bổ khác?</h3><p>Phân tích không tự tối ưu danh mục. Chọn riêng mục tiêu Sharpe hoặc volatility trong tab Tối ưu hóa; xem các kịch bản tương lai trong tab Mô phỏng.</p><div class="form-tools"><a href="/optimize" class="primary-button">Tối ưu hóa phân bổ</a><a href="/simulation" class="text-button">Mô phỏng Monte Carlo</a></div></section>
+            <section class="table-panel" id="advanced-metrics"><h3>Đọc sâu hơn, khi bạn cần</h3><p id="metrics-period" class="table-footnote"></p><details><summary>Hiệu quả và mức giảm: CAGR, Drawdown, Sharpe, Sortino, Calmar</summary><div class="table-scroll"><table class="explain-table"><thead><tr><th>Chỉ số</th><th>Kết quả</th><th>Cách đọc / điều kiện</th></tr></thead><tbody id="performance-metrics"></tbody></table></div></details><details><summary>Ngày xấu và hình dạng return: VaR, CVaR, skewness, kurtosis</summary><div class="table-scroll"><table class="explain-table"><thead><tr><th>Chỉ số</th><th>Kết quả</th><th>Cách đọc / giới hạn</th></tr></thead><tbody id="risk-metrics"></tbody></table></div></details><details><summary>So với benchmark: Beta, Alpha, tracking error, information ratio</summary><div class="table-scroll"><table class="explain-table"><thead><tr><th>Chỉ số</th><th>Kết quả</th><th>Cách đọc / điều kiện</th></tr></thead><tbody id="benchmark-metrics"></tbody></table></div></details><details><summary>Các tài sản có thường đi cùng chiều không?</summary><p>Correlation từ −1 đến +1, trên return giá quy đổi VND cùng ngày. Thiếu biến động hiện “—”; tương quan lịch sử không cố định qua thời gian.</p><div class="table-scroll"><table id="correlation-table"></table></div></details></section>
             <section id="fx-panel" class="table-panel" aria-labelledby="fx-title"><h3 id="fx-title">Giá tài sản và tỷ giá đóng góp thế nào?</h3><p id="fx-period" class="table-footnote"></p><div class="table-scroll"><table><thead><tr><th>Mã / đồng niêm yết</th><th>Giá tài sản</th><th>Tỷ giá USD/VND</th><th>Tương tác giá × tỷ giá</th><th>Tổng đóng góp</th></tr></thead><tbody id="fx-rows"></tbody><tfoot id="fx-total"></tfoot></table></div><p class="table-footnote">Đơn vị: điểm phần trăm của return danh mục. Return quy đổi = return giá + return tỷ giá + tích của hai return. Phân rã theo đồng niêm yết, không theo đồng bạn nhập vốn; cổ phiếu niêm yết VND không có phần quy đổi USD/VND. ETF USD không được phân rã tỷ giá của các tài sản bên trong quỹ.</p><h4>Phân rã rủi ro toàn kỳ</h4><div id="fx-risk" class="fx-risk-grid"></div><p class="table-footnote">Đóng góp vào volatility năm hóa, tính bằng covariance của từng thành phần với return danh mục, với tỷ trọng đầu kỳ cố định và 252 phiên/năm như chỉ số risk hiện có. Các phần cộng lại bằng volatility danh mục; giá trị âm biểu thị hiệu ứng giảm rủi ro. Không cộng các volatility riêng lẻ.</p></section>
             <section class="decision-panel" aria-labelledby="decision-title"><div><h3 id="decision-title">Ghi lại quyết định của bạn</h3><p>Chọn giữ nguyên hoặc cân nhắc tái phân bổ và ghi lý do. Đây là nhật ký quyết định, không phải lệnh giao dịch hay nút tối ưu danh mục.</p><p id="decision-account-note" class="table-footnote">Đang kiểm tra kết nối tài khoản…</p><a class="text-button" href="/account">Mở tài khoản & nhật ký →</a></div><form id="decision-form"><fieldset><legend>Lựa chọn</legend><label><input type="radio" name="decision" value="Giữ nguyên" required /> Giữ nguyên</label><label><input type="radio" name="decision" value="Cân nhắc tái phân bổ" /> Cân nhắc tái phân bổ</label></fieldset><label for="decision-reason">Lý do ngắn gọn</label><textarea id="decision-reason" required minlength="8" maxlength="2000" placeholder="Ví dụ: Tôi muốn xem thêm dữ liệu dài hạn trước khi cân nhắc điều chỉnh."></textarea><button class="secondary-button" type="submit" disabled>Lưu quyết định vào tài khoản</button><p id="decision-feedback" role="status" aria-live="polite"></p></form></section>
           </div>
         </section>
 
+        <section id="optimize-page" class="work-section" hidden aria-labelledby="optimize-title">
+          <div class="section-heading"><h1 id="optimize-title">Tối ưu hóa phân bổ</h1><p>Thử Sharpe cao hơn hoặc volatility thấp hơn trên cùng lịch sử. Không tạo lệnh giao dịch, không thay đổi danh mục của bạn.</p><a href="/analysis" class="text-button">Về báo cáo hiện tại</a></div>
+          <p id="optimize-empty" class="empty-state">Phân tích danh mục trước để có cùng dữ liệu so sánh. <a href="/portfolio">Nhập danh mục</a>.</p>
+          <form id="optimization-form" class="table-panel"><div class="form-grid"><label>Mục tiêu<select id="optimization-objective"><option value="minimum-variance">Volatility thấp nhất ước tính</option><option value="maximum-sharpe">Sharpe cao nhất ước tính</option></select></label><label>Giới hạn mỗi mã (%)<input id="asset-cap" type="number" min="0" max="100" step="any" value="80" required /></label><label>Giới hạn commodity proxy (%)<input id="commodity-cap" type="number" min="0" max="100" step="any" value="60" required /></label></div><p>Long-only, tổng tỷ trọng 100%, không đòn bẩy. Sharpe cần lãi suất phi rủi ro đã nhập ở Danh mục; không ngầm dùng 0%.</p><button id="optimize-button" class="primary-button" type="submit">Tính phương án</button><p id="optimize-error" class="form-error" role="alert"></p></form>
+          <section id="optimize-result" class="comparison-panel" hidden><h2>Hiện tại và phương án tham khảo</h2><p id="solver-method" class="table-footnote"></p><div class="comparison-layout"><div id="comparison-metrics" class="table-scroll"></div><div id="comparison-weights" class="table-scroll"></div></div><p id="optimize-note" class="table-footnote"></p></section>
+        </section>
+
+        <section id="simulation-page" class="work-section" hidden aria-labelledby="simulation-title">
+          <div class="section-heading"><h1 id="simulation-title">Mô phỏng Monte Carlo</h1><p>Nếu các mẫu biến động cũ lặp lại theo nhiều thứ tự khác nhau, giá trị danh mục có thể trải qua những kịch bản nào?</p><a href="/analysis" class="text-button">Xem lại dữ liệu đầu vào</a></div>
+          <p id="simulation-empty" class="empty-state">Phân tích danh mục trước. Mô phỏng dùng dữ liệu thực vừa tải, không dùng một bộ giá có sẵn. <a href="/portfolio">Nhập danh mục</a>.</p>
+          <form id="simulation-form" class="table-panel"><div class="form-grid"><label>Số phiên tương lai<select id="simulation-horizon"><option value="21">21 phiên · khoảng 1 tháng</option><option value="63">63 phiên · khoảng 3 tháng</option><option value="126">126 phiên · khoảng 6 tháng</option><option value="252" selected>252 phiên · khoảng 1 năm</option><option value="504">504 phiên · khoảng 2 năm</option></select></label><label>Số đường mô phỏng<select id="simulation-paths"><option value="1000">1.000</option><option value="2000" selected>2.000</option><option value="5000">5.000</option></select></label><label>Seed · để tái lập kết quả<input id="simulation-seed" type="number" min="0" max="4294967295" step="1" value="42" required /></label></div><p>Lấy mẫu chung từng block 5 phiên cho mọi tài sản để giữ tương quan và một phần phụ thuộc ngắn hạn. Return đã quy đổi VND, gồm tác động FX. Không phải mô hình phân phối chuẩn hay dự báo giá.</p><div class="form-tools"><button id="simulate-button" class="primary-button" type="submit">Chạy mô phỏng</button><button id="cancel-simulation" class="text-button" type="button" hidden>Hủy mô phỏng</button></div><p id="simulation-error" class="form-error" role="alert"></p></form>
+          <div id="simulation-result" hidden><div class="lead-result"><h2 id="simulation-brief"></h2></div><section class="chart-panel"><h2>Cách đọc các kịch bản</h2><p>Đường giữa: trung vị. Dải đậm: phân vị 25–75%; dải nhạt: 5–95% của mô hình. Không phải khoảng giá trị được bảo đảm hay khoảng tin cậy của dự báo.</p><div id="simulation-chart" class="research-chart"></div><p id="simulation-meta" class="table-footnote"></p><p id="simulation-allocation" class="table-footnote"></p></section><div class="result-grid"><section class="table-panel"><h2>Các mốc cuối kỳ</h2><div class="table-scroll"><table class="explain-table"><thead><tr><th>Mốc</th><th>Giá trị VND</th><th>Cách hiểu</th></tr></thead><tbody id="simulation-percentiles"></tbody></table></div></section><section class="chart-panel"><h2>Giá trị nào xuất hiện nhiều hơn?</h2><p>Mỗi cột là một khoảng giá trị cuối kỳ; cột cao hơn có nhiều đường mô phỏng hơn. Không phải xác suất thị trường đã được kiểm chứng.</p><div id="simulation-histogram" class="research-chart"></div></section></div><section class="table-panel"><h2>Giới hạn quan trọng</h2><p id="simulation-tail"></p><p>Mô hình không tạo được cú sốc chưa có trong lịch sử, không biết thay đổi chính sách hoặc cấu trúc thị trường. Mẫu quá ngắn, mã mới niêm yết và proxy dùng futures có thể làm kết quả thiếu đại diện. 252 phiên/năm chỉ là xấp xỉ cho danh mục nhiều thị trường và crypto. Không gồm phí, thuế, cổ tức hoặc cash flow mới.</p></section></div>
+        </section>
+
         <section id="account-page" class="work-section" aria-labelledby="account-title" hidden>
-          <div class="section-heading"><h2 id="account-title">Nhật ký quyết định của bạn</h2><p>Đăng nhập để lưu lựa chọn, lý do và bản tóm tắt danh mục tại thời điểm ra quyết định.</p></div>
+          <div class="section-heading"><h1 id="account-title">Nhật ký quyết định của bạn</h1><p>Đăng nhập để lưu lựa chọn, lý do và bản tóm tắt danh mục tại thời điểm ra quyết định.</p></div>
           <div class="account-bar"><p id="account-status" role="status" aria-live="polite">Đang kiểm tra kết nối tài khoản…</p><button id="account-login" class="primary-button" type="button" disabled>Đăng nhập với Google</button><button id="account-logout" class="text-button" type="button" hidden>Đăng xuất & xóa dữ liệu trên trình duyệt</button></div>
           <p class="table-footnote">Không yêu cầu quyền Gmail hoặc Drive. Phiên chỉ lưu trong tab hiện tại; mỗi thiết bị đăng nhập riêng. Người dùng khác không được đọc nhật ký của bạn. Quản trị viên database vẫn có quyền quản trị dữ liệu.</p>
           <div class="panel-heading"><h3>Các quyết định đã lưu</h3><button id="refresh-decisions" class="text-button" type="button" disabled>Tải lại</button></div>
@@ -132,12 +145,13 @@
         </section>
 
         <section id="method" class="method-section" aria-labelledby="method-title" hidden>
-          <div class="section-heading"><h2 id="method-title">Phương pháp và nguồn dữ liệu</h2><p>Những thông tin cần có để kiểm tra và giải thích kết quả.</p></div>
+          <div class="section-heading"><h1 id="method-title">Phương pháp và nguồn dữ liệu</h1><p>Những thông tin cần có để kiểm tra và giải thích kết quả.</p></div>
           <div class="method-grid">
             <div><h3>Phép tính chính</h3><p>Mỗi vị thế nhận giá trị đầu kỳ bằng USD hoặc VND. Khoản USD quy đổi theo VND=X tại phiên đầu tiên có đủ giá chung; cộng thành tổng vốn VND và chia để ra tỷ trọng. Mua tại giá phiên này rồi giữ nguyên số lượng. PnL bằng giá trị ngày xem trừ vốn đầu kỳ; benchmark so sánh cùng kỳ có giá.</p></div>
             <div><h3>Nguồn dữ liệu</h3><p>Cổ phiếu và chỉ số VN dùng TradingView qua tvdatafeed: 26 mã phổ biến cập nhật sau phiên mỗi ngày thường, mã ngoài danh sách hoặc cache cũ tải khi phân tích. Instrument quốc tế và tỷ giá VND=X tải từ Yahoo Finance qua yfinance. Đây là giá lịch sử ngày, không phải báo giá real-time.</p></div>
             <div><h3>Phạm vi</h3><p>Danh mục giả định 2–30 vị thế: cổ phiếu/ETF VN, cổ phiếu và quỹ niêm yết USD, commodity proxy, bond ETF, crypto. Tìm kiếm mở qua provider; kết quả tìm được không bảo đảm đủ lịch sử hoặc currency được hỗ trợ. Chưa có giao dịch thực, đòn bẩy, futures/options hay phân rã Brinson.</p></div>
           </div>
+          <div class="method-grid"><div><h3>Hai mục tiêu tối ưu hóa</h3><p>Tab Tối ưu hóa chạy khi bạn yêu cầu: minimum volatility hoặc maximum Sharpe, tổng tỷ trọng 100%, không âm, tuân thủ giới hạn từng mã và commodity. Sharpe cần lãi suất phi rủi ro khai báo. Cùng lịch sử được dùng để chọn và đánh giá nên có thiên lệch in-sample; không bảo đảm hiệu quả tương lai.</p></div><div><h3>Mô phỏng, không phải dự báo</h3><p>Monte Carlo lấy lại các block return lịch sử chung cho mọi mã; bắt đầu từ giá trị và tỷ trọng cuối kỳ, tiếp tục mua và giữ. Dải phân vị và tỷ lệ đường lỗ phụ thuộc mẫu lịch sử, không phải xác suất tương lai đã được kiểm chứng. VaR không phải giới hạn lỗ; CVaR là lỗ trung bình trong đuôi mẫu.</p></div></div>
           <details><summary>Xem giả định đầy đủ</summary><ul id="assumptions-list"><li>Phân tích chỉ dùng dữ liệu lịch sử và không tạo lệnh giao dịch.</li></ul></details>
         </section>
         <footer class="footer"><span>Finfolio · G09</span><a href="../docs/PRODUCT_SCOPE.md">Phạm vi và phương pháp</a></footer>

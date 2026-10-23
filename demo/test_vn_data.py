@@ -45,11 +45,22 @@ class HybridTests(unittest.TestCase):
 
     def test_fresh_snapshot_preserves_actual_timestamp(self):
         cached = entry()
-        with patch("vn_data._snapshot", return_value={"series": {"VIC.VN": cached}}), patch("vn_data.fetch_vn_series") as live:
+        with patch("vn_data._snapshot", return_value={"series": {"VIC.VN": cached}}), patch("vn_data.expected_daily_session", return_value="2026-09-25"), patch("vn_data.fetch_vn_series") as live:
             result, mode = vn_data.get_vn_series("VIC.VN")
         live.assert_not_called()
         self.assertEqual(mode, "daily_snapshot")
         self.assertEqual(result["fetched_at_utc"], cached["fetched_at_utc"])
+
+    def test_recent_download_with_old_session_still_fetches_provider(self):
+        with patch("vn_data._snapshot", return_value={"series": {"VIC.VN": entry()}}), patch("vn_data.expected_daily_session", return_value="2026-09-28"), patch("vn_data.fetch_vn_series", return_value=entry()) as live:
+            _, mode = vn_data.get_vn_series("VIC.VN")
+        self.assertEqual(mode, "on_demand")
+        live.assert_called_once()
+
+    def test_expected_session_before_close_weekend_and_monday(self):
+        from zoneinfo import ZoneInfo
+        for timestamp, expected in [("2026-10-22T14:00:00", "2026-10-21"), ("2026-10-22T16:00:00", "2026-10-22"), ("2026-10-24T16:00:00", "2026-10-23"), ("2026-10-26T09:00:00", "2026-10-23")]:
+            self.assertEqual(vn_data.expected_daily_session(datetime.fromisoformat(timestamp).replace(tzinfo=ZoneInfo('Asia/Ho_Chi_Minh'))), expected)
 
     def test_corrupt_or_stale_snapshot_loads_provider(self):
         for bad in [dict(entry(), fetched_at_utc="2020-01-01T00:00:00+00:00"), dict(entry(), prices=[["invalid", 1]] * 5), dict(entry(), prices=list(reversed(entry()["prices"]))), dict(entry(), source="unknown")]:

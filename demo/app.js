@@ -3,6 +3,11 @@ import { COMMODITIES, normalizeStockSymbol, registerInstruments } from './instru
 import { PERIODS, attributionWindow, groupAttribution, csvCell } from './attribution.mjs';
 import { chartSegments, dateTime, nearestDateIndex, tooltipPosition } from './chart-utils.mjs';
 import { accounts } from './accounts.mjs';
+import { percent, points, signedPercent, vnd, signedVnd, compactVnd, dateLabel } from './format.mjs';
+import { NAVIGATION } from './navigation.mjs';
+import { initResearch } from './research-ui.mjs';
+import { vnToday, rollingRange, shouldRefresh } from './freshness.mjs';
+import { riskReadiness } from './quality.mjs';
 
 const form = document.querySelector('#portfolio-form');
 const holdingsList = document.querySelector('#holdings-list');
@@ -15,6 +20,9 @@ let holdings = [
   { kind: 'commodity', symbol: 'GLD', value: 25000000, inputCurrency: 'VND' },
 ];
 let result = null;
+let analyzing = false, analysisSequence = 0;
+const research = initResearch(() => result);
+document.querySelector('.sidebar-nav').innerHTML = NAVIGATION.map(item => `<a href="${item.path}" class="nav-link">${item.label}</a>`).join('');
 let stockSearch = null;
 let attributionState = {period:'ALL',group:'symbol',unit:'points',sort:'contribution',descending:true};
 try {
@@ -23,21 +31,6 @@ try {
   registerInstruments(await catalogResponse.json());
 } catch { showError('Chưa tải được catalog mở rộng; hãy tải lại trang trước khi chọn instrument quốc tế.'); }
 
-const percent = (value, digits = 2) => `${(value * 100).toFixed(digits)}%`;
-const points = (value) => {
-  const rounded=Number((value*100).toFixed(2));
-  return `${rounded>=0?'+':''}${rounded.toFixed(2)} đ.%`;
-};
-const signedPercent = (value) => `${value >= 0 ? '+' : ''}${percent(value)}`;
-const vnd = (value) => `${new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 0 }).format(Math.round(value))} ₫`;
-const signedVnd = (value) => `${value >= 0 ? '+' : '-'}${vnd(Math.abs(value))}`;
-const compactVnd = (value) => {
-  const absolute = Math.abs(value);
-  if (absolute >= 1e9) return `${(value / 1e9).toFixed(1)} tỷ`;
-  if (absolute >= 1e6) return `${(value / 1e6).toFixed(0)} tr`;
-  return `${(value / 1e3).toFixed(0)} nghìn`;
-};
-const dateLabel = (date) => new Intl.DateTimeFormat('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC' }).format(new Date(`${date}T00:00:00Z`));
 const escapeHtml = (value) => String(value).normalize('NFC').replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
 
 function drawHoldings() {
@@ -127,6 +120,8 @@ function showError(message) {
 }
 
 function invalidateResult() {
+  analysisSequence++;
+  research.reset();
   if (!result) return;
   result = null;
   sessionStorage.removeItem('finfolio-analysis-v2');
@@ -146,7 +141,6 @@ function renderChart(data) {
   const bottom = 43;
   const series = [
     { label: 'Danh mục', values: data.current.valuePath, className: 'line-current' },
-    { label: 'Tham khảo', values: data.reference.valuePath, className: 'line-reference' },
     { label: data.benchmark.label, values: data.benchmark.valuePath, className: 'line-benchmark' },
   ];
   const allValues = series.flatMap((item) => item.values).filter(Number.isFinite);
@@ -169,7 +163,7 @@ function renderChart(data) {
   const xLabels = ticks.map((index) => `<text x="${x(index)}" y="${height - 11}" text-anchor="${index === 0 ? 'start' : index === data.dates.length - 1 ? 'end' : 'middle'}" class="chart-axis-label">${dateLabel(data.dates[index])}</text>`).join('');
   const paths = series.map((item) => chartSegments(item.values, data.dates).map((indices) => `<polyline points="${indices.map((index) => `${x(index)},${y(item.values[index])}`).join(' ')}" class="chart-line ${item.className}"/>`).join('')).join('');
   const area = chartSegments(series[0].values, data.dates).map((indices) => `<polygon points="${x(indices[0])},${y(floor)} ${indices.map((index) => `${x(index)},${y(series[0].values[index])}`).join(' ')} ${x(indices.at(-1))},${y(floor)}" fill="url(#portfolio-area)"/>`).join('');
-  chart.innerHTML = `<div class="chart-frame" tabindex="0" aria-label="Biểu đồ giá trị danh mục theo ngày. Dùng phím mũi tên trái hoặc phải để xem từng phiên."><svg role="img" aria-label="Giá trị danh mục, phương án tham khảo và benchmark theo ngày, đơn vị VND" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none"><defs><linearGradient id="portfolio-area" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="#159566" stop-opacity="0.19"/><stop offset="100%" stop-color="#159566" stop-opacity="0"/></linearGradient></defs>${grid}${xLabels}${area}${paths}<line id="chart-crosshair" y1="${top}" y2="${height - bottom}" class="chart-crosshair" hidden/>${series.map((item, index) => `<circle id="chart-dot-${index}" r="5" class="chart-dot ${item.className}" hidden/>`).join('')}</svg><div id="chart-tooltip" class="chart-tooltip" role="tooltip" hidden></div></div>`;
+  chart.innerHTML = `<div class="chart-frame" tabindex="0" aria-label="Biểu đồ giá trị danh mục theo ngày. Dùng phím mũi tên trái hoặc phải để xem từng phiên."><svg role="img" aria-label="Giá trị danh mục và benchmark theo ngày, đơn vị VND" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none"><defs><linearGradient id="portfolio-area" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" class="area-stop" stop-opacity="0.14"/><stop offset="100%" class="area-stop" stop-opacity="0"/></linearGradient></defs>${grid}${xLabels}${area}${paths}<line id="chart-crosshair" y1="${top}" y2="${height - bottom}" class="chart-crosshair" hidden/>${series.map((item, index) => `<circle id="chart-dot-${index}" r="5" class="chart-dot ${item.className}" hidden/>`).join('')}</svg><div id="chart-tooltip" class="chart-tooltip" role="tooltip" hidden></div></div>`;
   const frame = chart.querySelector('.chart-frame');
   const svg = chart.querySelector('svg');
   const tooltip = chart.querySelector('#chart-tooltip');
@@ -235,15 +229,17 @@ function renderChart(data) {
 }
 
 function renderResult(data, go=true) {
+  research.reset();
   navigate('/analysis',go);
-  const { current, reference, benchmark, symbols } = data;
+  const { current, benchmark, symbols } = data;
+  const quality = riskReadiness(data);
   emptyState.hidden = true;
   resultContent.hidden = false;
-  document.querySelector('#results-subtitle').textContent = `${data.dates[0]} đến ${data.dates.at(-1)} · ${data.observations} phiên danh mục · tải lúc ${new Date(data.fetchedAtUtc).toLocaleString('vi-VN')} · base currency VND`;
+  document.querySelector('#results-subtitle').textContent = `${dateLabel(data.dates[0])} đến ${dateLabel(data.dates.at(-1))} · ${data.observations} phiên danh mục · tải lúc ${new Date(data.fetchedAtUtc).toLocaleString('vi-VN')} · Đồng báo cáo VND`;
   const sourceDetails = Object.entries(data.vnSources || {}).map(([symbol, source]) => `${symbol}: phiên ${source.last_session}, cập nhật ${new Date(source.fetched_at_utc).toLocaleString('vi-VN')} (${source.mode === 'daily_snapshot' ? 'bản cập nhật hằng ngày' : 'tải trực tiếp'})`);
   document.querySelector('#data-sources').textContent = `${sourceDetails.length?'VN: TradingView/tvdatafeed. '+sourceDetails.join('; '):'Không có vị thế VN.'} Quốc tế và FX: Yahoo Finance/yfinance, tải theo request; bỏ ngày UTC đang mở. Currency và phân loại được kiểm tra trước khi phân tích.`;
   const warningBox = document.querySelector('#data-warning');
-  warningBox.textContent = [...(data.benchmarkNotice ? [data.benchmarkNotice] : []), ...data.warnings].join(' ');
+  warningBox.textContent = [...(data.benchmarkNotice ? [data.benchmarkNotice] : []), ...data.warnings, ...(!quality.ready ? [quality.reason] : [])].join(' ');
   warningBox.hidden = !warningBox.textContent;
   const pnl = current.valuePath.at(-1) - data.initialCapital;
   document.querySelector('#lead-headline').textContent = `Danh mục ${pnl >= 0 ? 'tăng' : 'giảm'} ${vnd(Math.abs(pnl))} trong kỳ phân tích.`;
@@ -251,27 +247,26 @@ function renderResult(data, go=true) {
   document.querySelector('#metric-strip').innerHTML = [
     ['Giá trị cuối kỳ', vnd(current.valuePath.at(-1)), 'Danh mục hiện tại'],
     ['PnL kỳ', signedVnd(pnl), signedPercent(current.periodReturn)],
-    ['Volatility ước lượng', percent(current.volatility), 'Annualized, covariance lịch sử'],
+    ['Volatility ước lượng', percent(quality.ready ? current.volatility : null), quality.ready ? 'Annualized, covariance lịch sử' : `Cần ${quality.required} return chung`],
   ].map(([label, value, description]) => `<div class="metric"><span>${label}</span><strong>${value}</strong><small>${description}</small></div>`).join('');
   document.querySelector('#chart-start-value').textContent = `Đầu kỳ: ${vnd(data.initialCapital)}`;
   document.querySelector('#weight-total').textContent = `Tổng vốn đầu kỳ: ${vnd(data.initialCapital)}${data.inputFx ? ' · USD/VND: '+new Intl.NumberFormat('vi-VN').format(data.inputFx) : ''} · ${dateLabel(data.dates[0])}`;
   document.querySelector('#benchmark-legend').textContent = benchmark.label;
   document.querySelector('#benchmark-period').textContent = benchmark.available ? `Benchmark so sánh từ ${dateLabel(benchmark.comparisonStart)} đến ${dateLabel(benchmark.comparisonEnd)}, cùng vốn ${vnd(benchmark.anchorValue)} tại ngày bắt đầu so sánh. Đoạn thiếu giá được để trống.` : 'Benchmark không có đủ dữ liệu; kết quả danh mục vẫn được giữ.';
   renderChart(data);
-  const allocationColors = symbols.map((_,i)=>['#1f8c5c','#84a978','#e2bd54','#5e84a8','#a96b74','#6d79a5','#8d7957','#62a6a4'][i%8]);
-  const cumulative = current.weights.reduce((out, weight, index) => {
+  const allocationColors = symbols.map((_,i)=>getComputedStyle(document.documentElement).getPropertyValue(`--ff-series-${i%7+1}`).trim());
+  const endingWeights = symbols.map((symbol,i)=>current.weights[i]*(data.prices[symbol].at(-1)/data.prices[symbol][0])/current.path.at(-1));
+  const cumulative = endingWeights.reduce((out, weight, index) => {
     const start = index === 0 ? 0 : out[index - 1].end;
     out.push({ start, end: start + weight * 100, color: allocationColors[index] });
     return out;
   }, []);
-  document.querySelector('#allocation-visual').innerHTML = `<div class="allocation-bar" role="img" aria-label="Phân bổ danh mục hiện tại: ${symbols.map((symbol, i) => `${symbol} ${percent(current.weights[i], 0)}`).join(', ')}" style="background:linear-gradient(90deg,${cumulative.map((item) => `${item.color} ${item.start}% ${item.end}%`).join(',')})"></div><div class="allocation-labels">${symbols.map((symbol, i) => `<div><span class="allocation-swatch" style="background:${allocationColors[i]}"></span><span>${symbol}</span><strong>${percent(current.weights[i], 0)}</strong></div>`).join('')}</div>`;
+  document.querySelector('#allocation-visual').innerHTML = `<div class="allocation-bar" role="img" aria-label="Phân bổ cuối kỳ: ${symbols.map((symbol, i) => `${symbol} ${percent(endingWeights[i])}`).join(', ')}" style="background:linear-gradient(90deg,${cumulative.map((item) => `${item.color} ${item.start}% ${item.end}%`).join(',')})"></div><div class="allocation-labels">${symbols.map((symbol, i) => `<div><span class="allocation-swatch" style="background:${allocationColors[i]}"></span><span>${symbol}</span><strong>${percent(current.weights[i])} → ${percent(endingWeights[i])}</strong></div>`).join('')}</div><p class="table-footnote">Đầu kỳ → cuối kỳ; tỷ trọng trôi theo giá, không phải tái cân bằng.</p>`;
   document.querySelector('#allocation-groups').innerHTML = data.groups.map((group) => `<p><span>${escapeHtml(group.className)}</span><strong>${percent(group.weight, 0)} · ${points(group.contribution)} return</strong></p>`).join('');
-  document.querySelector('#contribution-rows').innerHTML = symbols.map((symbol, i) => `<tr><th scope="row">${escapeHtml(symbol)}</th><td>${escapeHtml(data.instruments[symbol].group)}</td><td>${percent(current.weights[i], 0)}</td><td class="${current.contribution[i] >= 0 ? 'positive' : 'negative'}">${points(current.contribution[i])}</td><td>${points(current.riskContribution[i])}</td></tr>`).join('');
-  document.querySelector('#contribution-total').innerHTML = `<tr><th scope="row" colspan="2">Tổng danh mục</th><td>100%</td><td>${points(current.periodReturn)}</td><td>${points(current.volatility)}</td></tr>`;
-  document.querySelector('#comparison-metrics').innerHTML = `<div class="comparison-head"><span>Chỉ số</span><span>Hiện tại</span><span>Tham khảo</span></div><div><span>Return toàn kỳ</span><strong>${signedPercent(current.periodReturn)}</strong><strong>${signedPercent(reference.periodReturn)}</strong></div><div><span>Volatility</span><strong>${percent(current.volatility)}</strong><strong>${percent(reference.volatility)}</strong></div><div><span>So với benchmark (kỳ so sánh)</span><strong>${benchmark.available ? points(benchmark.comparisonPortfolioReturn - benchmark.periodReturn) : 'Chưa đủ dữ liệu'}</strong><strong>${benchmark.available ? points(benchmark.comparisonReferenceReturn - benchmark.periodReturn) : 'Chưa đủ dữ liệu'}</strong></div>`;
-  document.querySelector('#comparison-weights').innerHTML = `<div class="comparison-head"><span>Tỷ trọng</span><span>Hiện tại</span><span>Tham khảo</span></div>${symbols.map((symbol, i) => `<div><span>${symbol}</span><strong>${percent(current.weights[i], 0)}</strong><strong>${percent(reference.weights[i], 0)}</strong></div>`).join('')}`;
+  document.querySelector('#contribution-rows').innerHTML = symbols.map((symbol, i) => `<tr><th scope="row">${escapeHtml(symbol)}</th><td>${escapeHtml(data.instruments[symbol].group)}</td><td>${percent(current.weights[i], 0)}</td><td class="${current.contribution[i] >= 0 ? 'positive' : 'negative'}">${points(current.contribution[i])}</td><td>${points(quality.ready ? current.riskContribution[i] : null)}</td></tr>`).join('');
+  document.querySelector('#contribution-total').innerHTML = `<tr><th scope="row" colspan="2">Tổng danh mục</th><td>100%</td><td>${points(current.periodReturn)}</td><td>${points(quality.ready ? current.volatility : null)}</td></tr>`;
   document.querySelector('#assumptions-list').innerHTML = data.assumptions.map((assumption) => `<li>${escapeHtml(assumption)}</li>`).join('');
-  document.querySelector('#solver-method').textContent=data.optimization.method;
+  research.renderMetrics(data);
   renderAttribution();
   document.querySelector('#decision-feedback').textContent = '';
   document.querySelector('#results').scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
@@ -353,7 +348,7 @@ document.querySelector('#add-holding').addEventListener('click', () => {
   showError('');
   invalidateResult();
 });
-for (const id of ['start-date', 'end-date', 'asset-cap', 'commodity-cap', 'custom-benchmark']) {
+for (const id of ['start-date', 'end-date', 'custom-benchmark', 'risk-free-rate', 'risk-free-source']) {
   document.querySelector(`#${id}`).addEventListener('input', () => {
     showError('');
     invalidateResult();
@@ -366,12 +361,25 @@ document.querySelector('#benchmark').addEventListener('change', (event) => {
 });
 form.addEventListener('submit', async (event) => {
   event.preventDefault();
+  if (analyzing) return;
+  analyzing = true;
+  const sequence = ++analysisSequence;
   const button = document.querySelector('#analyze-button');
   button.disabled = true;
   button.firstChild.textContent = 'Đang phân tích ';
   showError('');
   try {
+    const rateText = document.querySelector('#risk-free-rate').value.trim();
+    const rate = rateText === '' ? null : Number(rateText) / 100;
+    const riskFreeSource = document.querySelector('#risk-free-source').value.trim();
+    if (rate !== null && (!Number.isFinite(rate) || rate <= -1 || rate > 1)) throw new Error('Lãi suất phi rủi ro giả định phải lớn hơn −100% và không quá 100%/năm.');
+    if (rate !== null && riskFreeSource.length < 4) throw new Error('Nêu nguồn hoặc ghi rõ đây là giả định cá nhân cho lãi suất phi rủi ro.');
     if (holdings.some((holding) => !holding.symbol)) throw new Error('Chọn instrument từ danh sách gợi ý trước khi phân tích.');
+    if (document.querySelector('#follow-latest').checked) {
+      const range = rollingRange(document.querySelector('#start-date').value,vnToday());
+      document.querySelector('#start-date').value=range.start;
+      document.querySelector('#end-date').value=range.end;
+    }
     const startDate = document.querySelector('#start-date').value;
     const endDate = document.querySelector('#end-date').value;
     const normalizedHoldings = holdings.map((holding) => ({
@@ -388,8 +396,9 @@ form.addEventListener('submit', async (event) => {
     normalizedHoldings.forEach((holding) => params.append('symbol', holding.symbol.endsWith('.VN') ? holding.symbol : `YF:${holding.symbol}`));
     params.set('benchmark', benchmarkSymbol);
     if (normalizedHoldings.some(h=>h.inputCurrency==='USD')) params.set('input_usd','1');
-    const response = await fetch(`/api/market-data?${params}`, { cache: 'no-store' });
+    const response = await fetch(`/api/market-data?${params}`, { cache: 'no-store', signal: AbortSignal.timeout(65000) });
     const marketData = await response.json();
+    if (sequence !== analysisSequence) throw new Error('Đầu vào đã thay đổi trong lúc tải. Hãy phân tích lại với bản nhập mới.');
     if (!response.ok) throw new Error(marketData.error || 'Không tải được dữ liệu thị trường.');
     registerInstruments(marketData.instruments);
     result = analyzePortfolio(marketData.rows, {
@@ -399,19 +408,26 @@ form.addEventListener('submit', async (event) => {
       benchmarkSymbol: marketData.benchmark || benchmarkSymbol,
       maxAssetPercent: document.querySelector('#asset-cap').value,
       maxCommodityPercent: document.querySelector('#commodity-cap').value,
+      optimize: false,
     });
+    result.riskFreeAnnual = rate;
+    result.riskFreeSource = riskFreeSource;
+    result.inputEndDate = endDate;
+    result.schemaVersion = 3;
     result.fetchedAtUtc = marketData.fetched_at_utc;
     result.vnSources = marketData.vn_sources;
     result.benchmarkNotice = marketData.benchmark_notice;
     result.inputFx = marketData.rows.find(row=>row.symbol==='USDVND'&&row.session_date===result.dates[0])?.close;
     try { sessionStorage.setItem('finfolio-analysis-v2',JSON.stringify(result)); } catch { /* Analysis remains available in this tab. */ }
     renderResult(result);
+    document.querySelector('#session-notice').textContent = 'Vừa tải lại nguồn giá. Ngày cuối của báo cáo là phiên chung thực có, có thể sớm hơn ngày VN do Mỹ/FX chưa đóng phiên.';
     savePortfolio();
   } catch (error) {
     navigate('/portfolio');
     showError(error.message || 'Không thể phân tích dữ liệu.');
     document.querySelector('#portfolio-input').scrollIntoView();
   } finally {
+    analyzing = false;
     button.disabled = false;
     button.firstChild.textContent = 'Phân tích danh mục ';
   }
@@ -459,7 +475,7 @@ function renderFx(window) {
   document.querySelector('#fx-rows').innerHTML=available?window.positions.map(p=>`<tr><th scope="row">${escapeHtml(p.symbol)} · ${escapeHtml(p.currency)}</th><td>${points(p.localContribution)}</td><td>${points(p.fxContribution)}</td><td>${points(p.interactionContribution)}</td><td>${points(p.contribution)}</td></tr>`).join(''):'';
   const sum=field=>window.positions.reduce((total,p)=>total+p[field],0);
   document.querySelector('#fx-total').innerHTML=available?`<tr><th scope="row">Tổng danh mục</th><td>${points(sum('localContribution'))}</td><td>${points(sum('fxContribution'))}</td><td>${points(sum('interactionContribution'))}</td><td>${points(window.periodReturn)}</td></tr>`:'';
-  document.querySelector('#fx-risk').innerHTML=available?[['Giá tài sản',result.fxRisk.local],['Tỷ giá USD/VND',result.fxRisk.fx],['Tương tác',result.fxRisk.interaction],['Tổng volatility',result.current.volatility]].map(([label,value])=>`<div><span>${label}</span><strong>${points(value)}</strong></div>`).join(''):'';
+  document.querySelector('#fx-risk').innerHTML=available&&riskReadiness(result).ready?[['Giá tài sản',result.fxRisk.local],['Tỷ giá USD/VND',result.fxRisk.fx],['Tương tác',result.fxRisk.interaction],['Tổng volatility',result.current.volatility]].map(([label,value])=>`<div><span>${label}</span><strong>${points(value)}</strong></div>`).join(''):`<p>${escapeHtml(riskReadiness(result).reason)}</p>`;
 }
 document.querySelector('#attribution-periods').addEventListener('click',event=>{
   const button=event.target.closest('[data-attr-period]'); if(!button) return;
@@ -479,7 +495,9 @@ document.querySelector('#export-attribution').addEventListener('click',()=>{
   const metric=r=>attributionState.unit==='vnd'?r.pnl:r.contribution*100;
   const table=[['Finfolio hypothetical buy-and-hold; price return, no dividends'],['Period',window.startDate,window.endDate],['Source', 'TradingView/tvdatafeed VN; Yahoo Finance international/FX'],['Grouping',attributionState.group],...(['sector','industry'].includes(attributionState.group)?[['Classification','TradingView Screener current classification; not historical; no ETF look-through'],...window.positions.map(p=>['Classification instrument',p.symbol,p.sector||'',p.industry||'',p.classification_as_of||''])]:[]),['Generated UTC',result.fetchedAtUtc],['Unit',attributionState.unit==='vnd'?'VND':'percentage points'],...multi.map(({w},i)=>[periods[i]+' actual period',w.startDate,w.endDate,w.complete?'available':'insufficient history']),['Instrument / Group','Name','Start weight %','Price return %','Selected contribution',...periods],...rows.map(r=>[r.symbol,r.name,r.weight*100,r.assetReturn*100,metric(r),...multi.map(({w,map})=>w.observations<2||!w.complete?'N/A':metric(map.get(r.symbol)||{pnl:0,contribution:0}))]),['Total','',100,window.periodReturn*100,attributionState.unit==='vnd'?window.pnl:window.periodReturn*100,...multi.map(({w})=>w.observations<2||!w.complete?'N/A':attributionState.unit==='vnd'?w.pnl:w.periodReturn*100)]];
   if(result.fxRisk && window.positions.every(p=>p.fxContribution!==null)) {
-    table.push([],['FX return attribution','Unit: percentage points',window.startDate,window.endDate],['Instrument','Quote currency','Local price','USD/VND','Interaction','Total'],...window.positions.map(p=>[p.symbol,p.currency,p.localContribution*100,p.fxContribution*100,p.interactionContribution*100,p.contribution*100]),[],['FX risk attribution','Unit: annualized volatility percentage points','Fixed initial weights',result.dates[0],result.dates.at(-1)],['Local price','USD/VND','Interaction','Total volatility'],[result.fxRisk.local*100,result.fxRisk.fx*100,result.fxRisk.interaction*100,result.current.volatility*100]);
+    table.push([],['FX return attribution','Unit: percentage points',window.startDate,window.endDate],['Instrument','Quote currency','Local price','USD/VND','Interaction','Total'],...window.positions.map(p=>[p.symbol,p.currency,p.localContribution*100,p.fxContribution*100,p.interactionContribution*100,p.contribution*100]));
+    if (riskReadiness(result).ready) table.push([],['FX risk attribution','Unit: annualized volatility percentage points','Fixed initial weights',result.dates[0],result.dates.at(-1)],['Local price','USD/VND','Interaction','Total volatility'],[result.fxRisk.local*100,result.fxRisk.fx*100,result.fxRisk.interaction*100,result.current.volatility*100]);
+    else table.push(['Risk attribution unavailable',riskReadiness(result).reason]);
   }
   const blob=new Blob(['\ufeff'+table.map(row=>row.map(csvCell).join(',')).join('\r\n')],{type:'text/csv;charset=utf-8'});
   const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`Finfolio-attribution-${window.endDate}.csv`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
@@ -488,7 +506,9 @@ document.querySelector('#print-report').addEventListener('click',()=>window.prin
 function savePortfolio() {
   try {
     const inputs=Object.fromEntries(['start-date','end-date','asset-cap','commodity-cap','benchmark','custom-benchmark'].map(id=>[id,document.querySelector(`#${id}`).value]));
-    localStorage.setItem('finfolio-hypothetical-v2',JSON.stringify({holdings,inputs}));
+    inputs['risk-free-rate'] = document.querySelector('#risk-free-rate').value;
+    inputs['risk-free-source'] = document.querySelector('#risk-free-source').value;
+    localStorage.setItem('finfolio-hypothetical-v2',JSON.stringify({holdings,inputs,followLatest:document.querySelector('#follow-latest').checked}));
     document.querySelector('#portfolio-save-status').textContent='Đã lưu input trên trình duyệt này. Không lưu lịch sử giá hoặc đồng bộ tài khoản.';
   } catch { document.querySelector('#portfolio-save-status').textContent='Trình duyệt không cho phép lưu; bạn vẫn có thể phân tích.'; }
 }
@@ -502,15 +522,16 @@ function loadPortfolio(silent=false) {
     if(saved.holdings.some(h=>!['stock','global','commodity','bond','crypto'].includes(h.kind)||typeof h.symbol!=='string'||!Number.isFinite(Number(h.value))||Number(h.value)<0||Number(h.value)>1e15||!['USD','VND'].includes(h.inputCurrency))) throw new Error();
     holdings=saved.holdings;
     for(const [id,value] of Object.entries(saved.inputs)) {
-      if(['start-date','end-date','asset-cap','commodity-cap','benchmark','custom-benchmark'].includes(id)) document.querySelector(`#${id}`).value=String(value);
+      if(['start-date','end-date','asset-cap','commodity-cap','benchmark','custom-benchmark','risk-free-rate','risk-free-source'].includes(id)) document.querySelector(`#${id}`).value=String(value);
     }
+    document.querySelector('#follow-latest').checked = saved.followLatest === true;
     document.querySelector('#custom-benchmark-wrap').hidden=document.querySelector('#benchmark').value!=='custom';
     drawHoldings();if(!silent) invalidateResult();showError('');
     document.querySelector('#portfolio-save-status').textContent='Đã mở input. Bấm phân tích để tải giá hiện tại.';
   } catch { if(!silent) showError('Chưa có bản lưu hợp lệ trên trình duyệt này.'); }
 }
 document.querySelector('#load-portfolio').addEventListener('click',()=>loadPortfolio());
-const routes = {'/':'.hero','/portfolio':'#portfolio-input','/analysis':'#results','/method':'#method','/account':'#account-page'};
+const routes = Object.fromEntries(NAVIGATION.map(item => [item.path,item.selector]));
 function navigate(path, push=true) {
   if(!routes[path]) path='/';
   for(const [route,selector] of Object.entries(routes)) document.querySelector(selector).hidden=route!==path;
@@ -519,8 +540,9 @@ function navigate(path, push=true) {
     if(link.getAttribute('href')===path) link.setAttribute('aria-current','page'); else link.removeAttribute('aria-current');
   });
   if(push&&location.pathname!==path) history.pushState(null,'',path);
-  document.title=`Finfolio | ${({'/':'Tổng quan','/portfolio':'Danh mục','/analysis':'Phân tích','/method':'Phương pháp','/account':'Tài khoản & quyết định'})[path]}`;
+  document.title=`Finfolio | ${NAVIGATION.find(item=>item.path===path).label}`;
   window.scrollTo(0,0);
+  research.refresh();
 }
 document.addEventListener('click',event=>{
   const link=event.target.closest('a');
@@ -532,7 +554,7 @@ document.addEventListener('click',event=>{
   if(result&&location.pathname==='/analysis') renderChart(result);
 });
 window.addEventListener('popstate',()=>{navigate(location.pathname,false);if(result&&location.pathname==='/analysis') renderChart(result);});
-window.addEventListener('resize',()=>{if(result&&location.pathname==='/analysis') renderChart(result);});
+window.addEventListener('resize',()=>{if(result&&location.pathname==='/analysis') renderChart(result);research.refresh();});
 drawHoldings();
 const now = new Date();
 const endDate = new Date(now);
@@ -545,15 +567,45 @@ loadPortfolio(true);
 navigate(location.pathname,false);
 try {
   const cached=JSON.parse(sessionStorage.getItem('finfolio-analysis-v2'));
-  if(cached?.dates?.length && cached.current?.valuePath && cached.instruments) {
+  if(cached?.dates?.length && cached.current?.valuePath && cached.instruments && cached.returns && cached.riskIndices) {
     registerInstruments(cached.instruments);
     result=cached;
     const path=location.pathname;
     renderResult(result,false);
+    document.querySelector('#session-notice').textContent = `Đang xem kết quả lưu trong tab từ ${new Date(result.fetchedAtUtc).toLocaleString('vi-VN')}, chưa tải giá mới. Kỳ cố định chỉ đổi khi bạn chọn cập nhật đến hôm nay.`;
     navigate(path,false);
   }
 } catch { sessionStorage.removeItem('finfolio-analysis-v2'); }
 if (new URLSearchParams(location.search).has('sample')) form.requestSubmit();
+document.querySelector('#refresh-data').addEventListener('click',()=>{ if (!analyzing) form.requestSubmit(); });
+document.querySelector('#follow-latest').addEventListener('change',()=>{
+  savePortfolio();
+  document.querySelector('#session-notice').textContent=document.querySelector('#follow-latest').checked ? 'Lần phân tích tiếp theo sẽ cập nhật đến hôm nay, dùng phiên chung đã đóng.' : 'Đang giữ khoảng ngày cố định; tải lại dữ liệu không tự đổi khoảng ngày.';
+});
+document.querySelector('#end-date').addEventListener('input',()=>{document.querySelector('#follow-latest').checked=false;savePortfolio();});
+let checkingFreshness=false, lastAutomaticRefresh=0;
+async function checkFreshness() {
+  if (checkingFreshness || document.visibilityState==='hidden') return;
+  checkingFreshness=true;
+  try {
+    const response=await fetch('/api/data-status',{cache:'no-store',signal:AbortSignal.timeout(12000)});
+    if(!response.ok) throw Error('metadata unavailable');
+    const status=await response.json();
+    const sessions=Object.values(status.series || {}).map(s=>s.last_session).filter(Boolean).sort();
+    document.querySelector('#data-freshness').textContent=status.available
+      ? `Snapshot VN: phiên mới nhất ${dateLabel(sessions.at(-1))}; cập nhật ${new Date(status.snapshot_updated_at_utc).toLocaleString('vi-VN')}. Giá ngày đã đóng, không phải real-time; danh mục quốc tế dùng phiên chung thực có.`
+      : 'Chưa kiểm tra được snapshot VN. Khi phân tích, hệ thống sẽ thử tải trực tiếp từ nguồn; không dùng dữ liệu minh họa thay thế.';
+    if(Date.now()-lastAutomaticRefresh>15*60000 && shouldRefresh(result,status,{followLatest:document.querySelector('#follow-latest').checked,analyzing})) {
+      lastAutomaticRefresh=Date.now();
+      form.requestSubmit();
+    }
+  } catch {
+    document.querySelector('#data-freshness').textContent='Chưa xác minh được mốc dữ liệu. Báo cáo đã lưu không được coi là giá mới; dùng “Tải lại dữ liệu” để thử nguồn.';
+  } finally {checkingFreshness=false;}
+}
+void checkFreshness();
+setInterval(checkFreshness,15*60000);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible') void checkFreshness();});
 void accounts(()=>result,()=>{
   localStorage.removeItem('finfolio-hypothetical-v1');
   localStorage.removeItem('finfolio-hypothetical-v2');

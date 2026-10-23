@@ -28,3 +28,42 @@ export function minimumVariance(covariance, commodityMask, assetCap, commodityCa
   }
   return { weights:w, iterations, gap, converged:gap<=scale*1e-7, method:'Constrained minimum variance · conditional gradient' };
 }
+
+// Approximate non-convex Sharpe search, NOT a guarantee of a global optimum.
+// Uses historical daily arithmetic means and the user's explicit risk-free input.
+export function maximumSharpe(covariance, excessMeans, commodityMask, assetCap, commodityCap) {
+  const n = covariance.length;
+  const dot = (a, b) => a.reduce((s, v, i) => s + v * b[i], 0);
+  const multiply = w => covariance.map(row => dot(row, w));
+  function vertex(cost) {
+    const w = Array(n).fill(0); let remaining = 1, commodity = 0;
+    for (const i of Array.from({length:n}, (_, i) => i).sort((a, b) => cost[a] - cost[b])) {
+      const take = Math.max(0, Math.min(assetCap, remaining, commodityMask[i] ? commodityCap - commodity : 1));
+      w[i] = take; remaining -= take; if (commodityMask[i]) commodity += take;
+    }
+    if (remaining > 1e-9) throw Error('Giới hạn tỷ trọng không khả thi với các mã đã chọn.');
+    return w;
+  }
+  const score = w => { const variance = dot(w, multiply(w)); return variance > 1e-18 ? dot(w, excessMeans) / Math.sqrt(variance) : -Infinity; };
+  const minimum = minimumVariance(covariance, commodityMask, assetCap, commodityCap).weights;
+  const starts = [minimum, vertex(excessMeans.map(x => -x)), vertex(Array(n).fill(0))];
+  let best = null;
+  for (const initial of starts) {
+    let w = [...initial], value = score(w), iterations = 0, gap = Infinity;
+    for (; iterations < 2000 && Number.isFinite(value); iterations++) {
+      const cw = multiply(w), sigma = Math.sqrt(dot(w, cw)), numerator = dot(w, excessMeans);
+      const gradient = excessMeans.map((mu, i) => -mu / sigma + numerator * cw[i] / sigma ** 3);
+      const v = vertex(gradient), direction = v.map((x, i) => x - w[i]);
+      gap = -dot(gradient, direction); if (gap < 1e-8) break;
+      let improved = false;
+      for (let step = 1; step >= 1e-9; step *= .5) {
+        const candidate = w.map((x, i) => x + step * direction[i]), next = score(candidate);
+        if (next > value + 1e-12) { w = candidate; value = next; improved = true; break; }
+      }
+      if (!improved) break;
+    }
+    if (!best || value > best.score) best = { weights: w, score: value, iterations, gap, converged: gap < 1e-8 };
+  }
+  if (!Number.isFinite(best.score)) throw Error('Biến động gần 0: Sharpe không xác định; hãy dùng minimum variance.');
+  return { ...best, method: 'Sharpe lịch sử · tìm kiếm conditional gradient xấp xỉ, 3 điểm khởi tạo', globalOptimumGuaranteed: false };
+}

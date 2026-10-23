@@ -12,6 +12,7 @@ Finfolio 2.0 giúp nhà đầu tư cá nhân đã có kiến thức tài chính 
 | Week 4 | [Financial Logic & Expected Results](docs/WEEK4.md) |
 | Week 5 | [MVP Feature, Flow & Implementation Readiness](docs/WEEK5.md) |
 | Week 6 | [Working demo, integration and test evidence](docs/WEEK6.md) |
+| Week 7 | [Final audit, evidence và individual footprint](docs/WEEK7.md) |
 
 ## Team members and roles
 
@@ -27,21 +28,23 @@ Finfolio 2.0 giúp nhà đầu tư cá nhân đã có kiến thức tài chính 
 
 Core MVP hỗ trợ **cổ phiếu và các commodity có chuỗi giá khả dụng từ nguồn dữ liệu được hỗ trợ** trong một flow hoàn chỉnh: nhập danh mục → kiểm tra dữ liệu → phân tích danh mục hiện tại → phân rã return/risk → so sánh benchmark → tối ưu hóa có ràng buộc → so sánh current–optimized → giải thích kết quả để người dùng tự quyết định. Gold và silver là ví dụ, không phải giới hạn universe. Kết quả tối ưu hóa là phương án phân bổ tham khảo, không phải lời khuyên đầu tư.
 
-Các asset class khác và Monte Carlo thuộc final product. Sample data trong [`data/`](data/README.md) chỉ là fixture phục vụ kiểm thử logic, không phải hành trình chính của người dùng và không được dùng để thay thế dữ liệu live khi nguồn lỗi.
+Final bổ sung tab riêng cho **minimum volatility / maximum Sharpe**, Monte Carlo joint block bootstrap và chỉ số có diễn giải: CAGR, drawdown, Sharpe/Sortino, VaR/CVaR, skewness/excess kurtosis, beta/alpha và tracking error. [Phương pháp tối ưu](docs/OPTIMIZATION.md) · [Mô phỏng và chỉ số](docs/FINAL_METHODS.md). Sample data trong [`data/`](data/README.md) chỉ là fixture kiểm thử, không thay thế giá thật khi nguồn lỗi.
 
 ## Finfolio portfolio analytics
 
-[Mở Finfolio](https://g09-finfolio.vercel.app/) · [Mã nguồn](demo/index.html) · [Phạm vi hiện tại](docs/PRODUCT_SCOPE.md). Website host trên Vercel như project SHB. Cổ phiếu/chỉ số VN dùng TradingView qua tvdatafeed; instrument quốc tế và tỷ giá tải qua yfinance khi phân tích. Danh mục giả định nhập giá trị từng tài sản bằng USD/VND, tự suy ra tổng vốn và tỷ trọng; không phải lịch sử giao dịch thật. Workspace tách thành Tổng quan, Danh mục, Phân tích và Phương pháp, mỗi trang có URL riêng. Để chạy local:
+[Mở Finfolio](https://g09-finfolio.vercel.app/) · [Mã nguồn](demo/index.html) · [Phạm vi hiện tại](docs/PRODUCT_SCOPE.md). Website host trên Vercel như project SHB. VN dùng TradingView/tvdatafeed; quốc tế và tỷ giá dùng yfinance. Nhập giá trị giả định đầu kỳ từng tài sản bằng USD/VND, không phải lịch sử giao dịch thật. Workspace tách bảy trang, gồm Tối ưu hóa, Mô phỏng và Nhật ký riêng. Để chạy local:
 
 ```bash
 cd G09-Finfolio
+npm ci
+npm run build
 python3 -m pip install -r demo/requirements.txt
 python3 demo/server.py
 ```
 
 Mở <http://127.0.0.1:8123/portfolio>. Không mở bằng `file://` hoặc `python3 -m http.server`: hai cách đó không có API. Input minh họa: FPT.VN 40 triệu VND, HPG.VN 35 triệu VND, GLD 25 triệu VND, **5 năm gần nhất**, benchmark **VN30 Index**, giới hạn 80% mỗi mã và 60% commodity. Gõ tên công ty/ticker rồi chọn một gợi ý bằng chuột hoặc phím mũi tên và Enter. Chọn giá trị và currency riêng cho mỗi vị thế rồi bấm phân tích. Khoản USD quy đổi bằng tỷ giá tại phiên đầu tiên có đủ giá chung; kết quả hiển thị tổng vốn VND và tỷ trọng tự tính. Mã không có dữ liệu provider sẽ báo lỗi, không tự dùng fixture.
 
-Job [Refresh VN daily prices](.github/workflows/update-vn-data.yml) lên lịch **17:30 giờ Việt Nam, thứ Hai–thứ Sáu**, sau phiên đóng cửa (GitHub Actions có thể chạy trễ). Job tải lại lịch sử để cập nhật cả điều chỉnh chia tách, kiểm tra dữ liệu và lưu snapshot thực trên nhánh `market-data`; code vẫn ở `main`. Danh sách cập nhật gồm 26 mã cổ phiếu/ETF/chỉ số trong [vn_universe.json](demo/vn_universe.json). Mã ngoài danh sách, cache thiếu hoặc quá cũ được tải trực tiếp từ tvdatafeed khi phân tích. UI hiện timestamp riêng và phiên mới nhất của từng mã; job lỗi không giả vờ cập nhật thành công. Các ngày nghỉ không có nến mới. Hiện lấy được dữ liệu không đăng nhập; nếu provider thay đổi, có thể cấu hình GitHub Secrets và biến môi trường Vercel, không commit thông tin đăng nhập.
+Job [Refresh VN daily prices](.github/workflows/update-vn-data.yml) lên lịch **16:17 và 20:47 giờ Việt Nam, thứ Hai–thứ Sáu**; GitHub Actions có thể chạy trễ, không phải SLA. Snapshot thật trên `market-data`, code trên `main`. Có 26 mã trong [universe](demo/vn_universe.json); mã thiếu/cũ tải trực tiếp. Bản cache tải gần đây nhưng thiếu phiên ngày thường kỳ vọng cũng thử provider; chưa có lịch nghỉ lễ sàn. UI phân biệt timestamp tải, phiên VN và phiên chung với quốc tế/FX. Theo dõi ngày mới nhất tự kiểm tra khi mở lại tab và mỗi 15 phút; khoảng lịch sử cố định không tự đổi. Giá ngày đã đóng, không phải realtime. Xem [audit cập nhật](docs/WEEK7.md#dữ-liệu-và-refresh).
 
 Kiểm tra logic tự động:
 
@@ -50,6 +53,14 @@ node --test demo/*.test.mjs
 python3 -m unittest discover -s demo -p 'test_*.py'
 ```
 
-Danh mục hỗ trợ 2–30 vị thế: cổ phiếu/ETF VN, cổ phiếu quốc tế và quỹ/ETF niêm yết USD, commodity proxy, bond ETF và crypto. Catalog gợi ý có 45 instrument quốc tế, gồm 23 commodity proxy; tìm kiếm Yahoo có thể trả thêm mã ngoài catalog, được xác minh loại/currency khi phân tích. Không khẳng định bao phủ toàn thị trường hay mọi commodity. VN dùng tvdatafeed; ETF proxy không phải vị thế spot/futures trực tiếp, bond ETF không phải trái phiếu riêng lẻ. Chart giữ vốn đầu kỳ VND, tooltip X/Y và xử lý dữ liệu khuyết. Bảng attribution có lookback, grouping, sorting, đơn vị điểm %/VND, CSV mở bằng Excel, in/lưu PDF; bộ chọn lookback chỉ đổi attribution, chart/risk vẫn là toàn kỳ nhập. Tỷ trọng đầu mỗi lookback được tính từ giá trị vị thế tại ngày đó. Optimizer dùng conditional gradient, không vét cạn lưới 1%. Input có thể lưu cục bộ trên trình duyệt, không có account/cloud sync. Return dựa trên giá, chưa gồm tái đầu tư cổ tức. [Bằng chứng Week 6 lịch sử](docs/WEEK6.md).
+Danh mục hỗ trợ 2–30 vị thế: cổ phiếu/ETF VN, cổ phiếu quốc tế và quỹ/ETF niêm yết USD, commodity proxy, bond ETF và crypto. Catalog có 45 instrument quốc tế, gồm 23 commodity proxy; tìm kiếm Yahoo có thể trả thêm mã, được xác minh loại/currency khi phân tích. Không khẳng định bao phủ toàn thị trường. ETF proxy không phải spot/futures trực tiếp; bond ETF không phải trái phiếu riêng lẻ. Chart giữ vốn đầu kỳ VND, tooltip X/Y và dữ liệu khuyết. Attribution có lookback, grouping (cả Sector/Industry), sorting, đơn vị điểm %/VND, CSV và in/lưu PDF. Lookback chỉ đổi attribution, chart/risk vẫn toàn kỳ nhập; tỷ trọng được tính lại ở đầu lookback, không tự rebalance. Optimizer dùng conditional gradient; account lưu decision journal riêng, không tự cloud-sync portfolio. Return chưa tái đầu tư cổ tức. [Week 6 lịch sử](docs/WEEK6.md).
 
-Production: <https://g09-finfolio.vercel.app/>. Hiện project Vercel chưa kết nối GitHub org để tự deploy khi push; sau khi thay đổi code, người có quyền Vercel chạy `vercel deploy --prod` tại thư mục repo hoặc cấp quyền GitHub App của Vercel cho repo `FTU-Legacy-63/G09`.
+## Final navigation, accounts và limitations
+
+Trạng thái final mới nhất: bảy trang `/`, `/portfolio`, `/analysis`, `/optimize`, `/simulation`, `/method`, `/account`. Tab tối ưu hóa chạy theo yêu cầu, không tự chạy khi phân tích. Google/Supabase lưu nhật ký quyết định theo tài khoản; input portfolio chỉ lưu cục bộ, không tự đồng bộ thành portfolio cloud. [Cấu hình tài khoản](docs/ACCOUNT_SETUP.md). Mô tả Week 6 và các đoạn baseline trước đó là lịch sử, không phải giới hạn final hiện tại.
+
+Annualized volatility mua và giữ cần 60 return; Euler risk attribution và optimizer cần ít nhất `max(120, 10N)` return chung. Không đủ mẫu thì vẫn xem allocation/period return, phần rủi ro hiển thị “—” và optimizer báo lý do. Giá ngày không đồng bộ giờ đóng giữa thị trường; source có thể lỗi/rate-limit; không bao phủ mọi mã. Không cổ tức/phí/thuế, không Brinson đầy đủ, không dự báo hoặc giao dịch tự động. Max-Sharpe xấp xỉ/in-sample; Monte Carlo không bảo đảm tương lai. [Toàn bộ giả định](docs/FINAL_METHODS.md).
+
+[Contribution map và Individual Footprint](docs/individual/README.md): phân công đã xác nhận; từng thành viên phải tự xác nhận việc đã làm và khả năng trình bày, không suy tác giả từ tài khoản upload. [Final readiness, bug status và backup](docs/WEEK7.md). Release/tag sẽ trỏ đúng commit đã deploy và được ghi ở audit.
+
+Production: <https://g09-finfolio.vercel.app/>. GitHub org chưa tự deploy qua Vercel App; chạy `vercel deploy --prod` bằng quyền Vercel hiện hữu, không coi push GitHub là deploy thành công.

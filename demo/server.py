@@ -21,6 +21,7 @@ if __package__:
     from .symbol_search import search_instruments
     from .classification import company_classifications
     from .account_config import account_config
+    from .data_status import data_status
 else:
     from symbol_search import search_stocks
     from vn_data import get_vn_series
@@ -28,6 +29,7 @@ else:
     from symbol_search import search_instruments
     from classification import company_classifications
     from account_config import account_config
+    from data_status import data_status
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -274,6 +276,9 @@ class Handler(SimpleHTTPRequestHandler):
         if url.path == "/api/account-config":
             self.send_json(200, account_config())
             return
+        if url.path == "/api/data-status":
+            self.send_json(200, data_status())
+            return
         if url.path == "/api/search-symbols":
             try:
                 params = parse_qs(url.query)
@@ -284,7 +289,7 @@ class Handler(SimpleHTTPRequestHandler):
                 self.send_json(502, {"error": str(exc)})
             return
         if url.path != "/api/market-data":
-            if url.path in {"/", "/portfolio", "/analysis", "/method", "/account"}:
+            if url.path in {"/", "/portfolio", "/analysis", "/optimize", "/simulation", "/method", "/account"}:
                 self.path = "/demo/index.html"
             return super().do_GET()
         query = parse_qs(url.query)

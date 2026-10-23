@@ -1,0 +1,10 @@
+:root {
+  --ff-ink:#10261c;--ff-forest:#1f5a3f;--ff-lime:#d5f06a;--ff-paper:#f5f6f1;
+  --ff-surface:#fff;--ff-surface-soft:#fafbf8;--ff-line:#e1e5dc;--ff-muted:#3d4f45;--ff-subtle:#5b6b62;
+  --ff-sage:#e4ebdf;--ff-positive:#1b6b45;--ff-negative:#a8461e;--ff-reference:#7c8b82;
+  --ff-series-1:#1f5a3f;--ff-series-2:#8db89a;--ff-series-3:#c9a43a;--ff-series-4:#5e8c6e;
+  --ff-series-5:#3d6b8c;--ff-series-6:#a7c76b;--ff-series-7:#b07a4f;
+  --ff-font-ui:"Be Vietnam Pro","Noto Sans Variable",system-ui,sans-serif;
+  --ff-font-display:"Fraunces","Noto Serif Variable",Georgia,serif;
+  --ff-container:1280px;--ff-gutter:32px;--ff-radius:20px;--ff-control:44px;
+}

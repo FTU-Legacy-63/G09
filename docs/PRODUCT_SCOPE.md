@@ -1,6 +1,6 @@
 # Finfolio: hypothetical portfolio analytics
 
-Cập nhật 05/10/2026 theo lựa chọn của nhóm. Target user là nhà đầu tư cá nhân đã có hiểu biết tài chính, muốn so sánh đóng góp và rủi ro giữa các loại tài sản.
+Cập nhật final 23/10/2026 theo lựa chọn của nhóm. Target user là nhà đầu tư cá nhân đã có hiểu biết tài chính, muốn so sánh đóng góp và rủi ro giữa các loại tài sản. [Week 7 audit](WEEK7.md) là trạng thái mới; mục Verification cũ bên dưới là lịch sử.
 
 ## Mô hình danh mục
 
@@ -26,18 +26,19 @@ Input: giá trị đầu kỳ của từng vị thế, chọn USD hoặc VND ri�
 - Lookback: suy ra quantity từ input gốc, tính position value tại ngày bắt đầu kỳ chọn, lấy tỷ trọng lúc đó nhân return kỳ chọn. Tổng PnL contribution bằng chênh lệch giá trị danh mục của kỳ chọn. Không giả định tái cân bằng khi bấm 1M/3M/6M/YTD/1Y/5Y.
 - Grouping: instrument, asset class, **Sector**, **Industry**, thị trường/commodity type hoặc currency niêm yết. Sector/Industry lấy trực tiếp từ TradingView Screener theo listing VN đã xác định sàn; cổ phiếu USD tra listing Mỹ, không gán khi listing mâu thuẫn. Đây là phân loại doanh nghiệp hiện tại, có nguồn/timestamp, không phải mapping point-in-time tại từng lookback hoặc GICS được tự suy diễn. Cổ phiếu thiếu metadata nằm trong “Chưa có phân loại”; ETF/quỹ, commodity và crypto nằm trong “Không áp dụng” theo asset class, không look-through holdings. Các nhóm vẫn cộng đủ toàn bộ contribution/weight/PnL. Metadata lỗi không làm mất kết quả phân tích giá. Currency grouping là phân nhóm contribution đã quy về VND, **không phải phân rã FX effect**.
 - Risk: Euler volatility contribution trên historical covariance và tỷ trọng input. Đây là risk của một allocation cố định theo dữ liệu lịch sử, không phải realized volatility của value path buy-and-hold với weights trôi. Annualization 252 phiên/năm là xấp xỉ, đặc biệt với crypto/đa thị trường. Giữ cảnh báo sample nhỏ/gap dài.
-- Optimizer: conditional gradient trên capped long-only simplex, per-asset cap và tổng commodity-proxy cap. Có giới hạn 4.000 vòng lặp, gap và trạng thái hội tụ; kết quả xấp xỉ không được gọi là danh mục tốt nhất hay khuyến nghị mua/bán.
+- Optimizer ở tab riêng, có **minimum volatility** (tương đương minimum variance) và **maximum Sharpe** với lãi suất phi rủi ro khai báo. Capped long-only simplex, per-asset cap và tổng commodity-proxy cap. Báo gap/trạng thái hội tụ; Max-Sharpe xấp xỉ với ba điểm khởi tạo không bảo đảm tối ưu toàn cục. Không tự chạy trong phân tích hoặc áp dụng vào input. [Phương pháp](OPTIMIZATION.md).
+- Metrics mở rộng và Monte Carlo: [công thức, cách đọc và giới hạn](FINAL_METHODS.md). Mô phỏng tiếp tục từ giá trị/tỷ trọng cuối kỳ, không từ vốn đầu kỳ hay một danh mục tự tối ưu.
 - Relative performance: portfolio minus benchmark trên cùng kỳ overlap. Chưa có constituent weights/returns lịch sử để làm Brinson allocation/selection/interaction.
 
 ## User flow và xuất báo cáo
 
 Tìm/chọn instrument → nhập giá trị và USD/VND từng vị thế, kỳ, benchmark → xác minh metadata/giá/currency → căn chỉnh ngày chung holdings/FX → quy đổi vốn và tính weights → portfolio value/PnL → attribution heatmap/table → risk và minimum-variance scenario → ghi nhận quyết định.
 
-Workspace có bốn URL riêng: `/` tổng quan, `/portfolio` nhập danh mục, `/analysis` kết quả, `/method` phương pháp. Không hiển thị tất cả phần trên cùng một trang. Hỗ trợ Back/Forward, tải trực tiếp URL và điều hướng mobile.
+Workspace có bảy URL riêng: `/`, `/portfolio`, `/analysis`, `/optimize`, `/simulation`, `/method`, `/account`. Hỗ trợ Back/Forward, tải trực tiếp URL và điều hướng mobile. Người dùng không bắt buộc tối ưu hay mô phỏng để có báo cáo phân tích.
 
 Lookback chỉ điều khiển bảng/heatmap attribution; chart PnL và risk vẫn dùng toàn kỳ đã nhập, được ghi rõ trên màn hình. Cột đa kỳ thiếu lịch sử hiện N/A, không trình bày vài ngày dữ liệu thành return 5 năm; kỳ chọn bị rút gọn được cảnh báo. Đổi đơn vị VND/điểm %, sort và grouping cập nhật bảng/CSV. CSV có ngày thực của từng lookback, nguồn, đơn vị, tổng; khi nhóm Sector/Industry có thêm classification từng mã và timestamp; có bảo vệ spreadsheet formula injection. PDF dùng chức năng in của trình duyệt, không phải native Excel `.xlsx` hay PDF generator server.
 
-Input lưu trong localStorage khi người dùng lưu/phân tích/chuyển trang; bản lưu vốn + weights cũ chuyển thành giá trị VND. Kết quả gần nhất lưu sessionStorage trong tab để chuyển trang/reload không mất kết quả, kèm timestamp; đây không phải lần fetch giá mới. Bấm phân tích luôn tải lại dữ liệu. Không cloud sync và không account. Những notes Week 1–6 là evidence theo giai đoạn, không bị viết lại thành claim đã có toàn bộ final roadmap.
+Input lưu localStorage; kết quả gần nhất lưu sessionStorage trong tab, kèm timestamp, không giả là lần fetch mới. Theo dõi ngày mới nhất kiểm tra mỗi 15 phút/khi trở lại tab, refresh khi có phiên mới hoặc dữ liệu đã quá 6 giờ; historical range cố định không tự dịch ngày. Nhật ký quyết định có integration Google/Supabase hiện hữu, xem [setup](ACCOUNT_SETUP.md); audit final này không thay cấu hình auth và chưa đăng nhập lại bằng tài khoản người dùng. Input không tự cloud-sync thành portfolio. Weeks 1–6 vẫn là evidence theo giai đoạn.
 
 ## Verification
 

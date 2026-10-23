@@ -1,5 +1,6 @@
 import { COMMODITIES, benchmarkFor, instrumentFor, normalizeInstrumentSymbol } from './instruments.mjs';
-import { minimumVariance } from './optimizer.mjs';
+import { minimumVariance, maximumSharpe } from './optimizer.mjs';
+import { riskReadiness } from './quality.mjs';
 
 export const BENCHMARK = { symbol: 'GLD', label: 'Vàng (GLD ETF proxy, VND)' };
 
@@ -87,7 +88,7 @@ export function analyzePortfolio(rows, input) {
   if (![assetCap, commodityCap].every((cap) => Number.isFinite(cap) && cap >= 0 && cap <= 1)) {
     throw new Error('Giới hạn tỷ trọng phải nằm trong khoảng 0% đến 100%.');
   }
-  if (assetCap * symbols.length < 1 - 1e-9) {
+  if (input.optimize !== false && assetCap * symbols.length < 1 - 1e-9) {
     throw new Error('Giới hạn mỗi mã quá thấp để tổng tỷ trọng đạt 100%.');
   }
 
@@ -148,7 +149,9 @@ export function analyzePortfolio(rows, input) {
   const dailyPortfolio = riskIndices.map((_, j) => componentNames.reduce((sum, name) => sum + componentSeries[name][j], 0));
   const dailySigma = Math.sqrt(current.dailyVariance);
   const fxRisk = Object.fromEntries(componentNames.map(name => [name, dailySigma === 0 ? 0 : sampleCovariance(componentSeries[name], dailyPortfolio) / dailySigma * Math.sqrt(252)]));
-  const optimization = minimumVariance(covariance, symbols.map(s=>instruments[s].className==='Commodity proxy'), assetCap, commodityCap, currentWeights);
+  // Legacy callers retain the optional comparison; the final UI explicitly sets
+  // optimize:false and runs scenarios only from the separate optimization page.
+  const optimization = input.optimize === false ? { weights: [...currentWeights], converged: true, method: 'Chưa chạy tối ưu hóa', skipped: true } : minimumVariance(covariance, symbols.map(s=>instruments[s].className==='Commodity proxy'), assetCap, commodityCap, currentWeights);
   const referenceWeights = optimization.weights;
   const reference = portfolioResult(symbols, referenceWeights, prices, covariance, capital);
   const benchmarkIndices = dates.map((_, index) => index).filter((index) => prices[selectedBenchmark.symbol][index] !== null);
@@ -178,6 +181,9 @@ export function analyzePortfolio(rows, input) {
     instruments,
     initialCapital: capital,
     prices,
+    covariance,
+    returns,
+    riskIndices,
     localPrices,
     fxRates,
     fxRisk,
@@ -196,11 +202,35 @@ export function analyzePortfolio(rows, input) {
       'Giá USD được quy đổi theo USD/VND cùng ngày; benchmark ETF tại Việt Nam dùng giá VND.',
       'Giá trị đầu kỳ được phân bổ theo tỷ trọng và giả định mua tại giá close đầu tiên; không phải lịch sử giao dịch thực tế.',
       'Period return giả định mua và giữ với tỷ trọng đầu kỳ; volatility là ước lượng từ covariance và tỷ trọng đầu kỳ.',
-      'Reference allocation ước lượng minimum variance bằng conditional gradient, long-only, cùng dữ liệu và giới hạn đã chọn; không bảo đảm nghiệm tối ưu tuyệt đối.',
+      input.optimize === false ? 'Phân tích không tự tối ưu hóa. Tab Tối ưu hóa riêng có minimum volatility hoặc maximum Sharpe với lãi suất phi rủi ro khai báo; long-only, giới hạn tỷ trọng, cùng dữ liệu in-sample. Không tạo lệnh giao dịch.' : 'Reference allocation ước lượng minimum variance bằng conditional gradient, long-only, cùng dữ liệu và giới hạn đã chọn; không bảo đảm nghiệm tối ưu tuyệt đối.',
       'VN dùng phiên ngày đã đóng từ TradingView/tvdatafeed, cập nhật hằng ngày hoặc tải trực tiếp khi cache thiếu/cũ; quốc tế và FX tải qua yfinance, bỏ ngày UTC đang mở. Không phải báo giá real-time.',
       'Dùng các ngày chung có đủ giá của holdings và FX, theo nhãn ngày của provider, không đồng bộ giờ đóng cửa giữa các thị trường. Annualization 252 phiên/năm là xấp xỉ, kể cả khi có crypto.',
       'Commodity proxy có thể nắm giữ vật chất hoặc hợp đồng futures; phí quỹ và roll effects nằm trong giá proxy. Không coi return proxy là return giá spot.',
       'Chuỗi giá lịch sử không bảo đảm hiệu quả trong tương lai; không dùng kết quả làm lời khuyên đầu tư.',
     ],
   };
+}
+
+export function allocationScenario(data, { maxAssetPercent = 80, maxCommodityPercent = 60, objective = 'minimum-variance', riskFreeAnnual = null, manualWeights = null } = {}) {
+  if (!data.covariance || !data.returns) throw Error('Hãy phân tích lại để tải dữ liệu cho tab tối ưu hóa.');
+  if (objective === 'maximum-sharpe' && (riskFreeAnnual === null || !Number.isFinite(riskFreeAnnual) || riskFreeAnnual <= -1 || riskFreeAnnual > 1)) throw Error('Nhập giả định lãi suất phi rủi ro hợp lệ trước khi chạy Max-Sharpe.');
+  const quality = riskReadiness(data);
+  if (!quality.ready) throw Error(quality.reason);
+  const assetCap = Number(maxAssetPercent) / 100, commodityCap = Number(maxCommodityPercent) / 100;
+  if (![assetCap, commodityCap].every(v => Number.isFinite(v) && v >= 0 && v <= 1)) throw Error('Giới hạn tỷ trọng phải từ 0% đến 100%.');
+  const mask = data.symbols.map(s => data.instruments[s].className === 'Commodity proxy');
+  let optimization;
+  if (manualWeights) {
+    if (manualWeights.length !== data.symbols.length || manualWeights.some(v => !Number.isFinite(v) || v < 0 || v > assetCap + 1e-9) || Math.abs(manualWeights.reduce((a, b) => a + b, 0) - 1) > 1e-8 || manualWeights.reduce((sum, w, i) => sum + (mask[i] ? w : 0), 0) > commodityCap + 1e-9) throw Error('Tỷ trọng thủ công phải cộng đúng 100%, không âm và không vượt giới hạn.');
+    optimization = { weights: [...manualWeights], converged: true, method: 'Phương án do người dùng nhập', iterations: 0, gap: 0 };
+  } else if (objective === 'maximum-sharpe') {
+    if (riskFreeAnnual === null || !Number.isFinite(riskFreeAnnual) || riskFreeAnnual <= -1 || riskFreeAnnual > 1) throw Error('Nhập giả định lãi suất phi rủi ro hợp lệ trước khi chạy Max-Sharpe.');
+    const rf = (1 + riskFreeAnnual) ** (1 / 252) - 1;
+    const means = data.symbols.map(s => data.returns[s].reduce((a, b) => a + b, 0) / data.returns[s].length - rf);
+    optimization = maximumSharpe(data.covariance, means, mask, assetCap, commodityCap);
+  } else if (objective === 'minimum-variance') {
+    optimization = minimumVariance(data.covariance, mask, assetCap, commodityCap, data.current.weights);
+  } else throw Error('Mục tiêu tối ưu hóa không hợp lệ.');
+  const reference = portfolioResult(data.symbols, optimization.weights, data.prices, data.covariance, data.initialCapital);
+  return { ...reference, weights: optimization.weights, optimization, objective, riskFreeAnnual };
 }
