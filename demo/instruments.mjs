@@ -1,9 +1,9 @@
 export const COMMODITIES = {
-  GLD: { name: 'Vàng', className: 'Commodity proxy', group: 'Gold', currency: 'USD', detail: 'GLD ETF proxy' },
-  SLV: { name: 'Bạc', className: 'Commodity proxy', group: 'Silver', currency: 'USD', detail: 'SLV ETF proxy' },
-  USO: { name: 'Dầu thô', className: 'Commodity proxy', group: 'Oil', currency: 'USD', detail: 'USO ETF proxy' },
-  CPER: { name: 'Đồng', className: 'Commodity proxy', group: 'Copper', currency: 'USD', detail: 'CPER ETF proxy' },
-  DBA: { name: 'Nông sản', className: 'Commodity proxy', group: 'Agriculture', currency: 'USD', detail: 'DBA ETF proxy' },
+  GLD: { name: 'Vàng', className: 'Commodity proxy', group: 'Gold', sector: 'Kim loại quý (Precious Metals)', industry: 'Kim loại tiền tệ', currency: 'USD', detail: 'GLD ETF proxy' },
+  SLV: { name: 'Bạc', className: 'Commodity proxy', group: 'Silver', sector: 'Kim loại quý (Precious Metals)', industry: 'Kim loại tiền tệ', currency: 'USD', detail: 'SLV ETF proxy' },
+  USO: { name: 'Dầu thô', className: 'Commodity proxy', group: 'Oil', sector: 'Năng lượng (Energy)', industry: 'Năng lượng truyền thống', currency: 'USD', detail: 'USO ETF proxy' },
+  CPER: { name: 'Đồng', className: 'Commodity proxy', group: 'Copper', sector: 'Kim loại cơ bản (Industrial/Base Metals)', industry: 'Kim loại xây dựng & hạ tầng', currency: 'USD', detail: 'CPER ETF proxy' },
+  DBA: { name: 'Nông sản', className: 'Commodity proxy', group: 'Agriculture', sector: 'Nông sản (Agriculture/Grains)', industry: 'Rổ nông sản', currency: 'USD', detail: 'DBA ETF proxy' },
 };
 
 export const BENCHMARKS = {

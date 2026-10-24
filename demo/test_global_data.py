@@ -6,6 +6,21 @@ from server import fetch_market_data
 import pandas as pd
 
 class GlobalTests(unittest.TestCase):
+    def test_all_curated_commodity_proxies_have_custom_sector_and_industry(self):
+        commodities = {
+            symbol: info for symbol, info in global_data.CATALOG.items()
+            if info.get('className') == 'Commodity proxy'
+        }
+        self.assertGreaterEqual(len(commodities), 20)
+        for symbol, info in commodities.items():
+            with self.subTest(symbol=symbol):
+                self.assertTrue(info.get('sector'))
+                self.assertTrue(info.get('industry'))
+        self.assertEqual(commodities['GLD']['industry'], 'Kim loại tiền tệ')
+        self.assertEqual(commodities['USO']['sector'], 'Năng lượng (Energy)')
+        self.assertEqual(commodities['CPER']['industry'], 'Kim loại xây dựng & hạ tầng')
+        self.assertEqual(commodities['CORN']['industry'], 'Ngũ cốc & hạt dầu')
+
     def test_usd_amount_requires_fx_even_when_all_holdings_and_benchmark_are_vn(self):
         close=pd.DataFrame({'VND=X':[26000,26010]},index=pd.to_datetime(['2026-09-24','2026-09-25']))
         vn={'prices':[['2026-09-24',10],['2026-09-25',11]], 'source':'TradingView', 'exchange':'HOSE','fetched_at_utc':'2026-09-25T10:00:00Z'}

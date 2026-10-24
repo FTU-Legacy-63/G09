@@ -3,15 +3,16 @@ import assert from 'node:assert/strict';
 import {attributionWindow,groupAttribution,periodStart,csvCell} from './attribution.mjs';
 import {minimumVariance} from './optimizer.mjs';
 const data={dates:['2026-01-01','2026-08-31','2026-09-01','2026-09-30'],initialCapital:100,current:{weights:[.5,.5],valuePath:[100,150,155,200]},symbols:['A','B'],prices:{A:[1,2,2.1,3],B:[1,1,1,1]},instruments:{A:{name:'A',className:'Equity',group:'US equity',currency:'USD'},B:{name:'B',className:'Equity',group:'US equity',currency:'USD'}}};
-test('Sector and industry group independently and preserve all contributions including unclassified/non-equities',()=>{
- const positions=[{symbol:'A',className:'Equity',sector:'Technology',industry:'Software',weight:.3,pnl:3,contribution:.03},{symbol:'B',className:'Equity',sector:'Technology',industry:'Hardware',weight:.3,pnl:-1,contribution:-.01},{symbol:'C',className:'Equity',weight:.2,pnl:1,contribution:.01},{symbol:'GLD',className:'Commodity proxy',weight:.2,pnl:2,contribution:.02}];
+test('Sector and industry group independently and preserve return and risk contributions including custom commodities',()=>{
+ const positions=[{symbol:'A',className:'Equity',sector:'Technology',industry:'Software',weight:.3,pnl:3,contribution:.03,riskContribution:.04},{symbol:'B',className:'Equity',sector:'Technology',industry:'Hardware',weight:.3,pnl:-1,contribution:-.01,riskContribution:.03},{symbol:'C',className:'Equity',weight:.2,pnl:1,contribution:.01,riskContribution:.02},{symbol:'GLD',className:'Commodity proxy',sector:'Precious Metals',industry:'Monetary metals',weight:.2,pnl:2,contribution:.02,riskContribution:.01}];
  for(const mode of ['sector','industry']) {
   const rows=groupAttribution(positions,mode);
   assert.ok(Math.abs(rows.reduce((s,r)=>s+r.weight,0)-1)<1e-12);
   assert.ok(Math.abs(rows.reduce((s,r)=>s+r.contribution,0)-.05)<1e-12);
+  assert.ok(Math.abs(rows.reduce((s,r)=>s+r.riskContribution,0)-.10)<1e-12);
   assert.equal(rows.reduce((s,r)=>s+r.pnl,0),5);
   assert.ok(rows.some(r=>r.symbol==='Chưa có phân loại'));
-  assert.ok(rows.some(r=>r.symbol==='Không áp dụng · Commodity proxy'));
+  assert.ok(rows.some(r=>r.symbol===(mode==='sector'?'Precious Metals':'Monetary metals')));
  }
  assert.equal(groupAttribution(positions,'sector').length,3);
  assert.equal(groupAttribution(positions,'industry').length,4);
@@ -22,6 +23,16 @@ test('lookback rebases holdings weight, money and contributions to window start'
  assert.ok(Math.abs(w.positions.reduce((s,p)=>s+p.contribution,0)-w.periodReturn)<1e-12);
  assert.equal(w.positions.reduce((s,p)=>s+p.pnl,0),w.pnl);
  assert.notEqual(w.positions[0].weight,.5);
+});
+test('selected-period Euler risk reconciles and follows the chosen grouping',()=>{
+ const daily={dates:['2026-01-01','2026-01-02','2026-01-05','2026-01-06'],initialCapital:100,current:{weights:[.6,.4],valuePath:[100,101.4,101.2,103.4]},symbols:['A','GLD'],prices:{A:[10,10.2,10.1,10.4],GLD:[20,20.1,20.2,20.4]},instruments:{A:{name:'A',className:'Equity',sector:'Technology',industry:'Software',group:'US equity',currency:'USD'},GLD:{name:'Gold',className:'Commodity proxy',sector:'Precious Metals',industry:'Monetary metals',group:'Gold',currency:'USD'}}};
+ const window=attributionWindow(daily,'ALL');
+ assert.equal(window.riskObservations,3);
+ assert.ok(Number.isFinite(window.volatility));
+ assert.ok(Math.abs(window.positions.reduce((sum,p)=>sum+p.riskContribution,0)-window.volatility)<1e-12);
+ const grouped=groupAttribution(window.positions,'sector');
+ assert.ok(grouped.some(row=>row.symbol==='Precious Metals'));
+ assert.ok(Math.abs(grouped.reduce((sum,row)=>sum+row.riskContribution,0)-window.volatility)<1e-12);
 });
 test('FX split uses lookback-start weights and reconciles, legacy results remain unknown',()=>{
  const enriched={...data,localPrices:{A:[1,1.5,1.6,2],B:[1,1,1,1]},fxRates:[1,4/3,2.1/1.6,1.5]};
