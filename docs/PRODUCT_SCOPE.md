@@ -40,12 +40,22 @@ Lookback chỉ điều khiển bảng/heatmap attribution; chart PnL và risk v�
 
 Input lưu localStorage; kết quả gần nhất lưu sessionStorage trong tab, kèm timestamp, không giả là lần fetch mới. Theo dõi ngày mới nhất kiểm tra mỗi 15 phút/khi trở lại tab, refresh khi có phiên mới hoặc dữ liệu đã quá 6 giờ; historical range cố định không tự dịch ngày. Nhật ký quyết định có integration Google/Supabase hiện hữu, xem [setup](ACCOUNT_SETUP.md); audit final này không thay cấu hình auth và chưa đăng nhập lại bằng tài khoản người dùng. Input không tự cloud-sync thành portfolio. Weeks 1–6 vẫn là evidence theo giai đoạn.
 
-## Verification
+## Earlier verification records (1–5 October 2026)
 
-05/10/2026: sửa cú pháp checkout nhánh `market-data` trong workflow; thêm hai lượt retry tuần tự cho các mã lỗi tạm thời, giữ nguyên timestamp của entry cũ nếu vẫn lỗi. Lượt chạy [37258292956](https://github.com/FTU-Legacy-63/G09/actions/runs/37258292956) xuất bản thành công, 26/26 mã tải được đến phiên 02/10/2026. Cron vẫn là 17:30 giờ Việt Nam các ngày thứ Hai–thứ Sáu; GitHub có thể chạy trễ, nghỉ lễ không tạo nến mới.
+The entries below preserve dated checks from an earlier product revision. They are historical evidence, not the current final verification or deployment status. For the latest recorded scope, release, and verification, see the [Week 7 audit](WEEK7.md) and [final release](https://github.com/FTU-Legacy-63/G09/releases/tag/v2.0.0-final-20261023). In particular, the refresh schedule below predates the two-window schedule recorded in Week 7.
 
-Browser verification: input 1.000 USD FPT + 35 triệu VND HPG + 25 triệu VND GLD, kỳ bắt đầu 01/09/2026, phiên chung đầu tiên 03/09/2026, FX 26.070, tổng vốn 86.070.000 VND. Chart bắt đầu đúng tổng vốn. Đã kiểm tra chuyển trang, reload kết quả, Back/Forward, giá trị 0 báo lỗi, bản lưu cũ vốn 200 triệu với 60/40 chuyển thành 120/80 triệu VND, và mobile 390px không tràn ngang.
+### 5 October 2026 — refresh workflow
+
+Sửa cú pháp checkout nhánh `market-data` trong workflow; thêm hai lượt retry tuần tự cho các mã lỗi tạm thời, giữ nguyên timestamp của entry cũ nếu vẫn lỗi. Lượt chạy [37258292956](https://github.com/FTU-Legacy-63/G09/actions/runs/37258292956) xuất bản thành công, 26/26 mã tải được đến phiên 02/10/2026. Tại thời điểm đó, lịch là 17:30 giờ Việt Nam các ngày thứ Hai–thứ Sáu; GitHub có thể chạy trễ, nghỉ lễ không tạo nến mới.
+
+### Browser verification — early October 2026
+
+Input 1.000 USD FPT + 35 triệu VND HPG + 25 triệu VND GLD, kỳ bắt đầu 01/09/2026, phiên chung đầu tiên 03/09/2026, FX 26.070, tổng vốn 86.070.000 VND. Chart bắt đầu đúng tổng vốn. Đã kiểm tra chuyển trang, reload kết quả, Back/Forward, giá trị 0 báo lỗi, bản lưu cũ vốn 200 triệu với 60/40 chuyển thành 120/80 triệu VND, và mobile 390px không tràn ngang.
+
+### Earlier automated checks
 
 30 Python tests: provider routing, search, currency/type validation, index-only benchmark, unverified VN ticker lookup, FX cho input USD dù holdings đều VN, classification chính xác theo listing, loại trừ ngành cho quỹ, metadata lỗi và listing mâu thuẫn. 26 JavaScript tests: tài chính, quy đổi giá trị đầu kỳ/weights, validation amounts, risk identities, dữ liệu khuyết, chart, lookback, grouping Sector/Industry và reconciliation, export escaping và optimizer 30 assets.
 
-Real-data integration: VIC/AAPL/TLT/BTC-USD/CORN, mỗi mã 20%, vốn 100 triệu, 01/10/2021–01/10/2026, SPY benchmark: 1.201 ngày chung; return contribution và Euler risk contribution reconcile trong sai số float, optimizer hội tụ trong ca kiểm tra. Các số là kết quả kiểm tra lịch sử, không dự báo hiệu suất.
+### Real-data integration — 1 October 2026
+
+VIC/AAPL/TLT/BTC-USD/CORN, mỗi mã 20%, vốn 100 triệu, 01/10/2021–01/10/2026, SPY benchmark: 1.201 ngày chung; return contribution và Euler risk contribution reconcile trong sai số float, optimizer hội tụ trong ca kiểm tra. Các số là kết quả kiểm tra lịch sử, không dự báo hiệu suất.

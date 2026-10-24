@@ -7,16 +7,13 @@
   "headers": [{"source":"/(.*)","headers":[{"key":"Referrer-Policy","value":"no-referrer"},{"key":"X-Content-Type-Options","value":"nosniff"},{"key":"X-Frame-Options","value":"DENY"},{"key":"Content-Security-Policy","value":"default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self' https://*.supabase.co; img-src 'self' data:; object-src 'none'; base-uri 'none'; frame-ancestors 'none'"}]}],
   "functions": {
     "api/data-status.py": {
-      "maxDuration": 15,
-      "excludeFiles": "{data/**,docs/**,demo/*.test.mjs,demo/test_*.py}"
+      "maxDuration": 15
     },
     "api/market-data.py": {
-      "maxDuration": 60,
-      "excludeFiles": "{data/**,docs/**,demo/finance.test.mjs,demo/test_server.py,demo/test_symbol_search.py}"
+      "maxDuration": 60
     },
     "api/search-symbols.py": {
-      "maxDuration": 15,
-      "excludeFiles": "{data/**,docs/**,demo/finance.test.mjs,demo/test_server.py,demo/test_symbol_search.py}"
+      "maxDuration": 15
     }
   },
   "rewrites": [

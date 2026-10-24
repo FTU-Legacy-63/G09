@@ -18,7 +18,7 @@
 Với tư cách là **Product Manager** kiêm **Trưởng nhóm phụ trách Luồng nghiệp vụ và Kiểm thử (Flow & Testing Lead)** của Finfolio 2.0, em chịu trách nhiệm chính về:
 1. **Chuyển hóa Yêu cầu thành Luồng nghiệp vụ (Requirements to User Flow):** Chuyển các định nghĩa toán học và logic tài chính từ Product Owner thành các luồng người dùng cụ thể (Happy Path, Alternative Paths, Error Paths), đảm bảo giao diện phản ánh đúng hành trình ra quyết định của nhà đầu tư.
 2. **Thiết lập Tiêu chí chấp nhận (Acceptance Criteria):** Định nghĩa ranh giới nghiệm thu nghiêm ngặt cho từng tính năng, xác định điều kiện đầu vào hợp lệ, các trường hợp biên (boundary cases) và thông báo lỗi tương ứng.
-3. **Quản trị chất lượng và Kiểm thử hồi quy (QA & Regression Testing):** Xây dựng ma trận kịch bản kiểm thử xuyên suốt từ Week 5 đến Week 7; theo dõi danh mục lỗi tồn đọng (Bug Log); phối hợp cùng Lead Developer để tự động hóa 85 test cases (50 JS + 35 Python), đảm bảo hệ thống đạt độ tin cậy tuyệt đối trước khi phát hành production.
+3. **Quản trị chất lượng và Kiểm thử hồi quy (QA & Regression Testing):** Xây dựng ma trận kịch bản kiểm thử xuyên suốt từ Week 5 đến Week 7; theo dõi danh mục lỗi tồn đọng (Bug Log); phối hợp cùng Lead Developer để tự động hóa 85 test cases (50 JS + 35 Python), cung cấp bằng chứng kiểm thử trước khi phát hành production. Bộ test hỗ trợ phát hiện hồi quy nhưng không thể bảo đảm độ tin cậy tuyệt đối.
 
 ---
 

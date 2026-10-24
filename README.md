@@ -4,6 +4,20 @@
 
 [Open the live application](https://g09-finfolio.vercel.app/) · [View the verified release](https://github.com/FTU-Legacy-63/G09/releases/tag/v2.0.0-final-20261023) · [Browse the source](demo/index.html)
 
+## Repository evidence
+
+| Stage | Primary evidence |
+| --- | --- |
+| Week 1 | [Problem Direction](docs/WEEK1.md) |
+| Week 2 | [Product Direction & MVP](docs/WEEK2.md) |
+| Week 3 | [Information & Data Readiness](docs/WEEK3.md) |
+| Week 4 | [Financial Logic & Expected Results](docs/WEEK4.md) |
+| Week 5 | [MVP Feature, Flow & Implementation Readiness](docs/WEEK5.md) |
+| Week 6 | [Working Demo, Integration & Test Evidence](docs/WEEK6.md) |
+| Week 7 | [Final Audit, Evidence & Individual Footprint](docs/WEEK7.md) |
+| Group summary | [Group Footprint](docs/GROUP_FOOTPRINT.md) |
+| Individual contributions | [Individual Footprint Hub](docs/individual/README.md) ([Linh](docs/individual/linh.md) · [Quynh Anh](docs/individual/quynh-anh.md) · [Bao An](docs/individual/bao-an.md) · [Minh Ngoc](docs/individual/minh-ngoc.md) · [Ngoc Anh](docs/individual/ngoc-anh.md)) |
+
 ## The problem Finfolio addresses
 
 A portfolio’s total return or volatility does not show which positions drove that result. Finfolio turns supported holdings and daily market data into a report that groups return and risk contributions, compares performance with a selected benchmark, and lets users examine constrained reference allocations. The user remains responsible for any investment decision.
@@ -64,7 +78,7 @@ Then open <http://127.0.0.1:8123/portfolio>. The integrated server provides the 
 | Current product scope and data contract | [Product scope](docs/PRODUCT_SCOPE.md) · [Data fixture notes](data/README.md) |
 | Setup and financial methods | [Account setup](docs/ACCOUNT_SETUP.md) · [Final methods](docs/FINAL_METHODS.md) · [Optimization](docs/OPTIMIZATION.md) · [FX attribution](docs/FX_ATTRIBUTION.md) |
 | Project requirements and weekly evidence | [Weeks 1–7](docs/WEEK1.md), [WEEK2](docs/WEEK2.md), [WEEK3](docs/WEEK3.md), [WEEK4](docs/WEEK4.md), [WEEK5](docs/WEEK5.md), [WEEK6](docs/WEEK6.md), [WEEK7](docs/WEEK7.md) |
-| Group and individual evidence | [Group footprint](docs/GROUP_FOOTPRINT.md) · [Individual contribution map](docs/individual/README.md) · [V2 individual reports](academic_reports_v2/) · [Group presentation outline](docs/GROUP_PRESENTATION_SLIDEDECK.md) · [Presentation report](docs/Finfolio_2.0_Group_Presentation_SlideDeck_Report.docx) |
+| Group and individual evidence | [Group footprint](docs/GROUP_FOOTPRINT.md) · [Individual contribution map](docs/individual/README.md) · [Final individual reports](formatted_reports/) |
 | Documentation audit | [Audit report and requirements traceability](docs/DOCUMENTATION_AUDIT.md) |
 
 The weekly reports and contribution records form the academic evidence layer. They document decisions and project stages; they are not rewritten as product marketing material. Individual contributions should be read alongside their linked artefacts and personal sign-off.

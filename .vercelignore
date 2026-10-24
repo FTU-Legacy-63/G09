@@ -9,3 +9,9 @@ supabase/
 **/*.har
 **/*.trace
 **/Icon*
+docs/
+__pycache__/
+*.pyc
+**/*.pyc
+demo/test_*.py
+demo/*.test.mjs

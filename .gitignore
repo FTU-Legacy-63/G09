@@ -4,6 +4,9 @@
 __pycache__/
 .playwright-cli/
 node_modules/
+.DS_Store
+tmp/
+~$*.docx
 demo/vendor/
 demo/fonts/
 output/playwright/
@@ -14,3 +17,8 @@ supabase/.branches/
 .mcp.json
 *.har
 *.trace
+
+# Local presentation working files; intentionally not published in GitHub.
+docs/GROUP_PRESENTATION_SLIDEDECK.md
+docs/Finfolio_2.0_Group_Presentation_SlideDeck_Report.docx
+output/docx/Finfolio_2.0_Group_Presentation_SlideDeck_Report.docx

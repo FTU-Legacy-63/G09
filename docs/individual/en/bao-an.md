@@ -18,7 +18,7 @@ I implemented the minimum-volatility and approximate maximum-Sharpe workflows in
 
 ### 2.3 Full ownership of Monte Carlo simulation
 
-I designed, implemented and tested the Joint Moving-Block Bootstrap workflow in `simulation.mjs` and its Web Worker integration. Common blocks of five historical daily-return observations are sampled across all assets, preserving contemporaneous cross-asset dependence and short volatility clusters better than independent normal draws. A seeded linear congruential generator makes results reproducible. The output includes 5th, 25th, 50th, 75th and 95th percentiles, loss probability, simulated VaR/CVaR, a fan chart and a terminal-value histogram. This technical scope belongs to my footprint, not to the UI/UX footprint.
+I designed, implemented and tested the Joint Moving-Block Bootstrap workflow in `simulation.mjs` and its Web Worker integration. Common blocks of five historical daily-return observations are sampled across all assets, preserving contemporaneous cross-asset dependence and short volatility clusters better than independent normal draws. A seeded Mulberry32 pseudo-random generator makes results reproducible. The output includes 5th, 25th, 50th, 75th and 95th percentiles, loss probability, simulated VaR/CVaR, a fan chart and a terminal-value histogram. This technical scope belongs to my footprint, not to the UI/UX footprint.
 
 ## III. Work completed across the project
 

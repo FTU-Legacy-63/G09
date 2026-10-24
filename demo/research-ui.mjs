@@ -12,7 +12,7 @@ function renderOptimizationPnl(data, optimized) {
   const host = el('optimization-pnl-chart');
   const width = Math.max(360, host.clientWidth || 900);
   const height = 340;
-  const margin = { left: 78, right: 22, top: 22, bottom: 46 };
+  const margin = { left: 78, right: 22, top: 22, bottom: 62 };
   const dates = data.dates;
   const current = data.current.pnlPath;
   const proposal = optimized.pnlPath;
@@ -42,7 +42,7 @@ function renderOptimizationPnl(data, optimized) {
     const position = y(value);
     return `<line x1="${margin.left}" x2="${width - margin.right}" y1="${position}" y2="${position}" class="chart-grid"/><text x="${margin.left - 10}" y="${position + 4}" text-anchor="end" class="chart-axis-label">${compactVnd(value)}</text>`;
   }).join('');
-  const xLabels = ticks.map(index => `<text x="${x(index)}" y="${height - 12}" text-anchor="${index === 0 ? 'start' : index === dates.length - 1 ? 'end' : 'middle'}" class="chart-axis-label">${dateLabel(dates[index])}</text>`).join('');
+  const xLabels = ticks.map(index => `<text x="${x(index)}" y="${height - 20}" text-anchor="${index === 0 ? 'start' : index === dates.length - 1 ? 'end' : 'middle'}" class="chart-axis-label">${dateLabel(dates[index])}</text>`).join('');
   const points = series => series.map((value, index) => `${x(index).toFixed(1)},${y(value).toFixed(1)}`).join(' ');
   const zeroY = y(0);
   host.innerHTML = `<div class="chart-frame optimization-pnl-frame" tabindex="0" aria-label="Biểu đồ PnL danh mục hiện tại và phương án tối ưu hóa theo ngày. Dùng phím mũi tên trái hoặc phải để xem từng phiên."><svg role="img" aria-label="So sánh PnL trước và sau tối ưu hóa, đơn vị VND" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none">${grids}<line x1="${margin.left}" x2="${width - margin.right}" y1="${zeroY}" y2="${zeroY}" class="optimization-zero-line"/><text x="${width - margin.right}" y="${zeroY - 6}" text-anchor="end" class="chart-axis-label">0 đ</text>${xLabels}<polyline class="chart-line line-current" points="${points(current)}"/><polyline class="chart-line line-optimized" points="${points(proposal)}"/><line id="optimization-crosshair-x" y1="${margin.top}" y2="${height - margin.bottom}" class="chart-crosshair" hidden/><line id="optimization-crosshair-y" x1="${margin.left}" x2="${width - margin.right}" class="chart-crosshair" hidden/><circle id="optimization-dot-current" r="4.5" class="chart-dot line-current" hidden/><circle id="optimization-dot-proposal" r="4.5" class="chart-dot line-optimized" hidden/></svg><div id="optimization-pnl-tooltip" class="chart-tooltip" role="tooltip" hidden></div></div>`;
@@ -335,7 +335,7 @@ export function initResearch(getResult) {
     if (el('chip-cvar')) el('chip-cvar').textContent = percent(output.tail.expectedShortfall);
 
     el('simulation-tail').textContent = `VaR 95% mô phỏng (${output.horizon} phiên): ${percent(output.tail.varLoss)}; CVaR: ${percent(output.tail.expectedShortfall)}. Có thể âm nếu toàn bộ phân vị đuôi vẫn đạt mức sinh lời dương. Đây không phải VaR lịch sử 1 phiên ở báo cáo. Phụ thuộc vào dữ liệu đầu vào và phương pháp lấy mẫu block.`;
-    el('simulation-meta').textContent = `${dateLabel(output.historyStart)} – ${dateLabel(output.historyEnd)}; ${output.observations} return chung; block ${output.blockLength} phiên; seed ${output.seed}; ${output.paths} đường × ${output.horizon} phiên. Vốn mô phỏng là giá trị cuối kỳ; giữ nguyên tỷ trọng cuối kỳ theo chiến lược mua và giữ.`;
+    el('simulation-meta').textContent = `${dateLabel(output.historyStart)} – ${dateLabel(output.historyEnd)}; ${output.observations} return chung; block ${output.blockLength} phiên; ${output.paths} đường × ${output.horizon} phiên. Vốn mô phỏng là giá trị cuối kỳ; giữ nguyên tỷ trọng cuối kỳ theo chiến lược mua và giữ.`;
     el('simulation-allocation').textContent = output.symbols.map((s, i) => `${s}: ${percent(output.weights[i])}`).join(' · ');
   }
   // Chart mode toggle
@@ -355,7 +355,7 @@ export function initResearch(getResult) {
     const request = ++simulationRequest;    const data = getResult(); if (!data) { el('simulation-error').textContent = 'Hãy phân tích danh mục trước.'; return; }
     el('simulate-button').disabled = true; el('cancel-simulation').hidden = false; el('simulation-empty').textContent = 'Đang tạo các đường mô phỏng ở nền; có thể hủy mà không mất báo cáo.';
     try {
-      const output = await run('simulation', simulationInput(data), { paths: Number(el('simulation-paths').value), horizon: Number(el('simulation-horizon').value), seed: Number(el('simulation-seed').value), blockLength: 5 });
+      const output = await run('simulation', simulationInput(data), { paths: Number(el('simulation-paths').value), horizon: Number(el('simulation-horizon').value), seed: 42, blockLength: 5 });
       if (request !== simulationRequest || data !== getResult()) return;
       lastSimulation = output;
       renderSimulation(lastSimulation); el('simulation-empty').hidden = true;
