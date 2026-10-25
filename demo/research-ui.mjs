@@ -124,7 +124,7 @@ export function initResearch(getResult) {
       row('CAGR · tăng trưởng bình quân năm', signedPercent(m.cagr), m.cagr === null ? 'Chỉ hiện khi có ít nhất 1 năm lịch và 252 return chung; không ngoại suy vài ngày thành một năm.' : 'Nếu tăng đều mỗi năm, mức tăng nào đưa vốn đầu kỳ đến giá trị cuối kỳ? Không cộng CAGR từng mã.'),
       row('Max Drawdown · mức giảm sâu nhất', percent(m.maxDrawdown), 'Mức giảm từ một đỉnh trước đó đến đáy sau nó trong kỳ. Không phải mức lỗ tối đa có thể xảy ra trong tương lai.'),
       row('Biến động mua và giữ', percent(m.realizedVolatility), 'Độ dao động năm hóa của return thực trên đường giá trị có tỷ trọng trôi. Khác biến động phân bổ cố định dùng cho Euler attribution.'),
-      row('Sharpe · lợi nhuận vượt lãi suất / rủi ro', number(m.sharpe), 'Trung bình return ngày trừ lãi suất ngày, chia độ lệch chuẩn và nhân √252. Mặc định 3%/năm hoặc giả định tùy chỉnh đang hiển thị. Không cam kết hiệu quả tương lai.'),
+      row('Sharpe · lợi nhuận vượt lãi suất / rủi ro', number(m.sharpe), 'Trung bình return ngày trừ lãi suất ngày, chia độ lệch chuẩn và nhân √252. Dùng lợi suất mặc định HNX 10Y hoặc giả định tùy chỉnh đang hiển thị. Không cam kết hiệu quả tương lai.'),
       row('Sortino · so với dao động dưới mục tiêu', number(m.sortino), 'Dùng phần return dưới lãi suất mục tiêu để đo downside deviation trên toàn bộ mẫu. Không có downside hoặc thiếu lãi suất: không xác định.'),
       row('Calmar · CAGR / mức giảm sâu nhất', number(m.calmar), 'Chỉ xác định khi CAGR đủ dữ liệu và có drawdown âm. Cùng giá trị có thể đến từ nhiều đường đi khác nhau.'),
     ].join('');

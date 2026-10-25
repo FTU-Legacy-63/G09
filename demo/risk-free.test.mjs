@@ -1,9 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {resolveRiskFree,riskFreeForResult} from './risk-free.mjs';
-test('No user input resolves to the explicit Finfolio 1.0 3% assumption',()=>{
-  const rf=resolveRiskFree();assert.equal(rf.annual,.03);assert.equal(rf.mode,'default');assert.match(rf.source,/không phải lãi suất thị trường/);
+test('No user input resolves to the quiet Finfolio 3% default',()=>{
+  const rf=resolveRiskFree();assert.equal(rf.annual,.03);assert.equal(rf.mode,'default');assert.equal(rf.source,'Mặc định lãi suất phi rủi ro Finfolio');
   assert.deepEqual(resolveRiskFree({mode:'default',percent:'',source:''}),rf);
+});
+test('A valid HNX quote becomes the default risk-free rate',()=>{
+  const quote={annual:.04488,source:'HNX · lợi suất par trái phiếu Chính phủ Việt Nam 10 năm · 2026-10-26',observedAt:'2026-10-26'};
+  assert.deepEqual(resolveRiskFree({quote}),{annual:.04488,source:quote.source,observedAt:quote.observedAt,mode:'default'});
 });
 test('Default mode ignores stale custom fields; custom zero and negative assumptions are preserved',()=>{
   assert.equal(resolveRiskFree({mode:'default',percent:9}).annual,.03);

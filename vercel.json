@@ -9,6 +9,9 @@
     "api/data-status.py": {
       "maxDuration": 15
     },
+    "api/risk-free-rate.py": {
+      "maxDuration": 15
+    },
     "api/market-data.py": {
       "maxDuration": 60
     },

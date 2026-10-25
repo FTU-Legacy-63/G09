@@ -368,7 +368,15 @@ form.addEventListener('submit', async (event) => {
   button.firstChild.textContent = 'Đang phân tích ';
   showError('');
   try {
-    const riskFree = resolveRiskFree({mode:document.querySelector('#risk-free-mode').value,percent:document.querySelector('#risk-free-rate').value,source:document.querySelector('#risk-free-source').value});
+    const riskFreeMode = document.querySelector('#risk-free-mode').value;
+    let riskFreeQuote = null;
+    if (riskFreeMode === 'default') {
+      try {
+        const quoteResponse = await fetch('/api/risk-free-rate', {cache:'no-store',signal:AbortSignal.timeout(14000)});
+        if (quoteResponse.ok) riskFreeQuote = await quoteResponse.json();
+      } catch { /* Keep the quiet Finfolio default when the quote endpoint is unavailable. */ }
+    }
+    const riskFree = resolveRiskFree({mode:riskFreeMode,percent:document.querySelector('#risk-free-rate').value,source:document.querySelector('#risk-free-source').value,quote:riskFreeQuote});
     if (holdings.some((holding) => !holding.symbol)) throw new Error('Chọn instrument từ danh sách gợi ý trước khi phân tích.');
     if (document.querySelector('#follow-latest').checked) {
       const range = rollingRange(document.querySelector('#start-date').value,vnToday());

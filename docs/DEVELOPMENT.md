@@ -15,6 +15,8 @@ python3 demo/server.py
 
 The local application is served at <http://127.0.0.1:8123/>. Open `/portfolio` to enter holdings. `demo/server.py` serves the browser application and its local API routes together; opening `demo/index.html` with `file://` or using a static-only server does not provide the data APIs. Live market-data requests require internet access and may be limited by the providers.
 
+The default risk-free rate uses HNX's Vietnam government-bond yield curve `Par yield (%)` for the 10-year tenor through the public page's partial-view endpoint. The adapter rejects missing, malformed, or more-than-seven-day-old observations; otherwise it quietly uses Finfolio's 3% annual default. HNX does not document this page endpoint as a stable public API, so a page change may temporarily return the default. Custom rates remain available.
+
 `npm run build` generates local font assets and the browser Supabase bundle. The Python requirements file at `demo/requirements.txt` includes the shared pinned requirements from the repository root.
 
 ## Automated checks

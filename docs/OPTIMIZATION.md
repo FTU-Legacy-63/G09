@@ -7,9 +7,9 @@ Tab `/optimize` chỉ chạy khi người dùng yêu cầu, sau khi đã phân t
 | Lựa chọn | Hàm mục tiêu | Dữ liệu cần |
 | --- | --- | --- |
 | Volatility thấp nhất ước tính | Minimize `sqrt(252 × wᵀΣw)`; tương đương minimize variance | Covariance mẫu của return ngày tính bằng VND |
-| Sharpe cao nhất ước tính | Maximize `sqrt(252) × (wᵀμ − rf_daily) / sqrt(wᵀΣw)` | Cùng covariance, trung bình return ngày, giả định lãi suất mặc định 3%/năm hoặc tùy chỉnh |
+| Sharpe cao nhất ước tính | Maximize `sqrt(252) × (wᵀμ − rf_daily) / sqrt(wᵀΣw)` | Cùng covariance, trung bình return ngày, mặc định dùng HNX Vietnam 10Y par yield; 3%/năm khi quote không hợp lệ hoặc quá cũ; hoặc tùy chỉnh |
 
-`rf_daily = (1 + rf_annual)^(1/252) − 1`. **Không bắt người dùng nhập lãi suất:** mặc định 3%/năm, tương thích Finfolio 1.0. Đối chiếu source bản cũ: frontend gửi `riskFreeRate: 3` vào `/api/analyze`; đó là một hằng số giả định, không phải nguồn market data. Bản mới đưa giả định vào [risk-free.mjs](../demo/risk-free.mjs), công bố cạnh kết quả và cho đổi tại Cài đặt nâng cao. Tùy chỉnh có thể là 0%, nhưng nhập sai/để trống trong chế độ tùy chỉnh phải báo lỗi, không tự đổi thành 0. Tổng tỷ trọng bằng 100%, không âm, không đòn bẩy; giới hạn mỗi mã và tổng commodity proxy được kiểm tra đồng thời.
+`rf_daily = (1 + rf_annual)^(1/252) − 1`. **Không bắt người dùng nhập lãi suất:** mặc định lấy HNX 10Y par yield; khi không có quote hợp lệ, dùng nội bộ mức 3%/năm tương thích Finfolio 1.0. Tùy chỉnh có thể là 0%, nhưng nhập sai/để trống trong chế độ tùy chỉnh phải báo lỗi, không tự đổi thành 0. Tổng tỷ trọng bằng 100%, không âm, không đòn bẩy; giới hạn mỗi mã và tổng commodity proxy được kiểm tra đồng thời.
 
 ## Diễn giải và giới hạn
 

@@ -22,6 +22,7 @@ if __package__:
     from .classification import company_classifications
     from .account_config import account_config
     from .data_status import data_status
+    from .risk_free_data import fetch_risk_free_rate
 else:
     from symbol_search import search_stocks
     from vn_data import get_vn_series
@@ -30,6 +31,7 @@ else:
     from classification import company_classifications
     from account_config import account_config
     from data_status import data_status
+    from risk_free_data import fetch_risk_free_rate
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -278,6 +280,9 @@ class Handler(SimpleHTTPRequestHandler):
             return
         if url.path == "/api/data-status":
             self.send_json(200, data_status())
+            return
+        if url.path == "/api/risk-free-rate":
+            self.send_json(200, fetch_risk_free_rate())
             return
         if url.path == "/api/search-symbols":
             try:
