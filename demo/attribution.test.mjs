@@ -63,3 +63,9 @@ test('30-position optimizer is feasible, bounded and improves variance',()=>{
  assert.ok(w.reduce((s,v,i)=>s+v*v*c[i][i],0)<=c.reduce((s,row,i)=>s+row[i]/n/n,0));
 });
 test('infeasible all-commodity caps are rejected',()=>assert.throws(()=>minimumVariance([[1,0],[0,1]],[true,true],.8,.6),/không khả thi/));
+test('unclassified ETFs and crypto use their asset-class labels without a not-applicable prefix',()=>{
+ const positions=[{symbol:'ESGV',className:'ETF'},{symbol:'BTC-USD',className:'Crypto'},{symbol:'BND',className:'Bond ETF'},{symbol:'GLD',className:'Commodity proxy'}];
+ const groups=groupAttribution(positions,'sector');
+ for(const label of ['ETF','Crypto','Bond ETF']) assert.ok(groups.some(row=>row.symbol===label));
+ assert.ok(groups.some(row=>row.symbol==='Không áp dụng · Commodity proxy'));
+});
