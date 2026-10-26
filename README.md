@@ -78,7 +78,7 @@ Then open <http://127.0.0.1:8123/portfolio>. The integrated server provides the 
 | Current product scope and data contract | [Product scope](docs/PRODUCT_SCOPE.md) · [Data fixture notes](data/README.md) |
 | Setup and financial methods | [Account setup](docs/ACCOUNT_SETUP.md) · [Final methods](docs/FINAL_METHODS.md) · [Optimization](docs/OPTIMIZATION.md) · [FX attribution](docs/FX_ATTRIBUTION.md) |
 | Project requirements and weekly evidence | [Weeks 1–7](docs/WEEK1.md), [WEEK2](docs/WEEK2.md), [WEEK3](docs/WEEK3.md), [WEEK4](docs/WEEK4.md), [WEEK5](docs/WEEK5.md), [WEEK6](docs/WEEK6.md), [WEEK7](docs/WEEK7.md) |
-| Group and individual evidence | [Group footprint](docs/GROUP_FOOTPRINT.md) · [Individual contribution map](docs/individual/README.md) · [Final individual reports](formatted_reports/) |
+| Group and individual evidence | [Group footprint](docs/GROUP_FOOTPRINT.md) · [Individual contribution map](docs/individual/README.md) · [Final submission PDFs](docs/submissions/) |
 | Documentation audit | [Audit report and requirements traceability](docs/DOCUMENTATION_AUDIT.md) |
 
 The weekly reports and contribution records form the academic evidence layer. They document decisions and project stages; they are not rewritten as product marketing material. Individual contributions should be read alongside their linked artefacts and personal sign-off.
