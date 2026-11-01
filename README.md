@@ -4,6 +4,18 @@
 
 [Open the live application](https://g09-finfolio.vercel.app/) · [View the verified release](https://github.com/FTU-Legacy-63/G09/releases/tag/v2.0.0-final-20261023) · [Browse the source](demo/index.html)
 
+## Final contribution verification
+
+The [G09 Final Individual Contribution Verification](<G09 - FINAL CONTRIBUTION VERIFICATION.md>) explains each member’s contribution and traces constrained optimization from methodology through implementation and verification, including the documented improvement over Finfolio 1.0.
+
+| Member | Contribution summary | Detailed section |
+| --- | --- | --- |
+| Hoàng Khánh Linh | Financial methodology and product ownership | [Read](<G09 - FINAL CONTRIBUTION VERIFICATION.md#linh>) |
+| Trần Minh Ngọc | Data requirements and provenance | [Read](<G09 - FINAL CONTRIBUTION VERIFICATION.md#minh-ngoc>) |
+| Lê Bảo An | Calculation engine and software integration | [Read](<G09 - FINAL CONTRIBUTION VERIFICATION.md#bao-an>) |
+| Nguyễn Quỳnh Anh | Product requirements and verification | [Read](<G09 - FINAL CONTRIBUTION VERIFICATION.md#quynh-anh>) |
+| Nguyễn Ngọc Anh | Interface and information architecture | [Read](<G09 - FINAL CONTRIBUTION VERIFICATION.md#ngoc-anh>) |
+
 ## Repository evidence
 
 | Stage | Primary evidence |
